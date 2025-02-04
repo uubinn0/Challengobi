@@ -1,0 +1,50 @@
+.header {
+    position: fixed;  /*  화면 최상단에 고정 */
+    top: 0;           /* 위쪽 여백 없이 붙이기 */
+    left: 0;
+    width: 100%;      /* 전체 너비를 차지하도록 설정 */
+    height: 55px;     /* 적절한 높이 설정 (원하는 크기로 조정 가능) */
+    background-color: #f5f5f2; /* 💡 배경색을 추가하여 다른 요소와 분리 */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /*  상단바에 그림자 추가 */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1000;    /* 다른 요소 위에 올라오도록 설정 */
+  }
+  
+  
+  .nav {
+    font-size: 45px;
+    font-weight: 400;
+    color: #000;
+  }
+  .logo {
+    text-decoration: none; //로고에 이상한 보라색 제거 
+  }
+  
+  
+  
+  /* ✅ 특정 텍스트 "챌린고비"에만 폰트 적용 */
+  .logoText {
+    font-family: '행복고흥L', sans-serif;
+    font-size: 40px;
+    margin-left: 15px;  //챌린고비 로고 위치 조정 
+    color: #000;
+  }
+  
+  .iconContainer {
+    right: 30px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-right: 15px; /* 아이콘 위치 조정정*/ 
+  }
+  
+  .loginText {
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    font-weight: normal;
+    color: #5a4635;
+    text-decoration: none;
+  }
+  
