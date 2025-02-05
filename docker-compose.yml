@@ -23,7 +23,7 @@ services:
       - mongodb_data:/data/db
 
   django-app:
-    image: taromilktea/pjt01_django:1.0
+    image: taromilktea/pjt01_django:latest
     container_name: django-app
     working_dir: /app
     ports:
@@ -42,7 +42,7 @@ services:
     restart: always
 
   react-app:
-    image: taromilktea/pjt01_react:1.0
+    image: taromilktea/pjt01_react:latest
     container_name: react-app
     ports:
       - "3000:80"
@@ -53,7 +53,7 @@ services:
     restart: always
 
   fastapi-app:
-    image: taromilktea/pjt01_fastapi:1.0
+    image: taromilktea/pjt01_fastapi:latest
     container_name: fastapi-app
     working_dir: /app
     ports:
