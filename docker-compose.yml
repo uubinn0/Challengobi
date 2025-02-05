@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  mariadb:
+    image: mariadb:10.7
+    container_name: mariadb
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+  mongodb:
+    image: mongo:5.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  django-app:
+    image: taromilktea/pjt01_django:1.0
+    container_name: django-app
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_DB_HOST: mariadb
+      DJANGO_DB_PORT: 3306
+      DJANGO_DB_NAME: mydb
+      DJANGO_DB_USER: user
+      DJANGO_DB_PASSWORD: password
+      MONGO_HOST: mongodb
+      MONGO_PORT: 27017
+    depends_on:
+      - mariadb
+      - mongodb
+    restart: always
+
+  react-app:
+    image: taromilktea/pjt01_react:1.0
+    container_name: react-app
+    ports:
+      - "3000:80"
+    environment:
+      REACT_APP_API_URL: "http://django-app:8000/"
+    depends_on:
+      - django-app
+    restart: always
+
+  fastapi-app:
+    image: taromilktea/pjt01_fastapi:1.0
+    container_name: fastapi-app
+    working_dir: /app
+    ports:
+      - "8001:8001"
+    environment:
+      DJANGO_API_URL: "http://django-app:8000/"
+      MARIADB_HOST: mariadb
+      MARIADB_PORT: 3306
+      MARIADB_DB: mydb
+      MARIADB_USER: user
+      MARIADB_PASSWORD: password
+    depends_on:
+      - mariadb
+      - django-app
+    restart: always
+
+volumes:
+  mariadb_data:
+  mongodb_data:
