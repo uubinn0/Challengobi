@@ -1,9 +1,9 @@
-import React from "react";
-import { Outlet } from "react-router-dom";
+import React from 'react';
+import { Outlet } from 'react-router-dom';
 
 const ChallengePage: React.FC = () => {
   return (
-    <div className="challenge-page">
+    <div className="Challenge-page">
       <Outlet />
     </div>
   );

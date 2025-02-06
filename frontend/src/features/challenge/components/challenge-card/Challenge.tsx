@@ -1,94 +1,143 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import './Challenge.css';
+import { useState } from "react"
+import { Pencil, Lock } from "lucide-react"
+import styles from "./Challenge.module.scss"
+import AddModal from "../../../../components/modals/AddModal"
+import { useNavigate } from "react-router-dom"
 
-interface ChallengeItem {
-  category: string;
-  period: string;
-  reward: number;
-  duration: string;
+interface Challenge {
+  id: number
+  title: string
+  category: string
+  period: string
+  amount: string
+  participants: number
+  isLocked?: boolean
 }
 
-const Challenge: React.FC = () => {
-  const navigate = useNavigate();
-  const challenges: ChallengeItem[] = [
-    {
-      category: '술/담배',
-      period: '1월 1일 - 1월 28일',
-      reward: 20000,
-      duration: '28일'
-    },
-    {
-      category: '장보기',
-      period: '1월 1일 - 1월 7일',
-      reward: 15000,
-      duration: '7일'
-    },
-    {
-      category: '외식',
-      period: '1월 1일 - 1월 7일',
-      reward: 100000,
-      duration: '7일'
-    },
-    {
-      category: '교육',
-      period: '1월 1일 - 1월 28일',
-      reward: 50000,
-      duration: '28일'
-    }
-  ];
+export default function ChallengePage() {
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const navigate = useNavigate()
 
-  const handleCardClick = (index: number) => {
-    if (index === 0) {
-      navigate('/challenge/progress');
-    }
-  };
+  const ongoingChallenges: Challenge[] = [
+    {
+      id: 1,
+      title: "담배에 돈 쓰지 말..",
+      category: "술/담배",
+      period: "1월 1일 - 1월 28일",
+      amount: "20,000원",
+      participants: 35,
+      isLocked: true,
+    },
+    {
+      id: 2,
+      title: "장을 적당히",
+      category: "장보기",
+      period: "1월 1일 - 1월 7일",
+      amount: "100,000원",
+      participants: 3,
+    },
+    // Add more challenges to test scrolling
+    {
+      id: 5,
+      title: "커피 줄이기",
+      category: "카페/디저트",
+      period: "2월 1일 - 2월 28일",
+      amount: "30,000원",
+      participants: 20,
+    },
+  ]
+
+  const recruitingChallenges: Challenge[] = [
+    {
+      id: 3,
+      title: "외식을 줄입시다!!",
+      category: "외식",
+      period: "1월 1일 - 1월 7일",
+      amount: "100,000원",
+      participants: 3,
+      isLocked: true,
+    },
+    {
+      id: 4,
+      title: "택시 안타야지",
+      category: "교통",
+      period: "1월 1일 - 1월 28일",
+      amount: "30,000원",
+      participants: 7,
+    },
+    // Add more challenges to test scrolling
+    {
+      id: 6,
+      title: "영화 대신 넷플릭스",
+      category: "문화생활",
+      period: "2월 1일 - 2월 28일",
+      amount: "50,000원",
+      participants: 15,
+    },
+  ]
+
+  const handleChallengeClick = (challengeId: number) => {
+    navigate(`/challenge/progress/${challengeId}`)
+  }
 
   return (
-    <div className="challenge-container">
-      <button className="create-challenge-btn">
-        <span>✎</span> 챌린지 만들기
+    <div className={styles.container}>
+      <button className={styles.createButton} onClick={() => setIsModalOpen(true)}>
+        <Pencil size={20} />
+        챌린지 만들기
       </button>
-      
-      <h2>진행 중인 챌린지</h2>
-      <div className="challenge-grid">
-        {challenges.slice(0, 2).map((challenge, index) => (
-          <div key={index} className="challenge-card">
-            <div className="card-header">
-              <span className="lock-icon">🔒</span>
-            </div>
-            <div 
-              className="card-content"
-              onClick={() => handleCardClick(index)}
-              style={index === 0 ? { cursor: 'pointer' } : {}}
-            >
-              <p>카테고리 : {challenge.category}</p>
-              <p>챌린지 기간 : {challenge.period}</p>
-              <p>챌린지 금액 : {challenge.reward.toLocaleString()}원</p>
-              <p>챌린지 기간 : {challenge.duration}</p>
-            </div>
-          </div>
-        ))}
-      </div>
 
-      <h2>모집 중인 챌린지</h2>
-      <div className="challenge-grid">
-        {challenges.slice(2, 4).map((challenge, index) => (
-          <div key={index} className="challenge-card">
-            <div className="card-header">
-              <span className="lock-icon">🔒</span>
-            </div>
-            <div className="card-content">
-              <p>카테고리 : {challenge.category}</p>
-              <p>챌린지 기간 : {challenge.period}</p>
-              <p>챌린지 금액 : {challenge.reward.toLocaleString()}원</p>
-              <p>챌린지 기간 : {challenge.duration}</p>
-            </div>
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>진행 중인 챌린지</h2>
+        <div className={styles.challengeScrollContainer}>
+          <div className={styles.challengeScroll}>
+            {ongoingChallenges.map((challenge) => (
+              <div 
+                key={challenge.id} 
+                className={styles.challengeCard}
+                onClick={() => handleChallengeClick(challenge.id)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>{challenge.title}</h3>
+                  {challenge.isLocked && <Lock size={16} />}
+                </div>
+                <div className={styles.cardContent}>
+                  <p>카테고리 : {challenge.category}</p>
+                  <p>챌린지 기간 : {challenge.period}</p>
+                  <p>챌린지 금액 : {challenge.amount}</p>
+                  <p>챌린지 인원 : {challenge.participants}명</p>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>모집 중인 챌린지</h2>
+        <div className={styles.challengeScrollContainer}>
+          <div className={styles.challengeScroll}>
+            {recruitingChallenges.map((challenge) => (
+              <div key={challenge.id} className={styles.challengeCard}>
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>{challenge.title}</h3>
+                  {challenge.isLocked && <Lock size={16} />}
+                </div>
+                <div className={styles.cardContent}>
+                  <p>카테고리 : {challenge.category}</p>
+                  <p>챌린지 기간 : {challenge.period}</p>
+                  <p>챌린지 금액 : {challenge.amount}</p>
+                  <p>챌린지 인원 : {challenge.participants}명</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <AddModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
-  );
-};
+  )
+}
 
-export default Challenge;

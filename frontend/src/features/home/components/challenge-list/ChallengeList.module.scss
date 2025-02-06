@@ -1,0 +1,68 @@
+.challengeList {
+    padding: 16px;
+  }
+  
+  .noChallenges {
+    text-align: center;
+    padding: 40px 16px;
+    color: #806e61;
+  }
+  
+  .challengeCard {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      color: #171412;
+    }
+  
+    .info {
+      p {
+        color: #806e61;
+        margin: 8px 0;
+        font-size: 14px;
+      }
+    }
+  
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      
+      button {
+        flex: 1;
+        padding: 12px;
+        border-radius: 8px;
+        border: none;
+        font-size: 14px;
+        cursor: pointer;
+        background-color: #ebe8e5;
+        color: #171412;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        &:hover {
+          background-color: #e5e8eb;
+        }
+  
+        &.active {
+          background-color: #8a6e59;
+          color: #ffffff;
+        }
+  
+        .fishIcon {
+          margin-right: 8px;
+        }
+      }
+    }
+  }
+  
+  

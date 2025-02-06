@@ -18,6 +18,8 @@ import Progress from './features/challenge/components/challenge-card/Progress';
 import Challenge from './features/challenge/components/challenge-card/Challenge';
 import ConsumImage from './features/challenge/components/ocr/ConsumImage';
 import OcrComplete from './features/challenge/components/ocr/OcrComplete';
+import ChallengeDetail from './features/home/components/ChallengeDetail';
+import Home from './features/home/components/Home';
 
 const App: React.FC = () => {
   return (
@@ -25,26 +27,42 @@ const App: React.FC = () => {
       <Header />
       <div className="content">
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<HomePage />} >
+            <Route index element={<Home />} />
+            <Route path="challenge-detail/:id" element={<ChallengeDetail challenges={[]} />} />
+          </Route>
+
+
+
+
           <Route path="/login" element={<LoginPage />}>
-          {/* url 경로 : login/signup 이런식으로 바꾸려고 하위컴포넌트 경로 추가했습니다 
-                          다른것도 이런식으로 하위컴포넌트 방식으로 진행하는게 좋을것같습니다.
-          */}
             <Route index element={<LoginForm />} />
             <Route path="signup" element={<SignUpForm />} />
             <Route path="success" element={<SuccessForm />} />
             <Route path="password" element={<PasswordForm />} />
           </Route>
+
+
+
           <Route path="/challenge" element={<ChallengePage />}>
             <Route index element={<Challenge />} />
-            <Route path="progress" element={<Progress />}/>
+            <Route path="progress/:id" element={<Progress />}/>
             <Route path="ocr" element={<Ocr />} />
             <Route path="consum-image" element={<ConsumImage />} />
             <Route path="ocr-complete" element={<OcrComplete />} />
-          
           </Route>
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/follow" element={<FollowPage />} />
+
+
+
+          <Route path="/profile" element={<ProfilePage />} >
+          </Route>
+
+
+          <Route path="/follow" element={<FollowPage />} >
+          </Route>
+
+
+
           <Route path="*" element={<ErrorPage />} />
         </Routes>
       </div>
