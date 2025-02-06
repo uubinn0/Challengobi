@@ -1,0 +1,377 @@
+body {
+    font-family: 'SuseongHyejeong', sans-serif; /* 기본 폰트를 지정합니다 */
+}
+
+input, button, select {
+    font-family: 'SuseongHyejeong', sans-serif; /* 입력 칸, 버튼, 선택 박스에 폰트를 적용합니다 */
+}
+
+.signup-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    width: 100%;
+  }
+  
+  .signup-title {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+    width: 100%;
+    padding: 15px 0;
+    font-size: 1.5rem;
+  }
+  
+  .signup-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .signup-form h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #333;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #141412;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  .form-group input:focus {
+    outline: none;
+    border-color: #666;
+  }
+  
+  .submit-button {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #795548;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+  
+  .submit-button:hover {
+    background-color: #5d4037;
+  }
+.signup-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.signup-header h2 {
+  margin: 0;
+  padding: 15px 0;
+}
+
+.input-with-button {
+  display: flex;
+  gap: 10px;
+}
+
+.input-with-button input {
+  flex: 1;
+}
+
+.check-button, .verify-button {
+  padding: 8px 16px;
+  white-space: nowrap;
+  background-color: #6b4eff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* 인증완료와 중복확인 완료 상태일 때의 스타일 */
+.check-button:disabled, .verify-button:disabled,
+.check-button.completed, .verify-button.completed {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.calendar-wrapper {
+  width: 100%;
+  position: relative;
+}
+
+.custom-datepicker-input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #e1e1e1;
+  border-radius: 8px;
+  font-size: 15px;
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.custom-datepicker-input:hover {
+  border-color: #999;
+}
+
+.custom-datepicker-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+/* DatePicker 커스텀 스타일 */
+.react-datepicker {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+}
+
+.react-datepicker__header {
+  background-color: white;
+  border-bottom: 1px solid #f0f0f0;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  padding-top: 12px;
+}
+
+.react-datepicker__month-container {
+  background-color: white;
+  border-radius: 12px;
+}
+
+.react-datepicker__day {
+  width: 2rem;
+  line-height: 2rem;
+  margin: 0.2rem;
+  border-radius: 50%;
+}
+
+.react-datepicker__day:hover {
+  background-color: #f0f7ff;
+}
+
+.react-datepicker__day--selected {
+  background-color: #4a90e2 !important;
+  color: white !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: #4a90e2;
+  color: white;
+}
+
+.react-datepicker__year-dropdown,
+.react-datepicker__month-dropdown {
+  background-color: white;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.react-datepicker__year-option:hover,
+.react-datepicker__month-option:hover {
+  background-color: #f0f7ff;
+}
+
+.react-datepicker__navigation {
+  top: 12px;
+}
+
+.react-datepicker__current-month {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.react-datepicker__day-name {
+  color: #666;
+  width: 2rem;
+  margin: 0.2rem;
+}
+
+.custom-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: white;
+}
+
+.custom-header button {
+  border: none;
+  background-color: transparent;
+  padding: 8px;
+  cursor: pointer;
+  color: #666;
+  font-size: 16px;
+}
+
+.custom-header button:hover {
+  color: #4a90e2;
+}
+
+.custom-header button:disabled {
+  color: #ddd;
+  cursor: not-allowed;
+}
+
+.custom-header-select-wrapper {
+  display: flex;
+  gap: 8px;
+}
+
+.year-select,
+.month-select {
+  padding: 4px 8px;
+  border: 1px solid #e1e1e1;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: white;
+}
+
+.year-select:focus,
+.month-select:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+.year-select {
+  width: 90px;
+}
+
+.month-select {
+  width: 70px;
+}
+
+/* 입력 필드 읽기 전용 스타일 */
+.custom-datepicker-input {
+  background-color: white !important;
+  cursor: pointer !important;
+  user-select: none;
+}
+
+.custom-datepicker-input::selection {
+  background-color: transparent;
+}
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.popup-content h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+}
+
+.popup-content p {
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.popup-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.popup-button {
+  background-color: #f8f8f8;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.popup-button:hover {
+  background-color: #efefef;
+}
+
+.popup-button.selected {
+  background-color: #6b4eff;
+  color: white;
+}
+
+.popup-button.selected:hover {
+  background-color: #5a3dee;
+}
+
+.popup-action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cancel-button, .complete-button {
+  padding: 12px 30px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancel-button {
+  background-color: #f0f0f0;
+  color: #666;
+}
+
+.cancel-button:hover {
+  background-color: #e0e0e0;
+}
+
+.complete-button {
+  background-color: #6b4eff;
+  color: white;
+}
+
+.complete-button:hover {
+  background-color: #5a3dee;
+}
+
+.complete-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}

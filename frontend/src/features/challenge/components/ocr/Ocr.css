@@ -1,0 +1,279 @@
+.receipt-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f5f5f5;
+    min-height: 100vh;
+}
+
+.header-box {
+    background-color: #8B7355;
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.header-box h1 {
+    margin: 0;
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.header-box p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.ocr-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+    padding: 20px;
+    max-width: 360px;
+    margin: 0 auto;
+    margin-top: 40px;
+}
+
+.title-box {
+    background-color: #8B7355;
+    color: white;
+    padding: 18px;
+    border-radius: 10px;
+    width: 360px;
+    text-align: center;
+}
+
+.title-box h2 {
+    margin: 0;
+    font-size: 20px;
+    color: white;
+}
+
+.title-box p {
+    margin: 8px 0 0 0;
+    font-size: 15px;
+    color: #000000;
+}
+
+.button-container {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    width: 100%;
+    height: auto;
+    padding: 20px;
+}
+
+.submit-button {
+    width: 50%;
+    height: 180px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    padding: 20px;
+}
+
+.submit-button:hover {
+    background-color: #76614a;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+.submit-action-button,
+.no-spend-button {
+    width: 360px;
+    padding: 18px;
+    background-color: #8B7355;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+.submit-action-button:hover,
+.no-spend-button:hover {
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.button-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100px;
+    gap: 10px;
+    font-size: 18px;
+    color: #333;
+}
+
+.camera-icon img {
+    width: 28px;
+    height: 28px;
+    vertical-align: middle;
+}
+
+/* 폰트 설정 */
+* {
+    font-family: 'SuseongHyejeong', sans-serif;
+}
+
+/* 공통 모달 스타일 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* 소비하지 않았어요 모달 스타일 */
+.no-spend-modal {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 400px;
+}
+
+.no-spend-modal .modal-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.no-spend-modal .modal-message {
+    font-size: 14px;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #666;
+}
+
+.no-spend-modal .modal-input-container {
+    margin-bottom: 20px;
+}
+
+.no-spend-modal .modal-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+/* 금액 입력 모달 스타일 */
+.amount-modal {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 400px;
+}
+
+.amount-modal .modal-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.amount-modal .modal-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    text-align: center;
+}
+
+/* 모달 버튼 스타일 */
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.modal-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.modal-cancel {
+    background-color: #f0f0f0;
+    color: #666;
+}
+
+.modal-confirm {
+    background-color: #8B4513;
+    color: white;
+}
+
+.modal-confirm:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* 금액 정보 표시 스타일 */
+.amount-info {
+    background-color: #f5f5f5;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.amount-info p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.text-overlay {
+    display: flex;
+    gap: 0;
+}
+
+.char-container {
+    position: relative;
+    display: inline-block;
+    margin-right: 2px;
+}
+
+.char-container.space {
+    margin-right: 8px;
+}
+
+.typed-char, .guide-char {
+    white-space: pre;
+}
+
+.typed-char {
+    color: #000;
+}
+
+.guide-char {
+    color: #999;
+}
+
+.modal-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* 입력창 포커스 시 스타일 */
+.modal-input:focus {
+    outline: none;
+    border-color: #8B7355;
+}
