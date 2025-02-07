@@ -4,30 +4,32 @@ import './SignUpForm.css';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { ko } from 'date-fns/locale';
+import KeywordSelect from '../../../components/modals/KeywordSelect';
 
 interface FormData {
   email: string;
+  userId: string;
   password: string;
   confirmPassword: string;
   name: string;
   nickname: string;
   gender: string;
-  phone: string;
-  birthDate: Date;
+  birthDate: Date | null;
   occupation: string;
 }
 
 const SignUpForm: React.FC = () => {
   const navigate = useNavigate();
+  const [showKeywordPopup, setShowKeywordPopup] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormData>({
     email: '',
+    userId: '',
     password: '',
     confirmPassword: '',
     name: '',
     nickname: '',
     gender: '',
-    phone: '',
-    birthDate: new Date(),
+    birthDate: null,
     occupation: ''
   });
   
@@ -35,9 +37,7 @@ const SignUpForm: React.FC = () => {
   const [verificationCode, setVerificationCode] = useState<string>('');
   const [isVerified, setIsVerified] = useState<boolean>(false);
   const [isDuplicateChecked, setIsDuplicateChecked] = useState<boolean>(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
-  const [showPopup, setShowPopup] = useState<boolean>(false);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [isUserIdDuplicateChecked, setIsUserIdDuplicateChecked] = useState<boolean>(false);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
     const { name, value } = e.target;
@@ -45,14 +45,17 @@ const SignUpForm: React.FC = () => {
       ...prev,
       [name]: value
     }));
-    if (name === 'email' || name === 'nickname') {
+    if (name === 'email' || name === 'nickname' || name === 'userId') {
       setIsDuplicateChecked(false);
+      if (name === 'userId') {
+        setIsUserIdDuplicateChecked(false);
+      }
     }
   };
   
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-    setShowPopup(true);
+    setShowKeywordPopup(true);
   };
 
   const handleLogin = (): void => {
@@ -75,43 +78,19 @@ const SignUpForm: React.FC = () => {
   };
 
   const handleDateChange = (date: Date | null): void => {
-    if (date) {
-      setFormData(prev => ({
-        ...prev,
-        birthDate: date
-      }));
-    }
-    setIsCalendarOpen(false);
-  };
-
-  const handleCalendarClick = (e: MouseEvent<HTMLInputElement>): void => {
-    e.preventDefault();
-    setIsCalendarOpen(true);
-  };
-
-  const handleCategoryClick = (category: string): void => {
-    setSelectedCategories(prev => {
-      if (prev.includes(category)) {
-        return prev.filter(item => item !== category);
-      } else {
-        return [...prev, category];
-      }
-    });
-  };
-
-  const handleCancel = (): void => {
-    setShowPopup(false);
-    setSelectedCategories([]);
-  };
-
-  const handleComplete = (): void => {
-    if (selectedCategories.length > 0) {
-      navigate('/login/success');
-    }
+    setFormData(prev => ({
+      ...prev,
+      birthDate: date
+    }));
   };
 
   const handleVerificationCodeChange = (e: ChangeEvent<HTMLInputElement>): void => {
     setVerificationCode(e.target.value);
+  };
+
+  const handleUserIdDuplicateCheck = (e: MouseEvent<HTMLButtonElement>): void => {
+    e.preventDefault();
+    setIsUserIdDuplicateChecked(true);
   };
 
   return (
@@ -129,14 +108,15 @@ const SignUpForm: React.FC = () => {
                 onChange={handleChange}
                 placeholder="이메일을 입력하세요"
               />
-              <button 
-                type="button" 
-                onClick={showVerification ? handleVerify : handleSendVerification}
-                className="verify-button"
-                disabled={isVerified}
-              >
-                {isVerified ? '인증완료' : (showVerification ? '인증하기' : '인증번호 발송')}
-              </button>
+              {!showVerification && !isVerified && (
+                <button 
+                  type="button" 
+                  onClick={handleSendVerification}
+                  className="verify-button"
+                >
+                  인증번호 발송
+                </button>
+              )}
             </div>
           </div>
 
@@ -151,9 +131,38 @@ const SignUpForm: React.FC = () => {
                   placeholder="인증번호를 입력하세요"
                   disabled={isVerified}
                 />
+                <button 
+                  type="button" 
+                  onClick={handleVerify}
+                  className="verify-button"
+                  disabled={isVerified}
+                >
+                  {isVerified ? '인증완료' : '인증하기'}
+                </button>
               </div>
             </div>
           )}
+
+          <div className="form-group">
+            <label>아이디</label>
+            <div className="input-with-button">
+              <input
+                type="text"
+                name="userId"
+                value={formData.userId}
+                onChange={handleChange}
+                placeholder="아이디를 입력하세요"
+              />
+              <button 
+                type="button" 
+                onClick={handleUserIdDuplicateCheck}
+                className="check-button"
+                disabled={isUserIdDuplicateChecked}
+              >
+                {isUserIdDuplicateChecked ? '중복확인 완료' : '중복확인'}
+              </button>
+            </div>
+          </div>
 
           <div className="form-group">
             <label>비밀번호</label>
@@ -211,26 +220,22 @@ const SignUpForm: React.FC = () => {
 
           <div className="form-group">
             <label>성별</label>
-            <select
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-            >
-              <option value="">성별을 선택하세요</option>
-              <option value="male">남성</option>
-              <option value="female">여성</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>휴대폰번호</label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="휴대폰번호를 입력하세요"
-            />
+            <div className="gender-buttons">
+              <button
+                type="button"
+                className={`gender-button ${formData.gender === '남' ? 'selected' : ''}`}
+                onClick={() => setFormData({ ...formData, gender: '남' })}
+              >
+                남
+              </button>
+              <button
+                type="button"
+                className={`gender-button ${formData.gender === '여' ? 'selected' : ''}`}
+                onClick={() => setFormData({ ...formData, gender: '여' })}
+              >
+                여
+              </button>
+            </div>
           </div>
 
           <div className="form-group">
@@ -240,26 +245,70 @@ const SignUpForm: React.FC = () => {
                 selected={formData.birthDate}
                 onChange={handleDateChange}
                 dateFormat="yyyy년 MM월 dd일"
-                className="date-picker"
-                showYearDropdown
+                className="date-input"
+                locale={ko}
                 showMonthDropdown
+                showYearDropdown
                 dropdownMode="select"
-                placeholderText="생년월일을 선택하세요"
+                maxDate={new Date()}
                 yearDropdownItemNumber={100}
                 scrollableYearDropdown
-                locale={ko}
-                maxDate={new Date()}
-                minDate={new Date('1900-01-01')}
-                open={isCalendarOpen}
-                onClickOutside={() => setIsCalendarOpen(false)}
+                renderCustomHeader={({
+                  date,
+                  changeYear,
+                  changeMonth,
+                }) => (
+                  <div 
+                    className="react-datepicker__header__dropdown"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="react-datepicker__year-dropdown-container">
+                      <select
+                        value={date.getFullYear()}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          changeYear(Number(e.target.value));
+                        }}
+                        className="react-datepicker__year-select"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {Array.from({ length: 100 }, (_, i) => (
+                          <option key={i} value={new Date().getFullYear() - i}>
+                            {new Date().getFullYear() - i}년
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <select
+                        value={date.getMonth()}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          changeMonth(Number(e.target.value));
+                        }}
+                        className="react-datepicker__month-select"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <option key={i} value={i}>
+                            {i + 1}월
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
                 customInput={
                   <input
-                    type="text"
-                    className="custom-datepicker-input"
-                    onClick={handleCalendarClick}
-                    onKeyDown={(e) => e.preventDefault()}
+                    className="date-input"
+                    value={formData.birthDate ? formData.birthDate.toLocaleDateString('ko-KR', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit'
+                    }) : ''}
                     readOnly
-                    autoComplete="off"
+                    placeholder="생년월일을 선택하세요"
+                    onClick={(e) => e.stopPropagation()}
                   />
                 }
               />
@@ -282,55 +331,30 @@ const SignUpForm: React.FC = () => {
           </div>
 
           <button type="submit" className="submit-button">
-            가입하기
+            회원가입하기
           </button>
 
-          <button
-            type="button"
-            className="login-link-button"
-            onClick={handleLogin}
-          >
-            로그인하러가기
-          </button>
+          <div className="login-link-wrapper">
+            <span className="login-question">이미 계정이 있으신가요?</span>
+            <button
+              type="button"
+              className="login-link-button"
+              onClick={handleLogin}
+            >
+              로그인하러가기
+            </button>
+          </div>
         </form>
       </div>
 
-      {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup-content">
-            <h3>가입이 다 됐어요!</h3>
-            <p>어떤 소식을 들려고 왔나요?</p>
-            <div className="popup-buttons">
-              {[
-                '외식', '장보기', '카페/디저트',
-                '교통', '문화생활', '쇼핑',
-                '취미/여가', '술/담배', '기타'
-              ].map((category) => (
-                <button
-                  key={category}
-                  className={`popup-button ${selectedCategories.includes(category) ? 'selected' : ''}`}
-                  onClick={() => handleCategoryClick(category)}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-            <div className="popup-action-buttons">
-              <button className="cancel-button" onClick={handleCancel}>
-                취소
-              </button>
-              <button 
-                type='submit'
-                className="complete-button" 
-                onClick={handleComplete}
-                disabled={selectedCategories.length === 0}
-              >
-                완료
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <KeywordSelect 
+        isOpen={showKeywordPopup}
+        onClose={() => setShowKeywordPopup(false)}
+        onComplete={() => {
+          setShowKeywordPopup(false);
+          navigate('/login/success');
+        }}
+      />
     </div>
   );
 };

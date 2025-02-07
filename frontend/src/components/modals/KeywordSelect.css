@@ -1,0 +1,104 @@
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup-content {
+    background-color: #EBE8E5;
+    padding: 2rem;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.popup-content h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+}
+
+.popup-content p {
+    color: #666;
+    margin-bottom: 1.5rem;
+}
+
+.popup-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.popup-button {
+    background-color: #d5c5b3;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #FFFFFF;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.popup-button:hover {
+    background-color: #8A6E59;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.popup-button.selected {
+    background-color: #8A6E59;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.popup-button.selected:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+}
+
+.popup-action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.cancel-button, .complete-button {
+    padding: 12px 30px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cancel-button {
+    background-color: #f0f0f0;
+    color: #666;
+}
+
+.cancel-button:hover {
+    background-color: #e0e0e0;
+}
+
+.complete-button {
+    background-color: #8A6E59;
+    color: white;
+}
+
+.complete-button:hover {
+    background-color: #725a49;
+}
+
+.complete-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}

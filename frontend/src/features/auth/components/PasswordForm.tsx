@@ -4,13 +4,10 @@ import "./PasswordForm.css";
 
 const PasswordForm: React.FC = () => {
     const navigate = useNavigate();
+    const [email, setEmail] = useState<string>('');
     const [showVerification, setShowVerification] = useState<boolean>(false);
     const [verificationCode, setVerificationCode] = useState<string>('');
     const [isVerified, setIsVerified] = useState<boolean>(false);
-
-    const handleLogin = (): void => {
-      navigate('/login');
-    };
 
     const handleSendVerification = (): void => {
         setShowVerification(true);
@@ -20,35 +17,56 @@ const PasswordForm: React.FC = () => {
         setIsVerified(true);
     };
 
+    const handleLogin = (): void => {
+        navigate('/login');
+    };
+
     return (
       <div className="password-reset-container">
         <h2>비밀번호 재설정</h2>
         <div className="input-group">
           <label>이메일</label>
-          <input type="email" placeholder="가입한 이메일을 입력하세요" />
+          <div className="input-with-button">
+            <input 
+              type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="가입한 이메일을 입력하세요" 
+            />
+            {!showVerification && (
+              <button 
+                type="button"
+                className="verify-button"
+                onClick={handleSendVerification}
+              >
+                인증번호 발송
+              </button>
+            )}
+          </div>
           
           {showVerification && (
-          <div className="input-group">
-            <label>인증번호</label>
-            <input
-              type="text"
-              value={verificationCode}
-              onChange={(e) => setVerificationCode(e.target.value)}
-              placeholder="인증번호를 입력하세요"
-              disabled={isVerified}
-            />
-          </div>
-        )}
-          <button 
-            className="verify-button"
-            onClick={showVerification ? handleVerify : handleSendVerification}
-            disabled={isVerified}
-          >
-            {isVerified ? '인증완료' : (showVerification ? '인증하기' : '인증번호 발송')}
-          </button>
+            <div className="input-group verification-section">
+              <label>인증번호</label>
+              <div className="input-with-button">
+                <input
+                  type="text"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  placeholder="인증번호를 입력하세요"
+                  disabled={isVerified}
+                />
+                <button 
+                  type="button"
+                  className="verify-button"
+                  onClick={handleVerify}
+                  disabled={isVerified}
+                >
+                  {isVerified ? '인증완료' : '인증하기'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-
-        
 
         <div className="input-group">
           <label>비밀번호</label>
