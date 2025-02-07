@@ -56,7 +56,8 @@ const OngoingChallengeList: React.FC<OngoingChallengeListProps> = ({ challenges 
   }
 
   const handleChallengeClick = (challengeId: number) => {
-    navigate(`/challenge/${challengeId}`)
+    //일단 해봄 된다 
+    navigate(`/ongoing-challenge/${challengeId}`)
   }
 
   if (challenges.length === 0) {
