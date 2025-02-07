@@ -1,0 +1,124 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.amount-modal {
+    background-color: #EBE8E5;
+    padding: 30px;
+    border-radius: 10px;
+    width: 400px;
+    height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.modal-title {
+    color: #000000;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.modal-input-container {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    text-align: center;
+    box-sizing: border-box;
+    padding-right: 30px;
+}
+
+.modal-input::placeholder {
+    text-align: center;
+}
+
+.currency-unit {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+    font-size: 16px;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.modal-input:not(:placeholder-shown) + .currency-unit {
+    opacity: 1;
+}
+
+.korean-amount {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    color: #666;
+    font-size: 13px;
+    height: 16px;
+    top: 100%;
+    margin-top: 5px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.korean-amount:not(:empty) {
+    opacity: 1;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 70px;
+    margin-top: auto;
+}
+
+.modal-button {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.modal-cancel {
+    background-color: #8A6E59;
+    color: white;
+}
+
+.modal-confirm {
+    background-color: #8A6E59;
+    color: white;
+}
+
+.modal-confirm:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.modal-input:focus {
+    outline: none;
+    border-color: #8B7355;
+}

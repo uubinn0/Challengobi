@@ -6,7 +6,7 @@ const OcrComplete = () => {
   const navigate = useNavigate();
 
   const handleHomeClick = () => {
-    navigate('/challenge/progress');
+    navigate('/challenge/progress/1');
   };
 
   return (
