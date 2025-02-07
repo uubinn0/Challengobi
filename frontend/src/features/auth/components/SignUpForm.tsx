@@ -302,9 +302,9 @@ const SignUpForm: React.FC = () => {
             <p>어떤 소식을 들려고 왔나요?</p>
             <div className="popup-buttons">
               {[
-                '연애', '일상', 'MBTI/심리',
-                '국내', '글로벌', '음식',
-                '취미/여가', '문화/예술', '기타'
+                '외식', '장보기', '카페/디저트',
+                '교통', '문화생활', '쇼핑',
+                '취미/여가', '술/담배', '기타'
               ].map((category) => (
                 <button
                   key={category}
