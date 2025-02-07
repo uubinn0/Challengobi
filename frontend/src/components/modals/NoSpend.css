@@ -1,0 +1,142 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.no-spend-modal {
+    background-color: #EBE8E5;
+    padding: 40px;
+    border-radius: 10px;
+    height: 180px;
+    width: 400px;
+}
+
+.modal-title {
+    color: #FF0004 !important;
+    font-size: 20px !important;
+    font-weight: bold;
+    text-align: center;
+}
+
+.modal-message {
+    font-size: 14px;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #666;
+}
+
+.modal-input-container {
+    position: relative;
+    margin-bottom: 30px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.modal-input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: -1px;
+    font-family: inherit;
+    height: 40px;
+    text-align: center;
+    color: black;
+    background-color: white;
+    caret-color: black;
+    position: relative;
+    z-index: 1;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 70px; /* 취소확인 간격 조정 */
+    margin-top: 20px;
+}
+
+.modal-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.modal-cancel {
+    background-color: #8A6E59;
+    color: white;
+}
+
+.modal-confirm {
+    background-color: #8A6E59;
+    color: white;
+}
+
+.modal-confirm:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.text-overlay {
+    display: flex;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: -1px;
+    pointer-events: none;
+    font-family: inherit;
+    white-space: nowrap;
+    color: #999;
+    z-index: 2;
+}
+
+.char-container {
+    position: relative;
+    display: inline-block;
+    width: 0.7em;
+    text-align: center;
+    height: 1.5em;
+    line-height: 1.5;
+}
+
+.typed-char, .guide-char {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.typed-char {
+    color: transparent;
+}
+
+.guide-char {
+    color: #999;
+}
+
+.modal-input:focus {
+    outline: none;
+    border-color: #8B7355;
+}
