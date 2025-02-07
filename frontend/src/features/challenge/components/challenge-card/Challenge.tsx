@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Pencil, Lock } from "lucide-react"
 import styles from "./Challenge.module.scss"
 import AddModal from "../../../../components/modals/AddModal"
+import ChallengeDetailModal from "../../../../components/modals/ChallengeDetailModal"
 import { useNavigate } from "react-router-dom"
 
 interface Challenge {
@@ -10,12 +11,17 @@ interface Challenge {
   category: string
   period: string
   amount: string
-  participants: number
+  currentMembers: number
+  maxMembers: number
+  likes: number
+  wants: number
+  description?: string
   isLocked?: boolean
 }
 
 export default function ChallengePage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null)
   const navigate = useNavigate()
 
   const ongoingChallenges: Challenge[] = [
@@ -25,7 +31,10 @@ export default function ChallengePage() {
       category: "술/담배",
       period: "1월 1일 - 1월 28일",
       amount: "20,000원",
-      participants: 35,
+      currentMembers: 3,
+      maxMembers: 5,
+      likes: 35,
+      wants: 20,
       isLocked: true,
     },
     {
@@ -34,7 +43,10 @@ export default function ChallengePage() {
       category: "장보기",
       period: "1월 1일 - 1월 7일",
       amount: "100,000원",
-      participants: 3,
+      currentMembers: 3,
+      maxMembers: 5,
+      likes: 3,
+      wants: 2,
     },
     // Add more challenges to test scrolling
     {
@@ -43,7 +55,10 @@ export default function ChallengePage() {
       category: "카페/디저트",
       period: "2월 1일 - 2월 28일",
       amount: "30,000원",
-      participants: 20,
+      currentMembers: 20,
+      maxMembers: 20,
+      likes: 20,
+      wants: 20,
     },
   ]
 
@@ -54,7 +69,10 @@ export default function ChallengePage() {
       category: "외식",
       period: "1월 1일 - 1월 7일",
       amount: "100,000원",
-      participants: 3,
+      currentMembers: 3,
+      maxMembers: 5,
+      likes: 10,
+      wants: 5,
       isLocked: true,
     },
     {
@@ -63,7 +81,10 @@ export default function ChallengePage() {
       category: "교통",
       period: "1월 1일 - 1월 28일",
       amount: "30,000원",
-      participants: 7,
+      currentMembers: 7,
+      maxMembers: 7,
+      likes: 7,
+      wants: 7,
     },
     // Add more challenges to test scrolling
     {
@@ -72,12 +93,19 @@ export default function ChallengePage() {
       category: "문화생활",
       period: "2월 1일 - 2월 28일",
       amount: "50,000원",
-      participants: 15,
+      currentMembers: 15,
+      maxMembers: 15,
+      likes: 15,
+      wants: 15,
     },
   ]
 
-  const handleChallengeClick = (challengeId: number) => {
-    navigate(`/challenge/progress/${challengeId}`)
+  const handleChallengeClick = (challenge: Challenge, isOngoing: boolean) => {
+    if (isOngoing) {
+      navigate(`/challenge/progress/${challenge.id}`)
+    } else {
+      setSelectedChallenge(challenge)
+    }
   }
 
   return (
@@ -95,7 +123,7 @@ export default function ChallengePage() {
               <div 
                 key={challenge.id} 
                 className={styles.challengeCard}
-                onClick={() => handleChallengeClick(challenge.id)}
+                onClick={() => handleChallengeClick(challenge, true)}
                 style={{ cursor: 'pointer' }}
               >
                 <div className={styles.cardHeader}>
@@ -106,7 +134,7 @@ export default function ChallengePage() {
                   <p>카테고리 : {challenge.category}</p>
                   <p>챌린지 기간 : {challenge.period}</p>
                   <p>챌린지 금액 : {challenge.amount}</p>
-                  <p>챌린지 인원 : {challenge.participants}명</p>
+                  <p>챌린지 인원 : {challenge.currentMembers}명 / {challenge.maxMembers}명</p>
                 </div>
               </div>
             ))}
@@ -119,7 +147,12 @@ export default function ChallengePage() {
         <div className={styles.challengeScrollContainer}>
           <div className={styles.challengeScroll}>
             {recruitingChallenges.map((challenge) => (
-              <div key={challenge.id} className={styles.challengeCard}>
+              <div 
+                key={challenge.id} 
+                className={styles.challengeCard}
+                onClick={() => handleChallengeClick(challenge, false)}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className={styles.cardHeader}>
                   <h3 className={styles.cardTitle}>{challenge.title}</h3>
                   {challenge.isLocked && <Lock size={16} />}
@@ -128,7 +161,7 @@ export default function ChallengePage() {
                   <p>카테고리 : {challenge.category}</p>
                   <p>챌린지 기간 : {challenge.period}</p>
                   <p>챌린지 금액 : {challenge.amount}</p>
-                  <p>챌린지 인원 : {challenge.participants}명</p>
+                  <p>챌린지 인원 : {challenge.currentMembers}명 / {challenge.maxMembers}명</p>
                 </div>
               </div>
             ))}
@@ -136,6 +169,13 @@ export default function ChallengePage() {
         </div>
       </section>
 
+      {selectedChallenge && (
+        <ChallengeDetailModal
+          isOpen={!!selectedChallenge}
+          onClose={() => setSelectedChallenge(null)}
+          challenge={selectedChallenge}
+        />
+      )}
       <AddModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   )

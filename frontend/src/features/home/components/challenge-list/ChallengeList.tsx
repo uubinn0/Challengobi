@@ -32,7 +32,8 @@ const ChallengeList: React.FC<ChallengeListProps> = ({ challenges }) => {
   )
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null)
 
-  const handleLike = (challengeId: number) => {
+  const handleLike = (challengeId: number, e: React.MouseEvent) => {
+    e.stopPropagation()
     setLikeStates((prev) => ({
       ...prev,
       [challengeId]: !prev[challengeId],
@@ -43,7 +44,8 @@ const ChallengeList: React.FC<ChallengeListProps> = ({ challenges }) => {
     }))
   }
 
-  const handleWant = (challengeId: number) => {
+  const handleWant = (challengeId: number, e: React.MouseEvent) => {
+    e.stopPropagation()
     setWantStates((prev) => ({
       ...prev,
       [challengeId]: !prev[challengeId],
@@ -87,20 +89,14 @@ const ChallengeList: React.FC<ChallengeListProps> = ({ challenges }) => {
             <div className={styles.actions}>
               <button
                 className={`${styles.likeButton} ${likeStates[challenge.id] ? styles.active : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleLike(challenge.id)
-                }}
+                onClick={(e) => handleLike(challenge.id, e)}
               >
                 <SupportFish className={styles.fishIcon} />
                 응원하기 {likeCounts[challenge.id]}
               </button>
               <button
                 className={`${styles.wantButton} ${wantStates[challenge.id] ? styles.active : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleWant(challenge.id)
-                }}
+                onClick={(e) => handleWant(challenge.id, e)}
               >
                 <WantFish className={styles.fishIcon} />
                 하고싶어요 {wantCounts[challenge.id]}
