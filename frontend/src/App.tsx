@@ -21,6 +21,7 @@ import OcrComplete from './features/challenge/components/ocr/OcrComplete';
 import ChallengeDetail from './features/home/components/ChallengeDetail';
 import Home from './features/home/components/Home';
 
+
 const App: React.FC = () => {
   return (
     <>
@@ -30,6 +31,8 @@ const App: React.FC = () => {
           <Route path="/" element={<HomePage />} >
             <Route index element={<Home />} />
             <Route path="challenge-detail/:id" element={<ChallengeDetail challenges={[]} />} />
+             {/* 라우트 추가 홈화면에서 진행 챌린지 */}
+            <Route path="ongoing-challenge/:id" element={<Progress />} />
           </Route>
 
 
@@ -62,7 +65,7 @@ const App: React.FC = () => {
           </Route>
 
 
-
+ 
           <Route path="*" element={<ErrorPage />} />
         </Routes>
       </div>
