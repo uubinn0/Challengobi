@@ -12,56 +12,61 @@ input, button, select {
     align-items: center;
     padding: 20px;
     width: 100%;
-  }
+}
   
-  .signup-title {
+.signup-title {
     text-align: center;
     color: #333;
     margin-bottom: 30px;
     width: 100%;
     padding: 15px 0;
     font-size: 1.5rem;
-  }
+}
   
-  .signup-form {
+.signup-form {
     background: white;
     padding: 2rem;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 400px;
-  }
+}
   
-  .signup-form h2 {
-    text-align: center;
-    margin-bottom: 2rem;
-    color: #333;
-  }
-  
-  .form-group {
+.form-group {
     margin-bottom: 1rem;
-  }
+    position: relative;
+    width: 100%;
+    max-width: 400px;  /* 최대 너비 설정 */
+    margin-left: auto;  /* 가운데 정렬을 위한 마진 */
+    margin-right: auto;  /* 가운데 정렬을 위한 마진 */
+}
   
-  .form-group label {
+.form-group label {
     display: block;
     margin-bottom: 0.5rem;
     color: #141412;
-  }
+    text-align: left;
+    padding-left: 0.25rem;
+}
   
-  .form-group input {
+.form-group input,
+.form-group select,
+.date-input,
+.custom-datepicker-input {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 1rem;
-  }
+    box-sizing: border-box;  /* padding이 width에 포함되도록 설정 */
+}
   
-  .form-group input:focus {
+.form-group input:focus {
     outline: none;
     border-color: #666;
-  }
+}
   
-  .submit-button {
+.submit-button {
     width: 100%;
     padding: 0.75rem;
     background-color: #795548;
@@ -71,11 +76,49 @@ input, button, select {
     font-size: 1rem;
     cursor: pointer;
     margin-top: 1rem;
-  }
+}
   
-  .submit-button:hover {
+.submit-button:hover {
     background-color: #5d4037;
-  }
+}
+
+.input-with-button {
+    position: relative;
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.input-with-button input {
+    flex: 1;
+    margin-bottom: 0;  /* 기존 마진 제거 */
+}
+
+.verify-button, .check-button {
+    width: 30% !important;
+    display: inline-block !important;
+    padding: 0.75rem;
+    margin-top: 0 !important;
+    margin-left: 8px !important;
+    background-color: #8A6E59 !important;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.check-button:hover{
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+}
+
+.verify-button:disabled, .check-button:disabled {
+    background-color: #cccccc !important;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
 .signup-header {
   text-align: center;
   margin-bottom: 20px;
@@ -86,128 +129,81 @@ input, button, select {
   padding: 15px 0;
 }
 
-.input-with-button {
-  display: flex;
-  gap: 10px;
-}
-
-.input-with-button input {
-  flex: 1;
-}
-
-.check-button, .verify-button {
-  padding: 8px 16px;
-  white-space: nowrap;
-  background-color: #6b4eff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-/* 인증완료와 중복확인 완료 상태일 때의 스타일 */
-.check-button:disabled, .verify-button:disabled,
-.check-button.completed, .verify-button.completed {
-  background-color: #cccccc;
-  cursor: not-allowed;
-  opacity: 0.8;
-}
-
-.calendar-wrapper {
-  width: 100%;
-  position: relative;
-}
-
 .custom-datepicker-input {
-  width: 100%;
-  padding: 12px 15px;
-  border: 1px solid #e1e1e1;
-  border-radius: 8px;
-  font-size: 15px;
-  background-color: white;
-  cursor: pointer;
-  transition: border-color 0.2s ease;
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    background-color: white !important;
+    cursor: pointer !important;
+    user-select: none;
 }
 
-.custom-datepicker-input:hover {
-  border-color: #999;
-}
-
-.custom-datepicker-input:focus {
-  outline: none;
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+.custom-datepicker-input::selection {
+    background-color: transparent;
 }
 
 /* DatePicker 커스텀 스타일 */
 .react-datepicker {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  border: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-radius: 12px;
+    font-family: inherit;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.react-datepicker__header {
-  background-color: white;
-  border-bottom: 1px solid #f0f0f0;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-  padding-top: 12px;
+.react-datepicker__month {
+    margin: 0;
+    padding: 0.4rem 0;
+    height: 20rem;  /* 달력 높이 고정 */
 }
 
 .react-datepicker__month-container {
-  background-color: white;
-  border-radius: 12px;
+    float: none;  /* 기본 float 제거 */
+    width: 280px;  /* 달력 너비 고정 */
+}
+
+.react-datepicker__week {
+    height: 3rem;  /* 각 주의 높이 고정 */
+    display: flex;
+    align-items: center;
 }
 
 .react-datepicker__day {
-  width: 2rem;
-  line-height: 2rem;
-  margin: 0.2rem;
-  border-radius: 50%;
+    margin: 0;
+    width: 40px;  /* 날짜 너비 고정 */
+    height: 40px;  /* 날짜 높이 고정 */
+    line-height: 40px;  /* 세로 중앙 정렬 */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.react-datepicker__day:hover {
-  background-color: #f0f7ff;
-}
-
-.react-datepicker__day--selected {
-  background-color: #4a90e2 !important;
-  color: white !important;
-}
-
-.react-datepicker__day--keyboard-selected {
-  background-color: #4a90e2;
-  color: white;
-}
-
-.react-datepicker__year-dropdown,
-.react-datepicker__month-dropdown {
-  background-color: white;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.react-datepicker__year-option:hover,
-.react-datepicker__month-option:hover {
-  background-color: #f0f7ff;
+.react-datepicker__header {
+    background-color: white;
+    border-bottom: 1px solid #ddd;
+    padding: 1rem 0;
+    height: 4.5rem;  /* 헤더 높이 고정 */
+    box-sizing: border-box;
 }
 
 .react-datepicker__navigation {
-  top: 12px;
+    top: 1.5rem;  /* 네비게이션 버튼 위치 고정 */
 }
 
-.react-datepicker__current-month {
-  font-size: 1rem;
-  color: #333;
-  margin-bottom: 10px;
+.react-datepicker__day-names {
+    margin-bottom: 0.4rem;
 }
 
 .react-datepicker__day-name {
-  color: #666;
-  width: 2rem;
-  margin: 0.2rem;
+    width: 40px;  /* 요일명 너비 고정 */
+    height: 40px;  /* 요일명 높이 고정 */
+    line-height: 40px;  /* 세로 중앙 정렬 */
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .custom-header {
@@ -265,113 +261,291 @@ input, button, select {
   width: 70px;
 }
 
-/* 입력 필드 읽기 전용 스타일 */
-.custom-datepicker-input {
-  background-color: white !important;
-  cursor: pointer !important;
-  user-select: none;
+.login-link-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 0.5rem;
 }
 
-.custom-datepicker-input::selection {
-  background-color: transparent;
+.login-question {
+    color: #666;
+    font-size: 0.9rem;
 }
 
-.popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+.login-link-button {
+    background: none;
+    border: none;
+    color: #333;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
 }
 
-.popup-content {
-  background-color: white;
-  padding: 2rem;
-  border-radius: 15px;
-  width: 90%;
-  max-width: 400px;
-  text-align: center;
+.login-link-button:hover {
+    color: #000;
 }
 
-.popup-content h3 {
-  margin-bottom: 0.5rem;
-  font-size: 1.2rem;
+.gender-buttons {
+    display: flex;
+    width: 100%;
 }
 
-.popup-content p {
-  color: #666;
-  margin-bottom: 1.5rem;
+.gender-button {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    background-color: white;
+    color: #666;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s ease;
 }
 
-.popup-buttons {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+/* 왼쪽 버튼 스타일 */
+.gender-button:first-child {
+    border-radius: 4px 0 0 4px;
+    border-right: none;
 }
 
-.popup-button {
-  background-color: #f8f8f8;
-  border: none;
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  color: #333;
+/* 오른쪽 버튼 스타일 */
+.gender-button:last-child {
+    border-radius: 0 4px 4px 0;
 }
 
-.popup-button:hover {
-  background-color: #efefef;
+.gender-button.selected {
+    background-color: #8A6E59;
+    color: white;
+    border-color: #8A6E59;
+    z-index: 1;
 }
 
-.popup-button.selected {
-  background-color: #6b4eff;
-  color: white;
+.gender-button:hover:not(.selected) {
+    border-color: #8A6E59;
+    color: #8A6E59;
 }
 
-.popup-button.selected:hover {
-  background-color: #5a3dee;
+.calendar-wrapper {
+    position: relative;
+    width: 100%;
 }
 
-.popup-action-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 20px;
+.date-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    background-color: white;
+    cursor: pointer;
 }
 
-.cancel-button, .complete-button {
-  padding: 12px 30px;
-  border-radius: 8px;
-  border: none;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
+/* DatePicker 커스텀 스타일 */
+.react-datepicker {
+    font-family: inherit;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.cancel-button {
-  background-color: #f0f0f0;
-  color: #666;
+.react-datepicker__header {
+    background-color: white;
+    border-bottom: 1px solid #ddd;
+    padding: 8px 0;
 }
 
-.cancel-button:hover {
-  background-color: #e0e0e0;
+.react-datepicker__current-month {
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 8px;
 }
 
-.complete-button {
-  background-color: #6b4eff;
-  color: white;
+.react-datepicker__day-name {
+    color: #666;
 }
 
-.complete-button:hover {
-  background-color: #5a3dee;
+.react-datepicker__day {
+    color: #333;
+    width: 2rem;
+    line-height: 2rem;
+    margin: 0.2rem;
 }
 
-.complete-button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
+.react-datepicker__day:hover {
+    background-color: #f0f0f0;
+    border-radius: 50%;
+}
+
+.react-datepicker__day--selected {
+    background-color: #8A6E59 !important;
+    color: white !important;
+    border-radius: 50%;
+}
+
+.react-datepicker__day--keyboard-selected {
+    background-color: #8A6E59;
+    color: white;
+    border-radius: 50%;
+}
+
+.react-datepicker__navigation {
+    top: 1rem;
+}
+
+.react-datepicker__navigation--previous,
+.react-datepicker__navigation--next {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 12px;
+    transition: color 0.2s;
+    position: static;  /* position 속성 수정 */
+    transform: none;   /* transform 제거 */
+    display: flex;     /* flex로 변경 */
+    align-items: center;
+    justify-content: center;
+    width: 24px;      /* 명확한 너비 설정 */
+    height: 24px;     /* 명확한 높이 설정 */
+}
+
+.react-datepicker__navigation--previous:hover,
+.react-datepicker__navigation--next:hover {
+    color: #8A6E59;
+}
+
+.react-datepicker__navigation--previous:disabled,
+.react-datepicker__navigation--next:disabled {
+    cursor: not-allowed;
+    color: #ccc;
+}
+
+.react-datepicker__header__dropdown {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 0;
+    position: relative;
+    z-index: 1;
+}
+
+.react-datepicker__navigation--next {
+    right: 1rem;
+}
+
+/* DatePicker 드롭다운 스타일 */
+.react-datepicker__header__dropdown {
+    padding: 0.5rem 0;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.react-datepicker__month-select,
+.react-datepicker__year-select {
+    padding: 0.3rem 2rem 0.3rem 0.5rem;  /* 오른쪽 패딩 증가 */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23666666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+}
+
+/* 드롭다운 컨테이너 스타일 */
+.react-datepicker__month-dropdown-container,
+.react-datepicker__year-dropdown-container {
+    flex: 1;
+    min-width: 100px;  /* 최소 너비 증가 */
+}
+
+.react-datepicker__month-select {
+    min-width: 90px;  /* 월 선택 드롭다운 최소 너비 */
+}
+
+.react-datepicker__year-select {
+    min-width: 100px;  /* 연도 선택 드롭다운 최소 너비 */
+}
+
+.react-datepicker__year-select option,
+.react-datepicker__month-select option {
+    color: #333;
+    background-color: white;
+}
+
+/* 스크롤바 스타일 */
+.react-datepicker__year-dropdown {
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #8A6E59 #f0f0f0;
+}
+
+.react-datepicker__year-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.react-datepicker__year-dropdown::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 3px;
+}
+
+.react-datepicker__year-dropdown::-webkit-scrollbar-thumb {
+    background-color: #8A6E59;
+    border-radius: 3px;
+}
+
+/* 기존 달력 스타일 유지하면서 헤더 영역 조정 */
+.react-datepicker__header {
+    padding-top: 0.5rem;
+    height: auto;  /* 고정 높이 제거하고 컨텐츠에 맞게 조정 */
+}
+
+.react-datepicker__current-month {
+    display: none;  /* 현재 월 표시 숨김 (드롭다운으로 대체) */
+}
+
+.react-datepicker__navigation {
+    top: 50%;  /* 네비게이션 버튼 위치 조정 */
+    transform: translateY(-50%);
+}
+
+.react-datepicker__navigation--previous,
+.react-datepicker__navigation--next {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 12px;
+    transition: color 0.2s;
+}
+
+.react-datepicker__navigation--previous:hover,
+.react-datepicker__navigation--next:hover {
+    color: #8A6E59;
+}
+
+.react-datepicker__navigation--previous:disabled,
+.react-datepicker__navigation--next:disabled {
+    cursor: not-allowed;
+    color: #ccc;
+}
+
+.react-datepicker__header__dropdown {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 0;
 }

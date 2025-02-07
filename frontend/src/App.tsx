@@ -71,6 +71,7 @@ const App: React.FC = () => {
 
 
           <Route path="/follow" element={<FollowPage />} >
+          
           </Route>
 
 
