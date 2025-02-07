@@ -39,7 +39,20 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(formData);
+    
+    // 추후 백엔드 통신을 위한 데이터 준비
+    const challengeData = {
+      ...formData,
+      startDate: formData.startDate.toISOString(),
+      currentMembers: 1,
+      maxMembers: parseInt(formData.people),
+      likes: 0,
+      wants: 0,
+    };
+
+    // 추후 백엔드 API 호출 예정
+    console.log('Challenge Data to be sent:', challengeData);
+    
     setShowSuccess(true);
   };
 
