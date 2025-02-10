@@ -27,6 +27,7 @@ import InvitableFriendList from './features/challenge/components/friend-list/Inv
 import { FriendInviteProvider } from './features/challenge/context/FriendInviteContext';
 import Profile from './features/profile/components/Profile';
 import ProfileEdit from './features/profile/components/ProfileEdit';
+import ChallengeComplete from './features/profile/components/ChallengeComplete';
 
 const App: React.FC = () => {
   return (
@@ -73,6 +74,7 @@ const App: React.FC = () => {
             <Route path="edit" element={<ProfileEdit />} />
           </Route>
 
+          <Route path="/profile/challenge-complete" element={<ChallengeComplete />} />
 
           <Route path="/follow" element={<FollowPage />} >
           
