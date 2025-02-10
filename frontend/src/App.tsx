@@ -29,6 +29,7 @@ import Profile from './features/profile/components/Profile';
 import ProfileEdit from './features/profile/components/ProfileEdit';
 import SearchUser from './features/search/components/SearchUser';
 import Ranking from './features/challenge/components/ranking/Ranking';
+import ChallengeComplete from './features/profile/components/ChallengeComplete';
 
 const App: React.FC = () => {
   return (
@@ -78,6 +79,7 @@ const App: React.FC = () => {
             <Route path="edit" element={<ProfileEdit />} />
           </Route>
 
+          <Route path="/profile/challenge-complete" element={<ChallengeComplete />} />
 
           <Route path="/follow" element={<FollowPage />} >
             <Route index element={<SearchUser />} />
