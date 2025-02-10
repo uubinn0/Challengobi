@@ -68,7 +68,7 @@ const HomePage: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState("전체")
   const [activeTab, setActiveTab] = useState<"recruiting" | "ongoing">("ongoing")
 
-  const challenges: Challenge[] = [
+  const challenges = useMemo((): Challenge[] => [
     {
       id: 1,
       title: "외식을 줄입시다!!",
@@ -91,12 +91,12 @@ const HomePage: React.FC = () => {
       likes: 76,
       wants: 12,
     },
-  ]
+  ], []);
 
   const filteredChallenges = useMemo(() => {
     if (activeCategory === "전체") return challenges
     return challenges.filter((challenge) => challenge.category === activeCategory)
-  }, [activeCategory])
+  }, [activeCategory, challenges])
 
   const filteredOngoingChallenges = useMemo(() => {
     if (activeCategory === "전체") return ongoingChallenges

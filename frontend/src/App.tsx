@@ -22,10 +22,15 @@ import ChallengeDetail from './features/home/components/ChallengeDetail';
 import Home from './features/home/components/Home';
 import Post from './features/challenge/components/post/Post'
 import WritePost from './features/challenge/components/write-post/WritePost';
+import InvitedFriendList from './features/challenge/components/friend-list/InvitedFriendList';
+import InvitableFriendList from './features/challenge/components/friend-list/InvitableFriendList';
+import { FriendInviteProvider } from './features/challenge/context/FriendInviteContext';
+import Profile from './features/profile/components/Profile';
+import ProfileEdit from './features/profile/components/ProfileEdit';
 
 const App: React.FC = () => {
   return (
-    <>
+    <FriendInviteProvider>
       <Header />
       <div className="content">
         <Routes>
@@ -57,15 +62,20 @@ const App: React.FC = () => {
             <Route path="ocr" element={<Ocr />} />
             <Route path="consum-image" element={<ConsumImage />} />
             <Route path="ocr-complete" element={<OcrComplete />} />
+            <Route path="invite-friends" element={<InvitableFriendList />} />
+            <Route path="invited-friends" element={<InvitedFriendList />} />
           </Route>
 
 
 
-          <Route path="/profile" element={<ProfilePage />} >
+          <Route path="/profile" element={<ProfilePage />}>
+            <Route index element={<Profile />} />
+            <Route path="edit" element={<ProfileEdit />} />
           </Route>
 
 
           <Route path="/follow" element={<FollowPage />} >
+          
           </Route>
 
 
@@ -74,7 +84,7 @@ const App: React.FC = () => {
         </Routes>
       </div>
       <Footer />
-    </>
+    </FriendInviteProvider>
   );
 }
 

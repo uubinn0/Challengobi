@@ -2,10 +2,12 @@ import React, { useState, FormEvent } from 'react';
 import './LoginForm.css';
 import { useNavigate } from 'react-router-dom';
 import kakaoIcon from '../../../assets/kakao-icon.png';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const handleLogin = (e: FormEvent<HTMLFormElement>): void => {
@@ -24,10 +26,14 @@ const LoginForm: React.FC = () => {
   const handleHomePage = (): void => {
     navigate('/');
   };
+
+  const togglePasswordVisibility = (): void => {
+    setShowPassword(!showPassword);
+  };
   
   return (
     <div className="login-container">
-      <h1 className="login-title">챌린지에 도전하세요</h1>
+      <h2 className="login-title">챌린지에 도전하세요</h2>
       
       <form onSubmit={handleLogin}>
         <div className="input-group">
@@ -40,17 +46,24 @@ const LoginForm: React.FC = () => {
         </div>
         
         <div className="input-group">
-          <input
-            type="password"
-            placeholder="비밀번호를 입력하세요"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <span 
-            className="forgot-password"
-            onClick={handlePassword}
-          >
-            비밀번호를 잊으셨나요?</span>
+          <div className="password-input-wrapper">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="비밀번호를 입력하세요"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button 
+              type="button"
+              className="password-toggle-btn"
+              onClick={togglePasswordVisibility}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+          <span className="forgot-password" onClick={handlePassword}>
+            비밀번호를 잊으셨나요?
+          </span>
         </div>
 
         <div className="kakao-login">
