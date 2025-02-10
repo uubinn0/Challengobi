@@ -1,10 +1,10 @@
 import React from 'react';
+import { Outlet } from 'react-router-dom';
 
 const FollowPage: React.FC = () => {
   return (
     <div>
-      <h1>Follow Page</h1>
-      <p>Welcome to the followpage!</p>
+      <Outlet/>
     </div>
   );
 }

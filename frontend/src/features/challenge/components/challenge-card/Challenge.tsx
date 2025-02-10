@@ -177,6 +177,13 @@ export default function ChallengePage() {
         />
       )}
       <AddModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      
+      <button 
+        className={styles.rankingButton} 
+        onClick={() => navigate('/challenge/ranking')}
+      >
+        순위 보기
+      </button>
     </div>
   )
 }
