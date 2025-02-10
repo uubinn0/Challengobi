@@ -42,6 +42,11 @@ const ChallengeDetailModal: React.FC<ChallengeDetailModalProps> = ({ isOpen, onC
     navigate('/challenge/invited-friends');
   };
 
+  const handleJoinChallenge = () => {
+    onClose();
+    navigate('/challenge');
+  };
+
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -99,12 +104,29 @@ const ChallengeDetailModal: React.FC<ChallengeDetailModalProps> = ({ isOpen, onC
               </div>
             </div>
           )}
+          <div className={styles.progressContainer}>
+            <div className={styles.progressLabel}>
+              <span>모집률</span>
+              <span>{Math.round((challenge.currentMembers / challenge.maxMembers) * 100)}%</span>
+            </div>
+            <div className={styles.progressBar}>
+              <div 
+                className={styles.progressFill}
+                style={{ 
+                  width: `${(challenge.currentMembers / challenge.maxMembers) * 100}%`
+                }}
+              />
+            </div>
+          </div>
         </div>
         <div className={styles.buttons}>
           <button className={styles.cancelButton} onClick={onClose}>
             취소하기
           </button>
-          <button className={styles.joinButton}>
+          <button 
+            className={styles.joinButton}
+            onClick={handleJoinChallenge}
+          >
             챌린지 참가하기
           </button>
         </div>

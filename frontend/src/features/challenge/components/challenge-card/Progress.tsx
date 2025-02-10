@@ -3,8 +3,10 @@
 import type { FC } from "react"
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { Pencil, Heart, MessageSquare, Fish } from "lucide-react"
+import { Pencil, Heart, MessageSquare } from "lucide-react"
 import "./Progress.css"
+import ocrbuttonfish from '../../../../assets/ocr-button-fish.png'
+import profileJaringobi from '../../../../assets/profile-jaringobi.png'
 
 interface Comment {
  id: number
@@ -108,21 +110,31 @@ const Progress: FC = () => {
      {!isFromHome && (
        <>
          <div className="progress-card">
-           <div className="fish-icon-container">
-             <Fish size={60} />
+           <div className="progress-text-container">
+             <div className="fish-icon-container">
+               <img 
+                 src={profileJaringobi}
+                 alt="자린고비 프로필" 
+                 className="ocr-fish-icon"
+               />
+             </div>
+             <p className="progress-text">
+               자린 고비님 챌린지 성공까지
+               <br />
+               7일 남았어요.
+             </p>
            </div>
-           <p className="progress-text">
-             자린 골비님 챌린지 성공까지
-             <br />
-             7일 남았어요.
-           </p>
            <p className="amount-text">
              현재까지
              <br />
              10,000원 남았어요
            </p>
            <button onClick={handleVerifyClick} className="verify-button">
-             <Fish size={24} />
+             <img 
+               src={ocrbuttonfish} 
+               alt="물고기 아이콘" 
+               className="ocr-fish-icon"
+             />
              고비 인증하기
            </button>
          </div>

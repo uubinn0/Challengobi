@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { useNavigate } from 'react-router-dom';
 import "./PasswordForm.css";
+import PasswordSuccess from "../../../components/modals/PasswordSuccess";
 
 const PasswordForm: React.FC = () => {
-    const navigate = useNavigate();
     const [email, setEmail] = useState<string>('');
     const [showVerification, setShowVerification] = useState<boolean>(false);
     const [verificationCode, setVerificationCode] = useState<string>('');
     const [isVerified, setIsVerified] = useState<boolean>(false);
+    const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
 
     const handleSendVerification = (): void => {
         setShowVerification(true);
@@ -17,9 +17,10 @@ const PasswordForm: React.FC = () => {
         setIsVerified(true);
     };
 
-    const handleLogin = (): void => {
-        navigate('/login');
+    const handleReset = (): void => {
+        setShowSuccessModal(true);
     };
+
 
     return (
       <div className="password-reset-container">
@@ -79,9 +80,14 @@ const PasswordForm: React.FC = () => {
         <button
             type="button"
             className="reset-button"
-            onClick={handleLogin}
+            onClick={handleReset}
           >
           재설정 완료</button>
+
+        <PasswordSuccess 
+          isOpen={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+        />
       </div>
     );
   };

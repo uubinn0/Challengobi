@@ -27,6 +27,8 @@ import InvitableFriendList from './features/challenge/components/friend-list/Inv
 import { FriendInviteProvider } from './features/challenge/context/FriendInviteContext';
 import Profile from './features/profile/components/Profile';
 import ProfileEdit from './features/profile/components/ProfileEdit';
+import SearchUser from './features/search/components/SearchUser';
+import Ranking from './features/challenge/components/ranking/Ranking';
 import ChallengeComplete from './features/profile/components/ChallengeComplete';
 
 const App: React.FC = () => {
@@ -65,6 +67,9 @@ const App: React.FC = () => {
             <Route path="ocr-complete" element={<OcrComplete />} />
             <Route path="invite-friends" element={<InvitableFriendList />} />
             <Route path="invited-friends" element={<InvitedFriendList />} />
+            <Route path="invited-friends" element={<InvitedFriendList />} />
+            <Route path="ranking" element={<Ranking/>} />
+
           </Route>
 
 
@@ -77,7 +82,7 @@ const App: React.FC = () => {
           <Route path="/profile/challenge-complete" element={<ChallengeComplete />} />
 
           <Route path="/follow" element={<FollowPage />} >
-          
+            <Route index element={<SearchUser />} />
           </Route>
 
 

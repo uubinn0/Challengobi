@@ -1,29 +1,43 @@
 // Footer.tsx
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import styles from './Footer.module.scss';
 import HomeIcon from '../../icons/HomeIcon';
+import HomeIconFill from '../../icons/HomeIcon-fill';
 import SearchIcon from '../../icons/SearchIcon';
+import SearchIconFill from '../../icons/SearchIcon-fill';
 import AddIcon from '../../icons/AddIcon';
 import ChallengeIcon from '../../icons/ChallengeIcon';
 import ProfileIcon from '../../icons/ProfileIcon';
 import AddModal from '../../modals/AddModal';
 
+
 const Footer: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+  const isFollow = location.pathname.startsWith('/follow');
 
   return (
     <>
       <footer className={styles.footer}>
         <nav className={styles.nav}>
-          <Link to="/" className={styles.navItem}>
-            <HomeIcon />
-            <span>홈</span>
+          <Link to="/" className={`${styles.navItem} ${isHome ? styles.active : ''}`}>
+            {isHome ? (
+              <HomeIconFill />
+            ) : (
+              <HomeIcon />
+            )}
+            <span style={{ color: isHome ? '#000' : 'inherit' }}>홈</span>
           </Link>
           
-          <Link to="/follow" className={styles.navItem}>
-            <SearchIcon/>
-            <span>검색</span>
+          <Link to="/follow" className={`${styles.navItem} ${isFollow ? styles.active : ''}`}>
+            {isFollow ? (
+              <SearchIconFill />
+            ) : (
+              <SearchIcon />
+            )}
+            <span style={{ color: isFollow ? '#000' : 'inherit' }}>검색</span>
           </Link>
 
           <button className={styles.navItem} onClick={() => setIsModalOpen(true)}>
