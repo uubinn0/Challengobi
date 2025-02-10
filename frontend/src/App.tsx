@@ -20,12 +20,13 @@ import ConsumImage from './features/challenge/components/ocr/ConsumImage';
 import OcrComplete from './features/challenge/components/ocr/OcrComplete';
 import ChallengeDetail from './features/home/components/ChallengeDetail';
 import Home from './features/home/components/Home';
+import Post from './features/challenge/components/post/Post'
+import WritePost from './features/challenge/components/write-post/WritePost';
 import InvitedFriendList from './features/challenge/components/friend-list/InvitedFriendList';
 import InvitableFriendList from './features/challenge/components/friend-list/InvitableFriendList';
 import { FriendInviteProvider } from './features/challenge/context/FriendInviteContext';
 import Profile from './features/profile/components/Profile';
 import ProfileEdit from './features/profile/components/ProfileEdit';
-
 
 const App: React.FC = () => {
   return (
@@ -38,6 +39,7 @@ const App: React.FC = () => {
             <Route path="challenge-detail/:id" element={<ChallengeDetail challenges={[]} />} />
              {/* 라우트 추가 홈화면에서 진행 챌린지 */}
             <Route path="ongoing-challenge/:id" element={<Progress />} />
+            <Route path="ongoing-challenge/:id/post/:postId" element={<Post />} />
           </Route>
 
 
@@ -55,6 +57,8 @@ const App: React.FC = () => {
           <Route path="/challenge" element={<ChallengePage />}>
             <Route index element={<Challenge />} />
             <Route path="progress/:id" element={<Progress />}/>
+            <Route path="progress/:id/write" element={<WritePost />} />
+            <Route path="progress/:id/post/:postId" element={<Post />} />
             <Route path="ocr" element={<Ocr />} />
             <Route path="consum-image" element={<ConsumImage />} />
             <Route path="ocr-complete" element={<OcrComplete />} />
