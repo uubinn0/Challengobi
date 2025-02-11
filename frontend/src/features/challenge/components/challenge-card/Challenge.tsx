@@ -108,9 +108,19 @@ export default function ChallengePage() {
     }
   }
 
+  const handleOpenModal = () => {
+    setIsModalOpen(true)
+    navigate('?modal=add')
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    navigate(-1)
+  }
+
   return (
     <div className={styles.container}>
-      <button className={styles.createButton} onClick={() => setIsModalOpen(true)}>
+      <button className={styles.createButton} onClick={handleOpenModal}>
         <Pencil size={20} />
         챌린지 만들기
       </button>
@@ -176,7 +186,7 @@ export default function ChallengePage() {
           challenge={selectedChallenge}
         />
       )}
-      <AddModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <AddModal isOpen={isModalOpen} onClose={handleCloseModal} />
       
       <button 
         className={styles.rankingButton} 
