@@ -1,0 +1,11 @@
+.appContainer {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.mainContent {
+  flex: 1;
+  padding-top: 55px;  // 상단바 높이만큼
+  padding-bottom: 60px;  // 하단바 높이만큼
+} 
