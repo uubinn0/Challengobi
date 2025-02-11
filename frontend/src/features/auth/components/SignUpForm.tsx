@@ -5,32 +5,15 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { ko } from 'date-fns/locale';
 import KeywordSelect from '../../../components/modals/KeywordSelect';
-
-interface FormData {
-  email: string;
-  userId: string;
-  password: string;
-  confirmPassword: string;
-  name: string;
-  nickname: string;
-  gender: string;
-  birthDate: Date | null;
-  occupation: string;
-}
+import type { UserProfile } from '../types/user';
+import { initialUserProfile } from '../types/user';
+import { existingNicknames } from '../data/dummyNicknames';
 
 const SignUpForm: React.FC = () => {
   const navigate = useNavigate();
   const [showKeywordPopup, setShowKeywordPopup] = useState<boolean>(false);
-  const [formData, setFormData] = useState<FormData>({
-    email: '',
-    userId: '',
-    password: '',
-    confirmPassword: '',
-    name: '',
-    nickname: '',
-    gender: '',
-    birthDate: null,
-    occupation: ''
+  const [formData, setFormData] = useState<UserProfile>({
+    ...initialUserProfile
   });
   
   const [showVerification, setShowVerification] = useState<boolean>(false);
@@ -55,6 +38,12 @@ const SignUpForm: React.FC = () => {
   
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
+    
+    if (!isDuplicateChecked) {
+      alert('닉네임 중복 확인이 필요합니다.');
+      return;
+    }
+
     setShowKeywordPopup(true);
   };
 
@@ -74,7 +63,16 @@ const SignUpForm: React.FC = () => {
 
   const handleDuplicateCheck = (e: MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault();
+    
+    const isNicknameTaken = existingNicknames.includes(formData.nickname);
+    
+    if (isNicknameTaken) {
+      alert('이미 사용 중인 닉네임입니다!');
+      return;
+    }
+
     setIsDuplicateChecked(true);
+    alert('사용 가능한 닉네임입니다!');
   };
 
   const handleDateChange = (date: Date | null): void => {
@@ -91,6 +89,20 @@ const SignUpForm: React.FC = () => {
   const handleUserIdDuplicateCheck = (e: MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault();
     setIsUserIdDuplicateChecked(true);
+  };
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({
+          ...prev,
+          profileImage: reader.result as string
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -183,17 +195,6 @@ const SignUpForm: React.FC = () => {
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="비밀번호를 다시 입력하세요"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>이름</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="이름을 입력하세요"
             />
           </div>
 
@@ -323,11 +324,43 @@ const SignUpForm: React.FC = () => {
               onChange={handleChange}
             >
               <option value="">직업을 선택해주세요</option>
-              <option value="student">학생</option>
-              <option value="employee">회사원</option>
-              <option value="self-employed">자영업</option>
-              <option value="other">기타</option>
+              <option value="student">학생(초/중/고)</option>
+              <option value="university">대학(원)생</option>
+              <option value="jobseeker">취업준비생</option>
+              <option value="employee">직장인</option>
+              <option value="housewife">주부</option>
+              <option value="freelancer">프리랜서</option>
             </select>
+          </div>
+
+          <div className="form-group">
+            <label>프로필 이미지</label>
+            <div className="profile-image-upload">
+              {formData.profileImage && (
+                <img 
+                  src={formData.profileImage} 
+                  alt="프로필 미리보기" 
+                  className="profile-preview" 
+                />
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="image-input"
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>한줄 소개</label>
+            <input
+              type="text"
+              name="introduction"
+              value={formData.introduction}
+              onChange={handleChange}
+              placeholder="자신을 한 줄로 소개해주세요"
+            />
           </div>
 
           <button type="submit" className="submit-button">

@@ -549,3 +549,24 @@ input, button, select {
     gap: 8px;
     padding: 8px 0;
 }
+
+.profile-image-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.profile-preview {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #F0EAE3;
+}
+
+.image-input {
+  width: 100%;
+  padding: 0.5rem;
+}

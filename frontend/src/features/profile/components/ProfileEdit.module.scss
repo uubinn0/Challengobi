@@ -225,4 +225,18 @@
     background-color: #ccc;
     cursor: not-allowed;
   }
+}
+
+.selectInput {
+  width: 100%;
+  padding: 0.8rem;
+  border: none;
+  border-bottom: 1px solid #ddd;
+  background: transparent;
+  font-size: 1rem;
+  outline: none;
+  
+  &:focus {
+    border-bottom-color: #8B7355;
+  }
 } 
