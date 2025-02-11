@@ -53,11 +53,14 @@
 }
 
 .stat {
+  width: 5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
+  cursor: pointer;
 
+  
   .label {
     font-size: 0.9rem;
     color: #666;

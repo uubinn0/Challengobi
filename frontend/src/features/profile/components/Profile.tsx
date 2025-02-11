@@ -72,6 +72,14 @@ const Profile: React.FC = () => {
     }
   ];
 
+  const handleFollower = () => {
+    navigate('/profile/follower');
+  };
+
+  const handleFollowing = () => {
+    navigate('/profile/following');
+  };
+
   const handleEditProfile = () => {
     navigate('/profile/edit');
   };
@@ -95,21 +103,22 @@ const Profile: React.FC = () => {
             <img src={profileTest} alt="프로필 이미지" />
           </div>
           <div className={styles.challengeInfo}>
-            <h2>나는 물고기</h2>
-            <div className={styles.stats}>
-              <div className={styles.stat}>
-                <span className={styles.label}>참여 챌린지</span>
-                <span className={styles.number}>3</span>
-              </div>
-              <div className={styles.stat}>
-                <span className={styles.label}>팔로우</span>
-                <span className={styles.number}>6</span>
-              </div>
-              <div className={styles.stat}>
-                <span className={styles.label}>팔로워</span>
-                <span className={styles.number}>6</span>
-              </div>
-            </div>
+            <h1>나는 물고기</h1>
+            <h2>돈을 아끼자!</h2>
+          </div>
+        </div>
+        <div className={styles.stats}>
+          <div className={styles.stat}>
+            <span className={styles.label}>참여 챌린지</span>
+            <span className={styles.number}>3</span>
+          </div>
+          <div className={styles.stat} onClick={handleFollowing}>
+            <span className={styles.label}>팔로잉</span>
+            <span className={styles.number}>6</span>
+          </div>
+          <div className={styles.stat} onClick={handleFollower}>
+            <span className={styles.label}>팔로워</span>
+            <span className={styles.number}>6</span>
           </div>
         </div>
         <div className={styles.challengeAmount}>
