@@ -70,6 +70,9 @@ const Header: React.FC = () => {
   const [selectedChallenge, setSelectedChallenge] = useState<any>(null);
   const [showChallengeModal, setShowChallengeModal] = useState(false);
 
+  // 로그인 상태 관리
+  const [isLoggedIn, setIsLoggedIn] = useState(true);  // 임시로 true로 시작
+
   const handleCloseNotifications = () => {
     setShowNotifications(false);
   };
@@ -101,6 +104,7 @@ const Header: React.FC = () => {
   };
 
   const handleLogout = () => {
+    setIsLoggedIn(false);  // 로그아웃 시 상태 변경
     logout();
     navigate('/');
   };
@@ -121,35 +125,41 @@ const Header: React.FC = () => {
           </nav>
         </Link>
         <div className={styles.iconContainer}>
-          <div className={styles.userProfile}>
-            <Link to="/profile">
-              <img 
-                src={user.profileImage} 
-                alt="프로필" 
-                className={styles.profileImage}
-              />
-            </Link>
-          </div>
-          <button onClick={handleLogout} className={styles.logoutButton}>
-            로그아웃
-          </button>
-          <div className={styles.notificationContainer} ref={notificationRef}>
-            <button 
-              className={styles.bellButton}
-              onClick={() => setShowNotifications(!showNotifications)}
-            >
-              <BellIcon width={20} height={20} fill="#000" />
-              {hasUnreadNotifications && <span className={styles.notificationDot} />}
-            </button>
-            {showNotifications && (
-              <NotificationList 
-                notifications={notifications}
-                onClose={handleCloseNotifications}
-                onShowChallengeDetail={handleShowChallengeDetail}
-                onNotificationClick={handleNotificationClick}
-              />
-            )}
-          </div>
+          {isLoggedIn ? (
+            <>
+              <div className={styles.userProfile}>
+                <Link to="/profile">
+                  <img 
+                    src={user.profileImage} 
+                    alt="프로필" 
+                    className={styles.profileImage}
+                  />
+                </Link>
+              </div>
+              <button onClick={handleLogout} className={styles.logoutButton}>
+                로그아웃
+              </button>
+              <div className={styles.notificationContainer} ref={notificationRef}>
+                <button 
+                  className={styles.bellButton}
+                  onClick={() => setShowNotifications(!showNotifications)}
+                >
+                  <BellIcon width={20} height={20} fill="#000" />
+                  {hasUnreadNotifications && <span className={styles.notificationDot} />}
+                </button>
+                {showNotifications && (
+                  <NotificationList 
+                    notifications={notifications}
+                    onClose={handleCloseNotifications}
+                    onShowChallengeDetail={handleShowChallengeDetail}
+                    onNotificationClick={handleNotificationClick}
+                  />
+                )}
+              </div>
+            </>
+          ) : (
+            <Link to="/login" className={styles.loginText}>로그인</Link>
+          )}
         </div>
       </header>
 
