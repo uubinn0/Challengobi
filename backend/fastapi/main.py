@@ -20,6 +20,13 @@ import io
 import numpy as np
 from typing import List
 from pydantic import BaseModel
+from database import get_db_connection
+import mysql.connector
+from mysql.connector import Error
+from database import get_users, get_categorys
+import pandas as pd
+from sklearn.metrics.pairwise import cosine_similarity
+
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -52,10 +59,6 @@ class OCRResult(BaseModel):
 
 class OCRResponse(BaseModel):
     results: List[OCRResult]
-
-
-app = FastAPI()
-ocr = PaddleOCR(lang='korean')
 
 
 def process_with_openai(arr: List[str]) -> List[OCRResult]:
@@ -131,20 +134,14 @@ async def extract_text(files: List[UploadFile] = File(...)):
     return OCRResponse(results=all_results)
 
 
-from fastapi import FastAPI, HTTPException
-from typing import List
-from database import get_db_connection
-import mysql.connector
-from mysql.connector import Error
-from database import get_users, get_categorys
-import pandas as pd
-from sklearn.metrics.pairwise import cosine_similarity
-from pydantic import BaseModel
+'''
+====================사용자 추천천=======================
+'''
+
 
 ### 변수 설정 ###
 RECOMMENDED_PERSON_NUM = 10 # 추천하는 사용자 수
 
-app = FastAPI()
 
 ### FE에서 받아오는 데이터 형식 ###
 #### 사용자 추천 ####
