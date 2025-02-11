@@ -86,7 +86,7 @@
 }
 
 /* 반응형 디자인 */
-@media (max-width: 480px) {
+@media (max-width: 399px) {  /* 400px 미만일 때 2컬럼으로 변경 */
     .user-grid {
         grid-template-columns: repeat(2, 1fr);
     }

@@ -40,14 +40,7 @@ const Progress: FC = () => {
 };
 
  const handleVerifyClick = () => {
-   navigate("/profile/challenge-complete", {
-     state: {
-       title: "담배에 돈 쓰지 맙시다",
-       period: "1월 1일 - 1월 29일",
-       amount: "20,000원",
-       days: 14
-     }
-   });
+   navigate("/challenge/ocr");
  }
 
  const comments: Comment[] = [
