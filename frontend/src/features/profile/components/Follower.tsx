@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import searchIcon from '../../../assets/SearchUser-search.png';  // 이미지 import
-import styles from './SearchUser.module.scss';
+import styles from './Follower.module.scss';
 
 interface User {
   id: number;
@@ -9,8 +8,8 @@ interface User {
   image: string;
 }
 
-const SearchUser: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState<string>('');
+const Follower: React.FC = () => {
+  const [searchTerm] = useState<string>('');
   const navigate = useNavigate();
   
   // 더미 데이터
@@ -31,19 +30,8 @@ const SearchUser: React.FC = () => {
 
   return (
     <div className={styles.searchContainer}>
-      <div className={styles.searchBox}>
-        <img src={searchIcon} alt="search" className={styles.searchIcon} />
-        <input
-          type="text"
-          placeholder="검색어를 입력하세요"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <button className={styles.searchButton}>검색</button>
-      </div>
-
       <div className={styles.recommendedSection}>
-        <h3>추천 팔로우 목록</h3>
+        <h2>팔로워 목록</h2>
         <div className={styles.userGrid}>
           {filteredUsers.map(user => (
             <div key={user.id} className={styles.userItem}>
@@ -63,4 +51,4 @@ const SearchUser: React.FC = () => {
   );
 };
 
-export default SearchUser;
+export default Follower;
