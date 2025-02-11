@@ -8,4 +8,36 @@
   flex: 1;
   padding-top: 55px;  // 상단바 높이만큼
   padding-bottom: 60px;  // 하단바 높이만큼
+}
+
+// App.css에서 가져온 전역 스타일
+:global {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #F5F5F2;
+  }
+
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  ul, li {
+    list-style: none;
+  }
 } 

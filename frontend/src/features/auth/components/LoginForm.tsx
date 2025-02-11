@@ -3,16 +3,24 @@ import './LoginForm.css';
 import { useNavigate } from 'react-router-dom';
 import kakaoIcon from '../../../assets/kakao-icon.png';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
 const LoginForm: React.FC = () => {
+  const { login } = useAuth();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e: FormEvent<HTMLFormElement>): void => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 로그인 로직 구현
+    // API 호출 및 로그인 처리 후
+    login({
+      id: '1',
+      nickname: '물고기',
+      profileImage: '/icons/default-profile.png'
+    });
+    navigate('/');
   };
 
   const handleSignUp = (): void => {

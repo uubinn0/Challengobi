@@ -80,12 +80,12 @@ const App: React.FC = () => {
               <Route index element={<SearchUser />} />
             </Route>
 
-            <Route path="*" element={<ErrorPage />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </FriendInviteProvider>
+              <Route path="*" element={<ErrorPage />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </FriendInviteProvider>
   );
 }
 
