@@ -20,10 +20,13 @@ class MyUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+    # 일반 유저 생성
     def create_user(self, email, password, **kwargs):
         kwargs.setdefault("is_admin", False)
+        kwargs.setdefault("is_superuser", False)
         return self._create_user(email, password, **kwargs)
 
+    # 관리자 생성
     def create_superuser(self, email, password, **kwargs):
         kwargs.setdefault("is_superuser", True)
         kwargs.setdefault("is_active", True)
@@ -34,19 +37,27 @@ class MyUserManager(BaseUserManager):
 class User(AbstractUser):
     objects = MyUserManager()
 
+    id = models.AutoField(primary_key=True)
     username = models.CharField(_("username"), max_length=150, blank=True)
     email = models.EmailField(_("email"), max_length=150, unique=True)
-    nickname = models.CharField(max_length=255, unique=True)
+    nickname = models.CharField(max_length=100,
+        unique=True,
+        error_messages={
+        'unique' : _("이미 존재하는 닉네임입니다."),
+        },
+        verbose_name="닉네임",)
     sex = models.CharField(
         max_length=1, choices=[("M", "Male"), ("F", "Female")], default="M"
     )
-    birth_date = models.DateField(null=True)
-    career = models.PositiveSmallIntegerField(null=True)
-    total_saving = models.PositiveIntegerField(null=True)
+    birth_date = models.DateField(null=False, blank=False)
+    career = models.PositiveSmallIntegerField(null=False, blank=False)
+    total_saving = models.PositiveIntegerField(default=0)
     introduction = models.TextField(null=True, blank=True)
     profile_image = models.ImageField(upload_to="profiles/", null=True, blank=True)
+    create_at = models.DateTimeField(auto_now_add=True)
+    social_login = models.CharField(null=True, default=0)
     challenge_streak = models.PositiveSmallIntegerField(default=0)
-    email_verified = models.BooleanField(default=False)
+    
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
@@ -55,14 +66,6 @@ class User(AbstractUser):
 
     class Meta:
         db_table = "User"
-
-
-class EmailVerification(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    token = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
-    verified = models.BooleanField(default=False)
 
 
 class Follow(models.Model):
