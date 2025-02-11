@@ -218,7 +218,7 @@ const ProfileEdit: React.FC = () => {
             </select>
           </div>
         </div>
-
+ 
         <div className={styles.formGroup}>
           <label>키워드</label>
           <div className={styles.inputWithButton}>
