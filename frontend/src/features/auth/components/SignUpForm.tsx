@@ -329,7 +329,7 @@ const SignUpForm: React.FC = () => {
               <option value="jobseeker">취업준비생</option>
               <option value="employee">직장인</option>
               <option value="housewife">주부</option>
-              <option value="freelancer">프리랜서</option>
+              <option value="freelancer">프리랜서</option>``
             </select>
           </div>
 
