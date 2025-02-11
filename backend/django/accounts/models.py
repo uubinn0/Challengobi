@@ -57,7 +57,7 @@ class User(AbstractUser):
     create_at = models.DateTimeField(auto_now_add=True)
     social_login = models.CharField(null=True, default=0)
     challenge_streak = models.PositiveSmallIntegerField(default=0)
-    
+
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
@@ -84,15 +84,15 @@ class Follow(models.Model):
 
 class UserChallengeCategory(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    cafe = models.BooleanField(null=True)
-    restaurant = models.BooleanField(null=True)
-    grocery = models.BooleanField(null=True)
-    shopping = models.BooleanField(null=True)
-    culture = models.BooleanField(null=True)
-    hobby = models.BooleanField(null=True)
-    drink = models.BooleanField(null=True)
-    transportation = models.BooleanField(null=True)
-    etc = models.BooleanField(null=True)
+    cafe = models.BooleanField(default=0)
+    restaurant = models.BooleanField(default=0)
+    grocery = models.BooleanField(default=0)
+    shopping = models.BooleanField(default=0)
+    culture = models.BooleanField(default=0)
+    hobby = models.BooleanField(default=0)
+    drink = models.BooleanField(default=0)
+    transportation = models.BooleanField(default=0)
+    etc = models.BooleanField(default=0)
 
     class Meta:
         db_table = "UserChallengeCategory"
