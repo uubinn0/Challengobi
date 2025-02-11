@@ -1,7 +1,4 @@
 from django.db import models
-
-# Create your models here.
-from django.db import models
 from django.conf import settings
 
 
@@ -11,9 +8,6 @@ class Notification(models.Model):
         ("challenge_end", "챌린지 마감"),
         ("expense_reminder", "인증 재촉"),
         ("new_follower", "팔로우"),
-        ("challenge_join", "챌린지 참여"),
-        ("post_like", "게시글 좋아요"),
-        ("post_comment", "게시글 댓글"),
     ]
 
     user = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
