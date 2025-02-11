@@ -86,7 +86,7 @@ const App: React.FC = () => {
           <Footer />
         </div>
       </FriendInviteProvider>
-    </AuthProvider>
+    // </AuthProvider>
   );
 }
 
