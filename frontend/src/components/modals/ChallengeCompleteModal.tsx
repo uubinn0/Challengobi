@@ -14,7 +14,7 @@ const ChallengeCompleteModal: React.FC<ChallengeCompleteModalProps> = ({ isOpen,
     <div className={styles.modalOverlay}>
       <div className={styles.modalContent}>
         <div className={styles.header}>
-          <span>챌린지고비</span>
+          <span>챌린고비</span>
           <button onClick={onClose} className={styles.closeButton}>
             <img src="/icons/close.svg" alt="닫기" />
           </button>

@@ -31,7 +31,8 @@
   .logoText {
     font-family: '행복고흥L', sans-serif;
     font-size: 40px;
-    margin-left: 15px;  //챌린고비 로고 위치 조정 
+    margin-left: 15px;  // 좌측 마진 유지
+    margin-top: 20px;    // 상단 마진 추가
     color: #000;
   }
   
@@ -56,5 +57,27 @@
     height: 50px;  // 40px에서 50px로 증가
     object-fit: contain;
     margin-left: -10px;  // 로고와 텍스트 간격 조정
+  }
+  
+  .notificationContainer {
+    position: relative;
+  }
+
+  .bellButton {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .notificationDot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background-color: #FF4B4B;
+    border-radius: 50%;
   }
   
