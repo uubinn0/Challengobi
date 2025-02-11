@@ -26,6 +26,8 @@ services:
     image: taromilktea/pjt01_django:latest
     container_name: django-app
     working_dir: /app
+    volumes:
+      - ./backend/django:/app
     ports:
       - "8000:8000"
     environment:
@@ -40,12 +42,18 @@ services:
       - mariadb
       - mongodb
     restart: always
+    command: >
+      sh -c "pip install -r requirements.txt &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
 
   react-app:
     image: taromilktea/pjt01_react:latest
     container_name: react-app
     ports:
       - "3000:80"
+    volumes:
+      - ./frontend:/app
     environment:
       REACT_APP_API_URL: "http://django-app:8000/"
     depends_on:
@@ -56,6 +64,8 @@ services:
     image: taromilktea/pjt01_fastapi:latest
     container_name: fastapi-app
     working_dir: /app
+    volumes:
+      - ./backend/fastapi:/app
     ports:
       - "8001:8001"
     environment:
@@ -69,6 +79,8 @@ services:
       - mariadb
       - django-app
     restart: always
+    command: >
+      sh -c "uvicorn main:app --host 0.0.0.0 --port 8001 --reload"
 
 volumes:
   mariadb_data:
