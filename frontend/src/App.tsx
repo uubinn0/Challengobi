@@ -33,60 +33,74 @@ import ChallengeComplete from './features/profile/components/ChallengeComplete';
 import styles from './App.module.scss';
 import Following from './features/profile/components/Following';
 import Follower from './features/profile/components/Follower';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from './features/auth/context/AuthContext';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App: React.FC = () => {
   return (
-    <FriendInviteProvider>
-      <div className={styles.appContainer}>
-        <Header />
-        <main className={styles.mainContent}>
-          <Routes>
-            <Route path="/*" element={<HomePage />}>
-              <Route index element={<Home />} />
-              <Route path="challenge-detail/:id" element={<ChallengeDetail challenges={[]} />} />
-              <Route path="ongoing-challenge/:id" element={<Progress />} />
-              <Route path="ongoing-challenge/:id/post/:postId" element={<Post />} />
-            </Route>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <FriendInviteProvider>
+          <div className={styles.appContainer}>
+            <Header />
+            <main className={styles.mainContent}>
+              <Routes>
+                <Route path="/*" element={<HomePage />}>
+                  <Route index element={<Home />} />
+                  <Route path="challenge-detail/:id" element={<ChallengeDetail challenges={[]} />} />
+                  <Route path="ongoing-challenge/:id" element={<Progress />} />
+                  <Route path="ongoing-challenge/:id/post/:postId" element={<Post />} />
+                </Route>
 
-            <Route path="/login/*" element={<LoginPage />}>
-              <Route index element={<LoginForm />} />
-              <Route path="signup" element={<SignUpForm />} />
-              <Route path="success" element={<SuccessForm />} />
-              <Route path="password" element={<PasswordForm />} />
-            </Route>
+                <Route path="/login/*" element={<LoginPage />}>
+                  <Route index element={<LoginForm />} />
+                  <Route path="signup" element={<SignUpForm />} />
+                  <Route path="success" element={<SuccessForm />} />
+                  <Route path="password" element={<PasswordForm />} />
+                </Route>
 
-            <Route path="/challenge/*" element={<ChallengePage />}>
-              <Route index element={<Challenge />} />
-              <Route path="progress/:id" element={<Progress />} />
-              <Route path="progress/:id/write" element={<WritePost />} />
-              <Route path="progress/:id/post/:postId" element={<Post />} />
-              <Route path="ocr" element={<Ocr />} />
-              <Route path="consum-image" element={<ConsumImage />} />
-              <Route path="ocr-complete" element={<OcrComplete />} />
-              <Route path="invite-friends" element={<InvitableFriendList />} />
-              <Route path="invited-friends" element={<InvitedFriendList />} />
-              <Route path="ranking" element={<Ranking />} />
-            </Route>
+                <Route path="/challenge/*" element={<ChallengePage />}>
+                  <Route index element={<Challenge />} />
+                  <Route path="progress/:id" element={<Progress />} />
+                  <Route path="progress/:id/write" element={<WritePost />} />
+                  <Route path="progress/:id/post/:postId" element={<Post />} />
+                  <Route path="ocr" element={<Ocr />} />
+                  <Route path="consum-image" element={<ConsumImage />} />
+                  <Route path="ocr-complete" element={<OcrComplete />} />
+                  <Route path="invite-friends" element={<InvitableFriendList />} />
+                  <Route path="invited-friends" element={<InvitedFriendList />} />
+                  <Route path="ranking" element={<Ranking />} />
+                </Route>
 
-            <Route path="/profile/*" element={<ProfilePage />}>
-              <Route index element={<Profile />} />
-              <Route path="edit" element={<ProfileEdit />} />
-              <Route path="challenge-complete" element={<ChallengeComplete />} />
-              <Route path="following" element={<Following />} />
-              <Route path="follower" element={<Follower />} />
-            </Route>
+                <Route path="/profile/*" element={<ProfilePage />}>
+                  <Route index element={<Profile />} />
+                  <Route path="edit" element={<ProfileEdit />} />
+                  <Route path="challenge-complete" element={<ChallengeComplete />} />
+                  <Route path="following" element={<Following />} />
+                  <Route path="follower" element={<Follower />} />
+                </Route>
 
-            <Route path="/follow/*" element={<FollowPage />}>
-              <Route index element={<SearchUser />} />
-            </Route>
+                <Route path="/follow/*" element={<FollowPage />}>
+                  <Route index element={<SearchUser />} />
+                </Route>
 
-              <Route path="*" element={<ErrorPage />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      </FriendInviteProvider>
-    </AuthProvider>
+                <Route path="*" element={<ErrorPage />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </FriendInviteProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 
