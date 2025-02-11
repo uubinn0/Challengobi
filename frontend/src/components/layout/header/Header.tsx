@@ -1,13 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import styles from './Header.module.scss';
-import { Link } from 'react-router-dom';
 import BellIcon from '../../icons/BellIcon';
-import logo2 from '@/assets/logo1.png';
+import logo2 from '@/assets/logo3.png';
 import NotificationList from '../../notification/NotificationList';
 import { Notification } from '../../../types/notification';
 import ChallengeDetailModal from '../../modals/ChallengeDetailModal';
+import { useAuth } from '../../../features/auth/context/AuthContext';
+import profileTest from '@/assets/profile-test.jpg';
 
 const Header: React.FC = () => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([
     {
@@ -96,6 +100,17 @@ const Header: React.FC = () => {
     setShowNotifications(false);
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  // 임시 사용자 데이터
+  const user = {
+    nickname: '물고기',
+    profileImage: profileTest
+  };
+
   return (
     <>
       <header className={styles.header}>
@@ -106,7 +121,18 @@ const Header: React.FC = () => {
           </nav>
         </Link>
         <div className={styles.iconContainer}>
-          <Link to="/login" className={styles.loginText}>로그인</Link>
+          <div className={styles.userProfile}>
+            <Link to="/profile">
+              <img 
+                src={user.profileImage} 
+                alt="프로필" 
+                className={styles.profileImage}
+              />
+            </Link>
+          </div>
+          <button onClick={handleLogout} className={styles.logoutButton}>
+            로그아웃
+          </button>
           <div className={styles.notificationContainer} ref={notificationRef}>
             <button 
               className={styles.bellButton}

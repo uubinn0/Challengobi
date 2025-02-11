@@ -13,7 +13,7 @@ import badge2 from '@/assets/badge/badge2.jpg';
 import badge3 from '@/assets/badge/badge3.jpg';
 import badge4 from '@/assets/badge/badge4.jpg';
 import badge5 from '@/assets/badge/badge5.jpg';
-import profileImage from '@/assets/profile.png';  // 또는 실제 이미지 경로
+import profileTest from '@/assets/profile-test.jpg';  // 같은 이미지 import
 // 백엔드에서 받을 뱃지 데이터 타입 정의
 interface BadgeData {
   id: number;
@@ -92,25 +92,24 @@ const Profile: React.FC = () => {
       <div className={styles.header}>
         <div className={styles.profileSection}>
           <div className={styles.profileImage}>
-            <img src={profileImage} alt="프로필 이미지" />
+            <img src={profileTest} alt="프로필 이미지" />
           </div>
           <div className={styles.challengeInfo}>
-            <h1>나는 물고기</h1>
-            <h2>돈을 아끼자!</h2>
-          </div>
-        </div>
-        <div className={styles.stats}>
-          <div className={styles.stat}>
-            <span className={styles.label}>참여 챌린지</span>
-            <span className={styles.number}>3</span>
-          </div>
-          <div className={styles.stat}>
-            <span className={styles.label}>팔로우</span>
-            <span className={styles.number}>6</span>
-          </div>
-          <div className={styles.stat}>
-            <span className={styles.label}>팔로워</span>
-            <span className={styles.number}>6</span>
+            <h2>나는 물고기</h2>
+            <div className={styles.stats}>
+              <div className={styles.stat}>
+                <span className={styles.label}>참여 챌린지</span>
+                <span className={styles.number}>3</span>
+              </div>
+              <div className={styles.stat}>
+                <span className={styles.label}>팔로우</span>
+                <span className={styles.number}>6</span>
+              </div>
+              <div className={styles.stat}>
+                <span className={styles.label}>팔로워</span>
+                <span className={styles.number}>6</span>
+              </div>
+            </div>
           </div>
         </div>
         <div className={styles.challengeAmount}>
