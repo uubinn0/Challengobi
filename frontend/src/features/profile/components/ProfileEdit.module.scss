@@ -72,9 +72,11 @@
   display: flex;
   gap: 1rem;
   align-items: center;
+  max-width: 100%;
 
-  input {
+  input, select {
     flex: 1;
+    max-width: 250px;
   }
 }
 
@@ -229,6 +231,7 @@
 
 .selectInput {
   width: 100%;
+  max-width: 250px;
   padding: 0.8rem;
   border: none;
   border-bottom: 1px solid #ddd;
