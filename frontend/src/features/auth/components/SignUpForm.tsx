@@ -1,6 +1,5 @@
 import React, { useState, FormEvent, ChangeEvent, MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './SignUpForm.css';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { ko } from 'date-fns/locale';
@@ -8,6 +7,7 @@ import KeywordSelect from '../../../components/modals/KeywordSelect';
 import type { UserProfile } from '../types/user';
 import { initialUserProfile } from '../types/user';
 import { existingNicknames } from '../data/dummyNicknames';
+import styles from './SignUpForm.module.scss';
 
 const SignUpForm: React.FC = () => {
   const navigate = useNavigate();
@@ -106,13 +106,13 @@ const SignUpForm: React.FC = () => {
   };
 
   return (
-    <div className="signup-container">
-      <h2 className="signup-title">회원가입</h2>
-      <div className="signup-form">
+    <div className={styles.signupContainer}>
+      <h2 className={styles.signupTitle}>회원가입</h2>
+      <div className={styles.signupForm}>
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>이메일</label>
-            <div className="input-with-button">
+            <div className={styles.inputWithButton}>
               <input
                 type="email"
                 name="email"
@@ -124,7 +124,7 @@ const SignUpForm: React.FC = () => {
                 <button 
                   type="button" 
                   onClick={handleSendVerification}
-                  className="verify-button"
+                  className={styles.verifyButton}
                 >
                   인증번호 발송
                 </button>
@@ -133,9 +133,9 @@ const SignUpForm: React.FC = () => {
           </div>
 
           {showVerification && (
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>인증번호</label>
-              <div className="input-with-button">
+              <div className={styles.inputWithButton}>
                 <input
                   type="text"
                   value={verificationCode}
@@ -146,7 +146,7 @@ const SignUpForm: React.FC = () => {
                 <button 
                   type="button" 
                   onClick={handleVerify}
-                  className="verify-button"
+                  className={styles.verifyButton}
                   disabled={isVerified}
                 >
                   {isVerified ? '인증완료' : '인증하기'}
@@ -155,9 +155,9 @@ const SignUpForm: React.FC = () => {
             </div>
           )}
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>아이디</label>
-            <div className="input-with-button">
+            <div className={styles.inputWithButton}>
               <input
                 type="text"
                 name="userId"
@@ -168,7 +168,7 @@ const SignUpForm: React.FC = () => {
               <button 
                 type="button" 
                 onClick={handleUserIdDuplicateCheck}
-                className="check-button"
+                className={styles.checkButton}
                 disabled={isUserIdDuplicateChecked}
               >
                 {isUserIdDuplicateChecked ? '중복확인 완료' : '중복확인'}
@@ -176,7 +176,7 @@ const SignUpForm: React.FC = () => {
             </div>
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>비밀번호</label>
             <input
               type="password"
@@ -187,7 +187,7 @@ const SignUpForm: React.FC = () => {
             />
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>비밀번호 확인</label>
             <input
               type="password"
@@ -198,9 +198,9 @@ const SignUpForm: React.FC = () => {
             />
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>닉네임</label>
-            <div className="input-with-button">
+            <div className={styles.inputWithButton}>
               <input
                 type="text"
                 name="nickname"
@@ -211,7 +211,7 @@ const SignUpForm: React.FC = () => {
               <button 
                 type="button" 
                 onClick={handleDuplicateCheck}
-                className="check-button"
+                className={styles.checkButton}
                 disabled={isDuplicateChecked}
               >
                 {isDuplicateChecked ? '중복확인 완료' : '중복확인'}
@@ -219,19 +219,19 @@ const SignUpForm: React.FC = () => {
             </div>
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>성별</label>
-            <div className="gender-buttons">
+            <div className={styles.genderButtons}>
               <button
                 type="button"
-                className={`gender-button ${formData.gender === '남' ? 'selected' : ''}`}
+                className={`${styles.genderButton} ${formData.gender === '남' ? styles.selected : ''}`}
                 onClick={() => setFormData({ ...formData, gender: '남' })}
               >
                 남
               </button>
               <button
                 type="button"
-                className={`gender-button ${formData.gender === '여' ? 'selected' : ''}`}
+                className={`${styles.genderButton} ${formData.gender === '여' ? styles.selected : ''}`}
                 onClick={() => setFormData({ ...formData, gender: '여' })}
               >
                 여
@@ -239,14 +239,14 @@ const SignUpForm: React.FC = () => {
             </div>
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>생년월일</label>
-            <div className="calendar-wrapper">
+            <div className={styles.calendarWrapper}>
               <DatePicker
                 selected={formData.birthDate}
                 onChange={handleDateChange}
                 dateFormat="yyyy년 MM월 dd일"
-                className="date-input"
+                className={styles.dateInput}
                 locale={ko}
                 showMonthDropdown
                 showYearDropdown
@@ -260,17 +260,17 @@ const SignUpForm: React.FC = () => {
                   changeMonth,
                 }) => (
                   <div 
-                    className="react-datepicker__header__dropdown"
+                    className={styles.reactDatepickerHeaderDropdown}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="react-datepicker__year-dropdown-container">
+                    <div className={styles.reactDatepickerYearDropdownContainer}>
                       <select
                         value={date.getFullYear()}
                         onChange={(e) => {
                           e.stopPropagation();
                           changeYear(Number(e.target.value));
                         }}
-                        className="react-datepicker__year-select"
+                        className={styles.reactDatepickerYearSelect}
                         onClick={(e) => e.stopPropagation()}
                       >
                         {Array.from({ length: 100 }, (_, i) => (
@@ -287,7 +287,7 @@ const SignUpForm: React.FC = () => {
                           e.stopPropagation();
                           changeMonth(Number(e.target.value));
                         }}
-                        className="react-datepicker__month-select"
+                        className={styles.reactDatepickerMonthSelect}
                         onClick={(e) => e.stopPropagation()}
                       >
                         {Array.from({ length: 12 }, (_, i) => (
@@ -301,7 +301,7 @@ const SignUpForm: React.FC = () => {
                 )}
                 customInput={
                   <input
-                    className="date-input"
+                    className={styles.dateInput}
                     value={formData.birthDate ? formData.birthDate.toLocaleDateString('ko-KR', {
                       year: 'numeric',
                       month: '2-digit',
@@ -316,7 +316,7 @@ const SignUpForm: React.FC = () => {
             </div>
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>직업</label>
             <select
               name="occupation"
@@ -329,30 +329,30 @@ const SignUpForm: React.FC = () => {
               <option value="jobseeker">취업준비생</option>
               <option value="employee">직장인</option>
               <option value="housewife">주부</option>
-              <option value="freelancer">프리랜서</option>``
+              <option value="freelancer">프리랜서</option>
             </select>
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>프로필 이미지</label>
-            <div className="profile-image-upload">
+            <div className={styles.profileImageUpload}>
               {formData.profileImage && (
                 <img 
                   src={formData.profileImage} 
                   alt="프로필 미리보기" 
-                  className="profile-preview" 
+                  className={styles.profilePreview} 
                 />
               )}
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className="image-input"
+                className={styles.imageInput}
               />
             </div>
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>한줄 소개</label>
             <input
               type="text"
@@ -363,15 +363,15 @@ const SignUpForm: React.FC = () => {
             />
           </div>
 
-          <button type="submit" className="submit-button">
+          <button type="submit" className={styles.submitButton}>
             회원가입하기
           </button>
 
-          <div className="login-link-wrapper">
-            <span className="login-question">이미 계정이 있으신가요?</span>
+          <div className={styles.loginLinkWrapper}>
+            <span className={styles.loginQuestion}>이미 계정이 있으신가요?</span>
             <button
               type="button"
-              className="login-link-button"
+              className={styles.loginLinkButton}
               onClick={handleLogin}
             >
               로그인하러가기

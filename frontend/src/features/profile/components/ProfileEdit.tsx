@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from './ProfileEdit.module.scss';
 import type { UserProfile } from '../../auth/types/user';
 import { existingNicknames } from '../../auth/data/dummyNicknames';
+import ConfirmModal from '../../../components/modals/ConfirmModal';
 
 const ProfileEdit: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ const ProfileEdit: React.FC = () => {
 
   const [isNicknameChecked, setIsNicknameChecked] = useState<boolean>(false);
   const [tempNickname, setTempNickname] = useState<string>(userData.nickname);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
 
   const handlePasswordChange = () => {
     navigate('/login/password');  // PasswordForm으로 이동
@@ -114,6 +116,17 @@ const ProfileEdit: React.FC = () => {
     alert('프로필이 수정되었습니다.');
   };
 
+  const handleDeleteAccount = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = () => {
+    // TODO: API 연동 시 회원 탈퇴 로직 구현
+    console.log('회원 탈퇴 처리');
+    alert('회원 탈퇴가 완료되었습니다.');
+    navigate('/');  // 홈으로 이동
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -192,12 +205,20 @@ const ProfileEdit: React.FC = () => {
 
         <div className={styles.formGroup}>
           <label>성별</label>
-          <input type="text" value={userData.gender} />
+          <input 
+            type="text" 
+            value={userData.gender} 
+            readOnly
+          />
         </div>
 
         <div className={styles.formGroup}>
           <label>생년월일</label>
-          <input type="text" value={userData.birthDate?.toISOString().split('T')[0]} />
+          <input 
+            type="text" 
+            value={userData.birthDate?.toISOString().split('T')[0]} 
+            readOnly
+          />
         </div>
 
         <div className={styles.formGroup}>
@@ -237,7 +258,12 @@ const ProfileEdit: React.FC = () => {
         </div>
 
         <div className={styles.buttons}>
-          <button className={styles.deleteButton}>회원 탈퇴</button>
+          <button 
+            className={styles.deleteButton} 
+            onClick={handleDeleteAccount}
+          >
+            회원 탈퇴
+          </button>
           <button className={styles.saveButton} onClick={handleSave}>
             저장
           </button>
@@ -281,6 +307,13 @@ const ProfileEdit: React.FC = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        message="정말로 탈퇴하시겠습니까?"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 };
