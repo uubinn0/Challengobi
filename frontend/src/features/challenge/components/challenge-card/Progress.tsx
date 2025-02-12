@@ -4,7 +4,7 @@ import type { FC } from "react"
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { Pencil, Heart, MessageSquare } from "lucide-react"
-import "./Progress.css"
+import styles from "./Progress.module.scss"
 import ocrbuttonfish from '../../../../assets/ocr-button-fish.png'
 import profileJaringobi from '../../../../assets/profile-jaringobi.png'
 
@@ -72,28 +72,28 @@ const Progress: FC = () => {
  }, [])
 
  return (
-   <div className="container">
-     <div className="challenge-card">
-       <h1 className="title">담배에 돈 쓰지 맙시다</h1>
-       <p className="subtitle">올해는 금연해봅시다 우리</p>
-       <div className="info">
-         <div className="info-item">
+   <div className={styles.container}>
+     <div className={styles.challengeCard}>
+       <h1 className={styles.title}>담배에 돈 쓰지 맙시다</h1>
+       <p className={styles.subtitle}>올해는 금연해봅시다 우리</p>
+       <div className={styles.info}>
+         <div className={styles.infoItem}>
            <span>카테고리 :</span>
            <span>술/담배</span>
          </div>
-         <div className="info-item">
+         <div className={styles.infoItem}>
            <span>챌린지 기간 :</span>
            <span>1월 1일 - 1월 29일</span>
          </div>
-         <div className="info-item">
+         <div className={styles.infoItem}>
            <span>챌린지 금액 :</span>
            <span>20,000원</span>
          </div>
-         <div className="info-item">
+         <div className={styles.infoItem}>
            <span>챌린지 인원 :</span>
            <span>3명</span>
          </div>
-         <div className="info-item">
+         <div className={styles.infoItem}>
            <span>남은 금액 :</span>
            <span>0원</span>
          </div>
@@ -102,67 +102,67 @@ const Progress: FC = () => {
      {/* 홈 화면에서 접근하지 않았을 때만 progress-card 표시 */}
      {!isFromHome && (
        <>
-         <div className="progress-card">
-           <div className="progress-text-container">
-             <div className="fish-icon-container">
+         <div className={styles.progressCard}>
+           <div className={styles.progressTextContainer}>
+             <div className={styles.fishIconContainer}>
                <img 
                  src={profileJaringobi}
                  alt="자린고비 프로필" 
-                 className="ocr-fish-icon"
+                 className={styles.ocrFishIcon}
                />
              </div>
-             <p className="progress-text">
+             <p className={styles.progressText}>
                자린 고비님 챌린지 성공까지
                <br />
                7일 남았어요.
              </p>
            </div>
-           <p className="amount-text">
+           <p className={styles.amountText}>
              현재까지
              <br />
              10,000원 남았어요
            </p>
-           <button onClick={handleVerifyClick} className="verify-button">
+           <button onClick={handleVerifyClick} className={styles.verifyButton}>
              <img 
                src={ocrbuttonfish} 
                alt="물고기 아이콘" 
-               className="ocr-fish-icon"
+               className={styles.ocrFishIcon}
              />
              고비 인증하기
            </button>
          </div>
        </>
      )}
-     <div className="comments-section">
-       <h2 className="section-title">게시글</h2>
-       <div className="comments-list">
+     <div className={styles.commentsSection}>
+       <h2 className={styles.sectionTitle}>게시글</h2>
+       <div className={styles.commentsList}>
          {comments.map((comment) => (
            <div 
              key={comment.id} 
-             className="comment-item"
+             className={styles.commentItem}
              onClick={() => handlePostClick(comment.id)}
              style={{ cursor: 'pointer' }}
            >
-             <div className="comment-header">
-               <img src={comment.avatar || "/placeholder.svg"} alt="" className="avatar" />
-               <div className="comment-info">
-                 <p className="comment-text">{comment.content}</p>
-                 <p className="author-name">{comment.authorRole}</p>
+             <div className={styles.commentHeader}>
+               <img src={comment.avatar || "/placeholder.svg"} alt="" className={styles.avatar} />
+               <div className={styles.commentInfo}>
+                 <p className={styles.commentText}>{comment.content}</p>
+                 <p className={styles.authorName}>{comment.authorRole}</p>
                </div>
              </div>
-             <div className="comment-actions" onClick={(e) => e.stopPropagation()}>
+             <div className={styles.commentActions} onClick={(e) => e.stopPropagation()}>
                <button
                  onClick={(e) => {
                    e.stopPropagation();
                    handleLike(comment.id);
                  }}
-                 className={`action-button ${likedComments.includes(comment.id) ? "liked" : ""}`}
+                 className={`${styles.actionButton} ${likedComments.includes(comment.id) ? styles.liked : ""}`}
                >
                  <Heart size={16} />
                  <span>{comment.likes}</span>
                </button>
                <button 
-                 className="action-button"
+                 className={styles.actionButton}
                  onClick={(e) => e.stopPropagation()}
                >
                  <MessageSquare size={16} />
@@ -175,7 +175,7 @@ const Progress: FC = () => {
      </div>
      {/* 홈 화면에서 접근하지 않았을 때만 write-button 표시 */}
      {!isFromHome && (
-       <button className="write-button" onClick={handleWriteClick}>
+       <button className={styles.writeButton} onClick={handleWriteClick}>
        <Pencil size={20} />
        글쓰기
      </button>

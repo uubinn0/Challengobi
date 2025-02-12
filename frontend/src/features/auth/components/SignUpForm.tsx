@@ -21,6 +21,8 @@ const SignUpForm: React.FC = () => {
   const [isVerified, setIsVerified] = useState<boolean>(false);
   const [isDuplicateChecked, setIsDuplicateChecked] = useState<boolean>(false);
   const [isUserIdDuplicateChecked, setIsUserIdDuplicateChecked] = useState<boolean>(false);
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [passwordsMatch, setPasswordsMatch] = useState(true);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
     const { name, value } = e.target;
@@ -60,7 +62,7 @@ const SignUpForm: React.FC = () => {
     e.preventDefault();
     setIsVerified(true);
   };
-
+  
   const handleDuplicateCheck = (e: MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault();
     
@@ -104,6 +106,33 @@ const SignUpForm: React.FC = () => {
       reader.readAsDataURL(file);
     }
   };
+
+  const handlePasswordConfirmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const confirmValue = e.target.value;
+    setPasswordConfirm(confirmValue);
+    setPasswordsMatch(confirmValue === formData.password);
+  };
+
+  const isFormValid = () => {
+    return (
+      formData.email.trim() !== '' &&
+      verificationCode.trim() !== '' &&
+      formData.userId.trim() !== '' &&
+      formData.password.trim() !== '' &&
+      passwordConfirm.trim() !== '' &&
+      passwordsMatch &&
+      formData.nickname.trim() !== '' &&
+      formData.gender !== '' &&
+      formData.birthDate !== null &&
+      formData.occupation !== '' &&
+      formData.introduction.trim() !== '' &&
+      isVerified &&
+      isUserIdDuplicateChecked &&
+      isDuplicateChecked &&
+      passwordsMatch
+    );
+  };
+
 
   return (
     <div className={styles.signupContainer}>
@@ -191,11 +220,14 @@ const SignUpForm: React.FC = () => {
             <label>비밀번호 확인</label>
             <input
               type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="비밀번호를 다시 입력하세요"
+              value={passwordConfirm}
+              onChange={handlePasswordConfirmChange}
             />
+            {!passwordsMatch && (
+              <span className={styles.errorMessage}>
+                비밀번호가 일치하지 않습니다.
+              </span>
+            )}
           </div>
 
           <div className={styles.formGroup}>
@@ -363,7 +395,15 @@ const SignUpForm: React.FC = () => {
             />
           </div>
 
-          <button type="submit" className={styles.submitButton}>
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={!isFormValid()}
+            style={{ 
+              opacity: isFormValid() ? 1 : 0.5,
+              cursor: isFormValid() ? 'pointer' : 'not-allowed'
+            }}
+          >
             회원가입하기
           </button>
 
