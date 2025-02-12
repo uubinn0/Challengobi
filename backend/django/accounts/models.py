@@ -40,12 +40,14 @@ class User(AbstractUser):
     id = models.AutoField(primary_key=True)
     username = models.CharField(_("username"), max_length=150, blank=True)
     email = models.EmailField(_("email"), max_length=150, unique=True)
-    nickname = models.CharField(max_length=100,
+    nickname = models.CharField(
+        max_length=100,
         unique=True,
         error_messages={
-        'unique' : _("이미 존재하는 닉네임입니다."),
+            "unique": _("이미 존재하는 닉네임입니다."),
         },
-        verbose_name="닉네임",)
+        verbose_name="닉네임",
+    )
     sex = models.CharField(
         max_length=1, choices=[("M", "Male"), ("F", "Female")], default="M"
     )
@@ -55,7 +57,7 @@ class User(AbstractUser):
     introduction = models.TextField(null=True, blank=True)
     profile_image = models.ImageField(upload_to="profiles/", null=True, blank=True)
     create_at = models.DateTimeField(auto_now_add=True)
-    social_login = models.CharField(null=True, default=0)
+    social_login = models.CharField(max_length=255, null=True, default=0)
     challenge_streak = models.PositiveSmallIntegerField(default=0)
 
     is_superuser = models.BooleanField(default=False)

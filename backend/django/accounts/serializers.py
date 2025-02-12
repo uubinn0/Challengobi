@@ -1,12 +1,6 @@
 from rest_framework import serializers
 from django.db import transaction
-from .models import User, EmailVerification, UserChallengeCategory, Follow
-from api_error.system_exception import (
-    Error,
-    SystemError,
-    SystemErrorList,
-    SystemException,
-)
+from .models import User, UserChallengeCategory, Follow
 
 
 class UserListSerializer(serializers.ModelSerializer):
@@ -47,29 +41,55 @@ class UserCreateSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         if validated_data["password1"] != validated_data["password2"]:
-            raise SystemException(
-                SystemErrorList.errors[Error.USER_TWO_PASSWORD_DOES_NOT_EQUAL.value]
-            )
-
-        try:
-            User.objects.get(email=validated_data["email"])
-            raise SystemException(
-                SystemErrorList.errors[Error.USER_EMAIL_ALREADY_EXIST.value],
-                validated_data["email"],
-            )
-        except User.DoesNotExist:
-            pass
+            raise serializers.ValidationError("비밀번호가 일치하지 않습니다.")
 
         user = User(
             email=validated_data["email"],
             nickname=validated_data["nickname"],
             sex=validated_data.get("sex", "M"),
-            birth_date=validated_data.get("birth_date"),
-            career=validated_data.get("career"),
+            birth_date=validated_data["birth_date"],
+            career=validated_data["career"],
         )
         user.set_password(validated_data["password1"])
         user.save()
         return user
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    follower_count = serializers.SerializerMethodField()
+    following_count = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "nickname",
+            "sex",
+            "birth_date",
+            "career",
+            "total_saving",
+            "introduction",
+            "profile_image",
+            "challenge_streak",
+            "follower_count",
+            "following_count",
+            "is_following",
+        ]
+        read_only_fields = ["email", "challenge_streak"]
+
+    def get_follower_count(self, obj):
+        return obj.followers.count()
+
+    def get_following_count(self, obj):
+        return obj.following.count()
+
+    def get_is_following(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return Follow.objects.filter(follower=request.user, following=obj).exists()
+        return False
 
 
 class UserChallengeCategorySerializer(serializers.ModelSerializer):
@@ -86,14 +106,6 @@ class UserChallengeCategorySerializer(serializers.ModelSerializer):
             "transportation",
             "etc",
         ]
-
-    def create(self, validated_data):
-        user = self.context["request"].user
-        # 이미 존재하는 카테고리가 있다면 업데이트
-        category, created = UserChallengeCategory.objects.update_or_create(
-            user=user, defaults=validated_data
-        )
-        return category
 
 
 class FollowSerializer(serializers.ModelSerializer):
@@ -115,55 +127,3 @@ class FollowSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["created_at"]
-
-
-class UserProfileSerializer(serializers.ModelSerializer):
-    password1 = serializers.CharField(write_only=True, required=False)
-    password2 = serializers.CharField(write_only=True, required=False)
-    follower_count = serializers.SerializerMethodField()
-    following_count = serializers.SerializerMethodField()
-    is_following = serializers.SerializerMethodField()
-
-    def get_follower_count(self, obj):
-        return obj.followers.count()
-
-    def get_following_count(self, obj):
-        return obj.following.count()
-
-    def get_is_following(self, obj):
-        request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            return Follow.objects.filter(follower=request.user, following=obj).exists()
-        return False
-
-    class Meta:
-        model = User
-        fields = [
-            "id",
-            "email",
-            "nickname",
-            "sex",
-            "birth_date",
-            "career",
-            "total_saving",
-            "introduction",
-            "profile_image",
-            "challenge_streak",
-            "email_verified",
-            "password1",
-            "password2",
-        ]
-        read_only_fields = ["email", "email_verified", "challenge_streak"]
-
-    @transaction.atomic
-    def update(self, instance, validated_data):
-        if "password1" in validated_data and "password2" in validated_data:
-            if validated_data["password1"] != validated_data["password2"]:
-                raise SystemException(
-                    SystemErrorList.errors[Error.USER_TWO_PASSWORD_DOES_NOT_EQUAL.value]
-                )
-            instance.set_password(validated_data["password1"])
-            validated_data.pop("password1")
-            validated_data.pop("password2")
-
-        return super().update(instance, validated_data)

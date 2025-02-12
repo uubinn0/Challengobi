@@ -28,7 +28,7 @@ from drf_yasg import openapi
 from rest_framework import routers, permissions
 from django.conf import settings
 
-from account.views import UserListView, UserCreateView, UserDetailView
+# from accounts.views import UserListView, UserCreateView, UserDetailView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -49,9 +49,7 @@ urlpatterns = [
     path("api/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # 계정 관련 URLs
-    path("api/account/", UserListView.as_view()),
-    path("api/account/<int:pk>/", UserDetailView.as_view()),
-    path("api/account/signup/", UserCreateView.as_view()),
+    path("api/accounts/", include("accounts.urls")),
     # 챌린지 관련 URLs
     path("api/challenges/", include("challenges.urls")),
     # 게시판 관련 URLs
