@@ -141,18 +141,34 @@ class ChallengeLikeSerializer(serializers.ModelSerializer):
         return data
 
 
-class ExpenseSerializer(serializers.ModelSerializer):
+# 소비 내역 저장 시리얼라이저
+class ExpenseCreateSerializer(serializers.ModelSerializer):
+    challenge_id = serializers.IntegerField()
+    user_id = serializers.IntegerField()
+    
     class Meta:
         model = Expense
-        fields = ["store", "amount", "payment_date", "is_handwritten"]
-
-    def validate_payment_date(self, value):
-        challenge = self.context["challenge"]
-        if not (challenge.start_date <= value.date() <= challenge.end_date):
-            raise serializers.ValidationError("결제일이 챌린지 기간을 벗어났습니다")
-        return value
+        fields = ['challenge_id', 'user_id', 'store', 'amount', 'payment_date', 'is_handwritten']
 
     def validate_amount(self, value):
         if value <= 0:
             raise serializers.ValidationError("결제 금액은 0보다 커야 합니다")
         return value
+
+    def create(self, validated_data):
+        challenge_id = validated_data.pop('challenge_id')
+        user_id = validated_data.pop('user_id')
+
+        # 무슨 의미인지 모르겠어서 사용 안 함
+        # challenge = get_object_or_404(Challenge, id=challenge_id)
+        # user = get_object_or_404(User, id=user_id)
+
+        validated_data['payment_date'] = timezone.now().date()
+
+        expense = Expense.objects.create(
+            challenge_id=challenge_id,
+            user_id=user_id,
+            **validated_data
+        )
+        return expense
+
