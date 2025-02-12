@@ -25,8 +25,9 @@ from .serializers import (
     ChallengeParticipantSerializer,
     ChallengeInviteSerializer,
     ChallengeLikeSerializer,
-    ExpenseSerializer,
+    ExpenseCreateSerializer,
 )
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +176,7 @@ class ChallengeLikeViewSet(viewsets.ModelViewSet):
 
 class ExpenseViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = ExpenseSerializer
+    serializer_class = ExpenseCreateSerializer
 
     def get_queryset(self):
         challenge_id = self.kwargs.get("challenge_id")
@@ -211,7 +212,8 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                 files.append(('files', file))  # files 파라미터로 여러 파일 전송
 
             response = requests.post(
-                "http://54.180.9.205:8001/extract_text/",
+                # settings.py에 OCR_SERVICE_URL 설정하지 않으면 기본 주소로 호출
+                f"{settings.OCR_SERVICE_URL}/extract_text/",
                 files=files,
                 timeout=90
             )
@@ -247,41 +249,70 @@ class ExpenseViewSet(viewsets.ModelViewSet):
 
         try:
             data = request.data
+            expenses_data = data.get('expenses', [])  # JSON 배열로 지출 데이터 받기
             
-            # 필수 필드 검증
-            required_fields = ['store', 'amount', 'payment_date', 'is_handwritten']
-            if not all(field in data for field in required_fields):
+            if not expenses_data:
                 return Response(
-                    {"error": "필수 필드가 누락되었습니다"},
+                    {"error": "지출 데이터가 없습니다"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # 참가자의 잔액 확인 및 업데이트
-            expense_amount = int(data['amount'])
-            if participant.balance < expense_amount:
-                return Response(
-                    {"error": "예산이 부족합니다"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-    
+            # 각 지출 데이터의 필수 필드 검증
+            required_fields = ['store', 'amount']
+            for expense_data in expenses_data:
+                if not all(field in expense_data for field in required_fields):
+                    return Response(
+                        {"error": "필수 필드가 누락되었습니다"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            # 총 지출 금액 계산
+            total_amount = sum(int(expense['amount']) for expense in expenses_data)
+            
+            # 잔액 확인 : 예산이 부족하면 에러를 발생하는데 우리는 에러보다는 챌린지 실패 상태로 변경하는 로직직
+            # if participant.balance < total_amount:
+            #     return Response(
+            #         {"error": "예산이 부족합니다"},
+            #         status=status.HTTP_400_BAD_REQUEST
+            #     )
 
             # 잔액 업데이트
-            participant.balance -= expense_amount
+            participant.balance -= total_amount
             participant.save()
 
-            # 지출 데이터 저장
-            expense = Expense.objects.create(
-                challenge=challenge,
-                user=request.user,
-                store=data['store'],
-                amount=expense_amount,
-                payment_date=data['payment_date'],
-            )
+            # JSON 각각의 지출 데이터 저장
+            created_expenses = []
+            for expense_data in expenses_data:
+                expense = Expense.objects.create(
+                    challenge=challenge,
+                    user=request.user,
+                    store=expense_data['store'],
+                    amount=int(expense_data['amount']),
+                    payment_date=expense_data.get('payment_date'),
+                )
+                created_expenses.append(expense.id)
+
+            # 잔액이 0 이하가 되면 챌린지 실패 처리
+            if participant.balance <= 0:
+                participant.is_failed = 1  # FAILED 상태 코드
+                participant.save()
+                
+                # 챌린지의 모든 참가자가 실패했는지 확인
+                all_failed = not ChallengeParticipant.objects.filter(
+                    challenge=challenge,
+                    is_failed=0  # 실패하지 않은 참가자가 있는지 확인
+                ).exists()
+                
+                # 모든 참가자가 실패했다면 챌린지도 종료
+                if all_failed:
+                    challenge.status = 3  # FINISHED 상태 코드
+                    challenge.save()
             
             return Response(
                 {
                     "message": "지출 내역이 저장되었습니다",
-                    "expense_id": expense.id,
+                    "expense_ids": created_expenses,
+                    "total_amount": total_amount,
                     "remaining_balance": participant.balance,
                     "ocr_count": participant.ocr_count
                 },
