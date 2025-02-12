@@ -1,4 +1,3 @@
-# Create your models here.
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
@@ -18,10 +17,10 @@ class Challenge(models.Model):
     ]
 
     STATUS_CHOICES = [
-        (0, "RECRUIT"),
-        (1, "IN_PROGRESS"),
-        (2, "COMPLETED"),
-        (3, "CANCELED"),
+        (0, "RECRUIT"),  # 모집중
+        (1, "IN_PROGRESS"),  # 진행중
+        (2, "COMPLETED"),  # 종료
+        (3, "DELETED"),  # 삭제(취소)
     ]
 
     creator = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
@@ -61,12 +60,6 @@ class ChallengeParticipant(models.Model):
 
 
 class ChallengeInvite(models.Model):
-    STATUS_CHOICES = [
-        ("pending", "Pending"),
-        ("accepted", "Accepted"),
-        ("rejected", "Rejected"),
-    ]
-
     challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE)
     from_user = models.ForeignKey(
         "accounts.User", related_name="sent_invites", on_delete=models.CASCADE
@@ -74,7 +67,6 @@ class ChallengeInvite(models.Model):
     to_user = models.ForeignKey(
         "accounts.User", related_name="received_invites", on_delete=models.CASCADE
     )
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -88,51 +80,18 @@ class Expense(models.Model):
     amount = models.PositiveIntegerField()
     payment_date = models.DateTimeField()
     is_handwritten = models.BooleanField()
-    receipt_image = models.ImageField(upload_to="receipts/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "Expense"
 
 
-class OCRResult(models.Model):
-    expense = models.OneToOneField(
-        Expense, on_delete=models.CASCADE, null=True, blank=True
-    )
-    user = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
-    challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to="ocr_images/")
-    result_data = models.JSONField()
-    status = models.CharField(max_length=20, default="processing")
-    created_at = models.DateTimeField(auto_now_add=True)
-    completed_at = models.DateTimeField(null=True, blank=True)
-
-
-class DraftExpense(models.Model):
-    challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE)
-    user = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
-    store = models.CharField(max_length=255)
-    amount = models.PositiveIntegerField()
-    payment_date = models.DateTimeField()
-    is_handwritten = models.BooleanField()
-    receipt_image = models.ImageField(
-        upload_to="draft_receipts/", null=True, blank=True
-    )
-    ocr_result = models.ForeignKey(
-        OCRResult, on_delete=models.SET_NULL, null=True, blank=True
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True)
-
-
 class ChallengeLike(models.Model):
-    REACTION_CHOICES = [("encourage", "Encourage"), ("want", "Want to Join")]
-
     challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE)
     user = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
-    reaction_type = models.CharField(max_length=10, choices=REACTION_CHOICES)
-    created_at = models.DateTimeField(auto_now_add=True)
+    encourage = models.BooleanField(default=False)  # 응원해요
+    want_to_join = models.BooleanField(default=False)  # 참여하고 싶어요
 
     class Meta:
         db_table = "ChallengeLike"
-        unique_together = ("challenge", "user", "reaction_type")
+        unique_together = ("challenge", "user")
