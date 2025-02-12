@@ -47,17 +47,18 @@ urlpatterns = [
         name="challenge-reaction-detail",
     ),
     # 소비내역 및 OCR
-    # OCR 호출 및 JSON 반환환
+    # OCR 호출 및 JSON 반환
     path(
         "<int:challenge_id>/expenses/ocr/",
         views.ExpenseViewSet.as_view({"post": "ocr"}),
         name="challenge-expense-ocr",
     ),
+    # OCR 저장
     path(
         "<int:challenge_id>/expenses/ocr/<int:ocr_id>",
         views.ExpenseViewSet.as_view({"post": "ocr_save"}),
         name="challenge-expense-ocr-save"
-    )
+    ),
 
     # 게시판 기능은 posts 앱의 URL을 include
     path("<int:challenge_id>/posts/", include("posts.urls")),
