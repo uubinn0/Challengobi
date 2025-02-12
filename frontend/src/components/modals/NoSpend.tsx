@@ -1,6 +1,6 @@
 import React, { ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './NoSpend.css';
+import styles from './NoSpend.module.scss';
 
 interface NoSpendProps {
   isOpen: boolean;
@@ -23,13 +23,13 @@ const NoSpend: React.FC<NoSpendProps> = ({ isOpen, onClose }) => {
   const getConfirmText = (): JSX.Element => {
     const text = '저는 오늘 소비하지 않았습니다';
     return (
-      <div className="text-overlay">
+      <div className={styles['text-overlay']}>
         {text.split('').map((char, index) => (
-          <span key={index} className="char-container">
+          <span key={index} className={styles['char-container']}>
             {index < inputText.length ? (
-              <span className="typed-char"></span>
+              <span className={styles['typed-char']}></span>
             ) : (
-              <span className="guide-char">{char}</span>
+              <span className={styles['guide-char']}>{char}</span>
             )}
           </span>
         ))}
@@ -40,29 +40,29 @@ const NoSpend: React.FC<NoSpendProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content no-spend-modal">
-        <div className="modal-title">정말 오늘 소비내역이 없습니까?</div>
-        <div className="modal-message">
+    <div className={styles['modal-overlay']}>
+      <div className={styles['no-spend-modal']}>
+        <div className={styles['modal-title']}>정말 오늘 소비내역이 없습니까?</div>
+        <div className={styles['modal-message']}>
           소비내역이 없다면, 아래 문구를 똑같이 입력해주세요.
         </div>
-        <div className="modal-input-container">
+        <div className={styles['modal-input-container']}>
           <input
             type="text"
             value={inputText}
             onChange={handleInputChange}
-            className="modal-input"
+            className={styles['modal-input']}
           />
-          <div className="modal-confirm-text">
+          <div className={styles['modal-confirm-text']}>
             {getConfirmText()}
           </div>
         </div>
-        <div className="modal-buttons">
-          <button className="modal-button modal-cancel" onClick={onClose}>
+        <div className={styles['modal-buttons']}>
+          <button className={`${styles['modal-button']} ${styles['modal-cancel']}`} onClick={onClose}>
             취소
           </button>
           <button 
-            className="modal-button modal-confirm"
+            className={`${styles['modal-button']} ${styles['modal-confirm']}`}
             onClick={handleProgress}
             disabled={inputText !== confirmText}
           >

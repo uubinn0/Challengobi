@@ -1,5 +1,5 @@
 import React, { ChangeEvent } from 'react';
-import './EasySubmit.css';
+import styles from './EasySubmit.module.scss';
 
 interface EasySubmitProps {
   isOpen: boolean;
@@ -58,32 +58,32 @@ const EasySubmit: React.FC<EasySubmitProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="amount-modal">
-        <div className="modal-title">소비한 금액을 작성해주세요.</div>
-        <div className="modal-input-container">
-          <div className="input-wrapper">
+    <div className={styles['modal-overlay']}>
+      <div className={styles['amount-modal']}>
+        <div className={styles['modal-title']}>소비한 금액을 작성해주세요.</div>
+        <div className={styles['modal-input-container']}>
+          <div className={styles['input-wrapper']}>
             <input
               type="text"
               value={displayAmount}
               onChange={handleAmountChange}
-              className="modal-input"
+              className={styles['modal-input']}
               placeholder="금액을 입력하세요"
             />
-            <span className="currency-unit">원</span>
+            <span className={styles['currency-unit']}>원</span>
           </div>
           {koreanAmount && (
-            <div className="korean-amount">
+            <div className={styles['korean-amount']}>
               {koreanAmount}원
             </div>
           )}
         </div>
-        <div className="modal-buttons">
-          <button className="modal-button modal-cancel" onClick={onClose}>
+        <div className={styles['modal-buttons']}>
+          <button className={`${styles['modal-button']} ${styles['modal-cancel']}`} onClick={onClose}>
             취소
           </button>
           <button 
-            className="modal-button modal-confirm"
+            className={`${styles['modal-button']} ${styles['modal-confirm']}`}
             onClick={handleSubmit}
             disabled={!amount || parseInt(amount) <= 0}
           >

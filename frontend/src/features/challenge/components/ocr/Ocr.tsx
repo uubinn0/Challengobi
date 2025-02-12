@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './Ocr.css';
+import styles from './Ocr.module.scss';
 import cameraIcon from '../../../../assets/camera.png';
 import { useNavigate } from 'react-router-dom';
 import NoSpend from '../../../../components/modals/NoSpend';
@@ -37,8 +37,8 @@ const Ocr: React.FC = () => {
   };
 
   return (
-    <div className="ocr-container">
-      <div className="title-box">
+    <div className={styles['ocr-container']}>
+      <div className={styles['title-box']}>
         <h2>고비 인증하기</h2>
         <p>
           사용 내역 캡처를 업로드해<br />
@@ -46,31 +46,31 @@ const Ocr: React.FC = () => {
         </p>
       </div>
 
-      <div className="button-container">
+      <div className={styles['button-container']}>
         <button 
-          className="submit-button"
+          className={styles['submit-button']}
           onClick={handleImageSubmit}
         >
-          <div className="button-content">
+          <div className={styles['button-content']}>
             <span>제출내역 <br/> 이미지 제출</span>
-            <span className="camera-icon">
+            <span className={styles['camera-icon']}>
               <img src={cameraIcon} alt="카메라 아이콘" />
             </span>
           </div>
         </button>
 
         <button 
-          className="submit-button"
+          className={styles['submit-button']}
           onClick={() => setShowAmountModal(true)}
         >
-          <div className="button-content">
+          <div className={styles['button-content']}>
             <span>간편제출</span>
           </div>
         </button>
       </div>
 
       {showAmountInfo && (
-        <div className="amount-info">
+        <div className={styles['amount-info']}>
           <p>남은 금액 {totalAmount}원에서</p>
           <p>{amount}원이 차감돼요</p>
           <p>남은 금액: <span style={{ color: totalAmount - parseInt(amount) < 0 ? '#FF0004' : 'inherit' }}>
@@ -82,14 +82,14 @@ const Ocr: React.FC = () => {
 
       {showSubmitButton && (
         <button 
-          className="submit-action-button"
+          className={styles['submit-action-button']}
           onClick={handleSubmit}
         >
           제출
         </button>
       )}
 
-      <button className="no-spend-button" onClick={handleNoSpendClick}>
+      <button className={styles['no-spend-button']} onClick={handleNoSpendClick}>
         오늘 소비하지 않았어요
       </button>
       
