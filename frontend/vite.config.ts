@@ -14,5 +14,5 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  assetsInclude: ['**/*.PNG', '**/*.png'],
+  assetsInclude: ['**/*.jpg', '**/*.JPG', '**/*.png', '**/*.PNG'],
 });
