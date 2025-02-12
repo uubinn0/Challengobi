@@ -37,9 +37,14 @@ class MyUserManager(BaseUserManager):
 class User(AbstractUser):
     objects = MyUserManager()
 
+    #상속받아 있지만 불필요한 필드 생성하지 않게 설정정
+    first_name = None
+    last_name = None
+    last_login = None
+    date_joined = None
+
+    # email, username은 AbstarctUser 클래스에서 상속 받음
     id = models.AutoField(primary_key=True)
-    username = models.CharField(_("username"), max_length=150, blank=True)
-    email = models.EmailField(_("email"), max_length=150, unique=True)
     nickname = models.CharField(max_length=100,
         unique=True,
         error_messages={
