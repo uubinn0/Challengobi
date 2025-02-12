@@ -14,9 +14,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-<<<<<<< HEAD
   assetsInclude: ['**/*.jpg', '**/*.JPG', '**/*.png', '**/*.PNG'],
-=======
   server: {
     port: 3000, // Vite 기본 포트
     host: "0.0.0.0", // 컨테이너 외부에서도 접근 가능하게 설정
@@ -25,6 +23,4 @@ export default defineConfig({
       usePolling: true, // 파일 변경 감지 문제 해결 (도커 환경 필수)
     },
   },
-  assetsInclude: ['**/*.PNG', '**/*.png'],
->>>>>>> b657f4faeb5a0d9af2f3a1c225ca28cc1b2eb6f7
 });

@@ -66,7 +66,7 @@ const HomePage: React.FC = () => {
   ]
 
   const [activeCategory, setActiveCategory] = useState("전체")
-  const [activeTab, setActiveTab] = useState<"recruiting" | "ongoing">("ongoing")
+  const [activeTab, setActiveTab] = useState<"recruiting" | "ongoing">("recruiting")
 
   const challenges = useMemo((): Challenge[] => [
     {
@@ -75,10 +75,10 @@ const HomePage: React.FC = () => {
       period: "1주일",
       amount: "10만원",
       category: "외식",
-      currentMembers: 3,
+      currentMembers: 1,
       maxMembers: 5,
       likes: 10,
-      wants: 5,
+      wants: 5
     },
     {
       id: 2,
@@ -86,11 +86,24 @@ const HomePage: React.FC = () => {
       period: "1주일",
       amount: "2만원",
       category: "술/담배",
-      currentMembers: 4,
+      currentMembers: 6,
       maxMembers: 6,
       likes: 76,
       wants: 12,
     },
+    {
+      id: 3,
+      title: "커피를 줄이자",
+      period: "1주일",
+      amount: "2만원",
+      category: "카페/디저트",
+      currentMembers: 2,
+      maxMembers: 6,
+      likes: 76,
+      wants: 12,
+    },
+
+
   ], []);
 
   const filteredChallenges = useMemo(() => {

@@ -1,9 +1,12 @@
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import styles from "./ChallengeList.module.scss"
 import type { Challenge } from "../../types"
 import { SupportFish, WantFish } from "../../../../components/icons/FishIcon"
 import ChallengeDetailModal from '../../../../components/modals/ChallengeDetailModal'
+import challengeList1 from '../../../../assets/challengelist1.jpg'
+import challengeList2 from '../../../../assets/challengelist2.jpg'
+import challengeList3 from '../../../../assets/challengelist3.jpg'
 
 interface ChallengeListProps {
   challenges: Challenge[]
@@ -12,25 +15,30 @@ interface ChallengeListProps {
 const ChallengeList: React.FC<ChallengeListProps> = ({ challenges }) => {
   const [likeStates, setLikeStates] = useState<{ [key: number]: boolean }>({})
   const [wantStates, setWantStates] = useState<{ [key: number]: boolean }>({})
-  const [likeCounts, setLikeCounts] = useState<{ [key: number]: number }>(
-    challenges.reduce(
-      (acc, challenge) => ({
-        ...acc,
-        [challenge.id]: challenge.likes,
-      }),
-      {},
-    ),
-  )
-  const [wantCounts, setWantCounts] = useState<{ [key: number]: number }>(
-    challenges.reduce(
-      (acc, challenge) => ({
-        ...acc,
-        [challenge.id]: challenge.wants,
-      }),
-      {},
-    ),
-  )
+  const [likeCounts, setLikeCounts] = useState<{ [key: number]: number }>({})
+  const [wantCounts, setWantCounts] = useState<{ [key: number]: number }>({})
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null)
+
+  useEffect(() => {
+    setLikeCounts(
+      challenges.reduce(
+        (acc, challenge) => ({
+          ...acc,
+          [challenge.id]: challenge.likes,
+        }),
+        {},
+      ),
+    );
+    setWantCounts(
+      challenges.reduce(
+        (acc, challenge) => ({
+          ...acc,
+          [challenge.id]: challenge.wants,
+        }),
+        {},
+      ),
+    );
+  }, [challenges]);
 
   const handleLike = (challengeId: number, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -60,6 +68,12 @@ const ChallengeList: React.FC<ChallengeListProps> = ({ challenges }) => {
     setSelectedChallenge(challenge)
   }
 
+  const getChallengeImage = (currentMembers: number, maxMembers: number) => {
+    if (currentMembers === maxMembers) return challengeList3;
+    if (currentMembers === 1) return challengeList1;
+    return challengeList2;
+  };
+
   if (challenges.length === 0) {
     return (
       <div className={styles.noChallenges}>
@@ -77,14 +91,22 @@ const ChallengeList: React.FC<ChallengeListProps> = ({ challenges }) => {
             className={styles.challengeCard}
             onClick={() => handleChallengeClick(challenge)}
           >
-            <h3 className={styles.title}>{challenge.title}</h3>
-            <div className={styles.info}>
-              <p>고비: {challenge.period}</p>
-              <p>금액: {challenge.amount}</p>
-              <p>카테고리: {challenge.category}</p>
-              <p>
-                모집인원: {challenge.currentMembers}/{challenge.maxMembers}
-              </p>
+            <div className={styles.cardContent}>
+              <div className={styles.content}>
+                <h3 className={styles.title}>{challenge.title}</h3>
+                <div className={styles.info}>
+                  <p>고비: {challenge.period}</p>
+                  <p>금액: {challenge.amount}</p>
+                  <p>카테고리: {challenge.category}</p>
+                  <p>모집인원: {challenge.currentMembers}/{challenge.maxMembers}</p>
+                </div>
+              </div>
+              <div className={styles.challengeImage}>
+                <img 
+                  src={getChallengeImage(challenge.currentMembers, challenge.maxMembers)} 
+                  alt="챌린지 상태"
+                />
+              </div>
             </div>
             <div className={styles.actions}>
               <button
