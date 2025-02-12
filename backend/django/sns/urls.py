@@ -48,6 +48,7 @@ urlpatterns = [
     path('account', UserListView.as_view()),
     path('account/<int:pk>', UserDetailView.as_view()),
     path('account/signup', UserCreateView.as_view()),
+    path('challenges/', include('challenges.urls')),
 ]
 
 if settings.DEBUG:
