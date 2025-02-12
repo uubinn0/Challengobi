@@ -16,7 +16,7 @@ export default defineConfig({
   },
   assetsInclude: ['**/*.jpg', '**/*.JPG', '**/*.png', '**/*.PNG'],
   server: {
-    port: 3000, // Vite 기본 포트
+    port: 3000,
     host: "0.0.0.0", // 컨테이너 외부에서도 접근 가능하게 설정
     strictPort: true, // 사용 중이면 오류 발생 (다른 포트로 변경 안 함)
     watch: {
