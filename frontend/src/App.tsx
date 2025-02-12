@@ -7,7 +7,6 @@ import HomePage from './pages/home-page/HomePage';
 import LoginPage from './pages/login-page/LoginPage';
 import ChallengePage from './pages/challenge-page/ChallengePage';
 import ProfilePage from './pages/profile-page/ProfilePage';  
-import ErrorPage from './pages/error-page/ErrorPage';
 import FollowPage from './pages/follow-page/FollowPage';
 import LoginForm from './features/auth/components/LoginForm';
 import SignUpForm from './features/auth/components/SignUpForm';
@@ -35,6 +34,8 @@ import Following from './features/profile/components/Following';
 import Follower from './features/profile/components/Follower';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './features/auth/context/AuthContext';
+import NotFoundPage from './pages/error-page/NotFoundPage';
+import Error404Page from './pages/error-page/Error404Page';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,8 +94,8 @@ const App: React.FC = () => {
                   <Route index element={<SearchUser />} />
                 </Route>
 
-
-                <Route path="*" element={<ErrorPage />} />
+                <Route path="/404" element={<Error404Page />} />
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </main>
             <Footer />

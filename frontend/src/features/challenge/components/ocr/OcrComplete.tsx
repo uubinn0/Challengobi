@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import fishImage from '../../../../assets/ocr-fish.png';
+import fishImage from '../../../../assets/ocr.jpg';
 import './OcrComplete.css';
 
 const OcrComplete = () => {

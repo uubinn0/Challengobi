@@ -9,6 +9,7 @@ export interface Challenge {
   likes: number;
   wants: number;
   description?: string;
+  isOwner: boolean;
 }
 
 export interface OngoingChallenge {
@@ -22,4 +23,5 @@ export interface OngoingChallenge {
   successRate: number;
   supports: number;
   wants: number;
+  isOwner: boolean;
 } 

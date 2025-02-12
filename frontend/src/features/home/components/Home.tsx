@@ -23,6 +23,7 @@ const ongoingChallenges: OngoingChallenge[] = [
     successRate: 75,
     supports: 100,
     wants: 65,
+    isOwner: true,
   },
   {
     id: 2,
@@ -35,6 +36,7 @@ const ongoingChallenges: OngoingChallenge[] = [
     successRate: 80,
     supports: 40,
     wants: 19,
+    isOwner: true,
   },
   {
     id: 3,
@@ -47,6 +49,7 @@ const ongoingChallenges: OngoingChallenge[] = [
     successRate: 70,
     supports: 85,
     wants: 30,
+    isOwner: true,
   },
 ]
 
@@ -78,7 +81,8 @@ const HomePage: React.FC = () => {
       currentMembers: 1,
       maxMembers: 5,
       likes: 10,
-      wants: 5
+      wants: 5,
+      isOwner: true,
     },
     {
       id: 2,
@@ -90,6 +94,7 @@ const HomePage: React.FC = () => {
       maxMembers: 6,
       likes: 76,
       wants: 12,
+      isOwner: false,
     },
     {
       id: 3,
@@ -101,9 +106,8 @@ const HomePage: React.FC = () => {
       maxMembers: 6,
       likes: 76,
       wants: 12,
+      isOwner: false,
     },
-
-
   ], []);
 
   const filteredChallenges = useMemo(() => {
@@ -152,7 +156,9 @@ const HomePage: React.FC = () => {
     <div className={styles.homePage}>
       <Routes>
         <Route path="/" element={renderMainContent()} />
-        <Route path="/challenge/:id" element={<ChallengeDetail challenges={ongoingChallenges} />} />
+        <Route path="/challenge/:id" element={
+          <ChallengeDetail challenges={challenges} />
+        } />
       </Routes>
     </div>
   )

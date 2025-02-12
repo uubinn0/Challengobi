@@ -20,6 +20,10 @@ const ChallengeDetailModal: React.FC<ChallengeDetailModalProps> = ({ isOpen, onC
   const [likeCount, setLikeCount] = useState(challenge.likes);
   const [wantCount, setWantCount] = useState(challenge.wants);
 
+  console.log('Modal Challenge:', challenge);
+  console.log('Modal isOwner:', challenge?.isOwner);
+  console.log('Full Challenge Object:', JSON.stringify(challenge, null, 2));
+
   if (!isOpen) return null;
 
   const handleLike = () => {
@@ -45,6 +49,10 @@ const ChallengeDetailModal: React.FC<ChallengeDetailModalProps> = ({ isOpen, onC
   const handleJoinChallenge = () => {
     onClose();
     navigate('/challenge');
+  };
+
+  const handleDeleteChallenge = () => {
+    // Implementation of handleDeleteChallenge
   };
 
   return (
@@ -129,6 +137,14 @@ const ChallengeDetailModal: React.FC<ChallengeDetailModalProps> = ({ isOpen, onC
           >
             챌린지 참가하기
           </button>
+          {challenge.isOwner && (
+            <button 
+              className={styles.deleteButton}
+              onClick={handleDeleteChallenge}
+            >
+              챌린지 삭제하기
+            </button>
+          )}
         </div>
       </div>
     </div>

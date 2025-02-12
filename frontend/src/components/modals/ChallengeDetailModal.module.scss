@@ -136,16 +136,25 @@
   display: flex;
   gap: 0.5rem;
   margin-top: 1.5rem;
-}
 
-.cancelButton, .joinButton {
-  flex: 1;
-  padding: 1rem;
-  border-radius: 8px;
-  border: none;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
+  .cancelButton, .joinButton, .deleteButton {
+    flex: 1;
+    padding: 1rem;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .deleteButton {
+    background-color: #d9534f;
+    color: white;
+
+    &:hover {
+      background-color: darken(#d9534f, 5%);
+    }
+  }
 }
 
 .cancelButton {
