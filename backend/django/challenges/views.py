@@ -201,17 +201,31 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # OCR 서버 호출
-        files = {"image": request.FILES.get("image")}
-        response = requests.post("http://your-ocr-server/analyze", files=files)
+        try:
+        # 다중 이미지 받은 후 OCR 서버 호출
+            files = []
+            for file_key, file in request.FILES.items():
+                files.append(('files', file))  # files 파라미터로 여러 파일 전송
 
-        if response.status_code != 200:
-            return Response(
-                {"error": "OCR 처리 중 오류가 발생했습니다"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            response = requests.post(
+                "http://54.180.9.205:8001/extract_text/",
+                files=files,
+                timeout=90
             )
 
-        return Response(response.json())
+            if response.status_code != 200:
+                return Response(
+                {"error": "OCR 처리 중 오류가 발생했습니다"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+            
+            return Response(response.json())
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class ChallengeLikeViewSet(viewsets.ModelViewSet):
