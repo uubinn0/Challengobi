@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 import requests
+import logging
 from datetime import date
 
 from .models import (
@@ -26,6 +27,7 @@ from .serializers import (
     ChallengeInviteSerializer,
 )
 
+logger = logging.getLogger(__name__)
 
 class ChallengeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
@@ -179,18 +181,29 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        try:
         # OCR 서버 호출
-        files = {"image": request.FILES.get("image")}
-        response = requests.post("http://your-ocr-server/analyze", files=files)
+            response = requests.post("http://your-fastapi-server/extract_text/", files=files)
 
-        if response.status_code != 200:
+            if response.status_code != 200:
+                return Response(
+                    {"error": "OCR 처리 중 오류가 발생했습니다"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+
+            return Response(response.json())
+        
+        # 시간초과 및 오류 예외처리리
+        except requests.exceptions.Timeout:
             return Response(
-                {"error": "OCR 처리 중 오류가 발생했습니다"},
+                {"error": "OCR 요청 시간이 초과되었습니다."},
+                status=status.HTTP_408_REQUEST_TIMEOUT,
+            )
+        except requests.exceptions.RequestException as e:
+            return Response(
+                {"error": f"OCR 처리 중 오류가 발생했습니다: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
-        return Response(response.json())
-
 
 class ChallengeLikeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
