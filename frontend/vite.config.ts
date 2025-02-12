@@ -15,7 +15,6 @@ export default defineConfig({
     },
   },
   assetsInclude: ['**/*.jpg', '**/*.JPG', '**/*.png', '**/*.PNG'],
-
   server: {
     port: 3000, // Vite 기본 포트
     host: "0.0.0.0", // 컨테이너 외부에서도 접근 가능하게 설정
