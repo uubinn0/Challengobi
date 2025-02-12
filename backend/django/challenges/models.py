@@ -76,10 +76,10 @@ class ChallengeInvite(models.Model):
 class Expense(models.Model):
     challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE)
     user = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
-    store = models.CharField(max_length=255)
-    amount = models.PositiveIntegerField()
-    payment_date = models.DateTimeField()
-    is_handwritten = models.BooleanField()
+    store = models.CharField(max_length=255, null=False)
+    amount = models.PositiveIntegerField(null=False)
+    payment_date = models.DateField(auto_now_add=True)
+    is_handwritten = models.BooleanField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
