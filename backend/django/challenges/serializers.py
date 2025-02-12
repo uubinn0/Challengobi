@@ -11,17 +11,21 @@ from .models import (
 
 
 class ChallengeCreateSerializer(serializers.ModelSerializer):
+    challenge_category = serializers.IntegerField(source="category")
+    challenge_title = serializers.CharField(source="title")
+    challenge_info = serializers.CharField(source="description")
+    period = serializers.IntegerField(source="duration")
+
     class Meta:
         model = Challenge
         fields = [
-            "category",
-            "title",
-            "description",
+            "challenge_category",
+            "challenge_title",
+            "challenge_info",
+            "period",
             "start_date",
-            "duration",
-            "visibility",
-            "max_participants",
             "budget",
+            "max_participants",
         ]
 
     def validate_start_date(self, value):
@@ -34,160 +38,113 @@ class ChallengeCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("예산은 0보다 커야 합니다")
         return value
 
-    def validate(self, data):
-        if data["visibility"] is False and data["max_participants"] < 2:
-            raise serializers.ValidationError(
-                "공개 챌린지는 최소 2명 이상의 참여자가 필요합니다"
-            )
-        return data
-
     def create(self, validated_data):
+        category = validated_data.pop("category")
+        title = validated_data.pop("title")
+        description = validated_data.pop("description")
+        duration = validated_data.pop("duration")
+
+        validated_data["category"] = category
+        validated_data["title"] = title
+        validated_data["description"] = description
+        validated_data["duration"] = duration
         validated_data["end_date"] = validated_data["start_date"] + timedelta(
-            days=validated_data["duration"]
+            days=duration
         )
         validated_data["status"] = 0  # RECRUIT
+
         return super().create(validated_data)
 
 
 class ChallengeListSerializer(serializers.ModelSerializer):
-    participant_count = serializers.SerializerMethodField()
-    is_participating = serializers.SerializerMethodField()
-    creator_nickname = serializers.CharField(source="creator.nickname", read_only=True)
-    reactions = serializers.SerializerMethodField()
+    challenge_id = serializers.IntegerField(source="id")
+    challenge_title = serializers.CharField(source="title")
+    period = serializers.IntegerField(source="duration")
+    challenge_category = serializers.IntegerField(source="category")
+    encourage_cnt = serializers.SerializerMethodField()
+    want_cnt = serializers.SerializerMethodField()
 
     class Meta:
         model = Challenge
         fields = [
-            "id",
-            "creator_nickname",
-            "category",
-            "title",
+            "challenge_id",
+            "challenge_title",
+            "period",
             "start_date",
-            "duration",
+            "end_date",
             "budget",
-            "status",
-            "participant_count",
-            "is_participating",
-            "reactions",
+            "challenge_category",
+            "max_participants",
+            "encourage_cnt",
+            "want_cnt",
         ]
 
-    def get_participant_count(self, obj):
-        return obj.challengeparticipant_set.count()
+    def get_encourage_cnt(self, obj):
+        return obj.challengelike_set.filter(encourage=True).count()
 
-    def get_is_participating(self, obj):
-        request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            return obj.challengeparticipant_set.filter(user=request.user).exists()
-        return False
-
-    def get_reactions(self, obj):
-        encourage_count = obj.challengelike_set.filter(encourage=True).count()
-        want_to_join_count = obj.challengelike_set.filter(want_to_join=True).count()
-        return {
-            "encourage_count": encourage_count,
-            "want_to_join_count": want_to_join_count,
-        }
+    def get_want_cnt(self, obj):
+        return obj.challengelike_set.filter(want_to_join=True).count()
 
 
 class ChallengeDetailSerializer(serializers.ModelSerializer):
-    creator_nickname = serializers.CharField(source="creator.nickname", read_only=True)
-    participants = serializers.SerializerMethodField()
-    reactions = serializers.SerializerMethodField()
-    my_reaction = serializers.SerializerMethodField()
-    remaining_days = serializers.SerializerMethodField()
-    total_participants = serializers.SerializerMethodField()
+    challenge_title = serializers.CharField(source="title")
+    challenge_info = serializers.CharField(source="description")
+    challenge_category = serializers.IntegerField(source="category")
+    user_budget = serializers.SerializerMethodField()
 
     class Meta:
         model = Challenge
         fields = [
-            "id",
-            "creator_nickname",
-            "category",
-            "title",
-            "description",
+            "challenge_title",
+            "challenge_info",
+            "challenge_category",
             "start_date",
-            "duration",
             "end_date",
-            "visibility",
-            "max_participants",
             "budget",
-            "status",
-            "progress_rate",
-            "participants",
-            "reactions",
-            "my_reaction",
-            "remaining_days",
-            "total_participants",
+            "max_participants",
+            "user_budget",
         ]
 
-    def get_participants(self, obj):
-        return ChallengeParticipantSerializer(
-            obj.challengeparticipant_set.all(), many=True
-        ).data
-
-    def get_reactions(self, obj):
-        encourage_count = obj.challengelike_set.filter(encourage=True).count()
-        want_to_join_count = obj.challengelike_set.filter(want_to_join=True).count()
-        return {
-            "encourage_count": encourage_count,
-            "want_to_join_count": want_to_join_count,
-        }
-
-    def get_my_reaction(self, obj):
+    def get_user_budget(self, obj):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
-            reaction = obj.challengelike_set.filter(user=request.user).first()
-            if reaction:
-                return {
-                    "encourage": reaction.encourage,
-                    "want_to_join": reaction.want_to_join,
-                }
+            participant = obj.challengeparticipant_set.filter(user=request.user).first()
+            if participant:
+                return participant.balance
         return None
-
-    def get_remaining_days(self, obj):
-        if obj.status == 0:  # RECRUIT
-            return (obj.start_date - timezone.now().date()).days
-        elif obj.status == 1:  # IN_PROGRESS
-            return (obj.end_date - timezone.now().date()).days
-        return 0
-
-    def get_total_participants(self, obj):
-        return obj.challengeparticipant_set.count()
 
 
 class ChallengeParticipantSerializer(serializers.ModelSerializer):
-    user_nickname = serializers.CharField(source="user.nickname", read_only=True)
-    expense_count = serializers.SerializerMethodField()
-    total_expense = serializers.SerializerMethodField()
-
     class Meta:
         model = ChallengeParticipant
-        fields = [
-            "user_nickname",
-            "initial_budget",
-            "balance",
-            "is_failed",
-            "expense_count",
-            "total_expense",
-        ]
-
-    def get_expense_count(self, obj):
-        return Expense.objects.filter(challenge=obj.challenge, user=obj.user).count()
-
-    def get_total_expense(self, obj):
-        expenses = Expense.objects.filter(challenge=obj.challenge, user=obj.user)
-        return sum(expense.amount for expense in expenses)
+        fields = ["challenge", "user", "initial_budget", "balance", "is_failed"]
 
 
-class ExpenseCreateSerializer(serializers.ModelSerializer):
+class ChallengeInviteSerializer(serializers.ModelSerializer):
+    from_user_id = serializers.IntegerField(source="from_user.id")
+    to_user_id = serializers.IntegerField(source="to_user.id")
+    challenge_id = serializers.IntegerField(source="challenge.id")
+
+    class Meta:
+        model = ChallengeInvite
+        fields = ["from_user_id", "to_user_id", "challenge_id"]
+
+
+class ChallengeLikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChallengeLike
+        fields = ["user", "challenge", "encourage", "want_to_join"]
+
+    def validate(self, data):
+        if not data.get("encourage") and not data.get("want_to_join"):
+            raise serializers.ValidationError("최소 하나의 반응은 선택해야 합니다")
+        return data
+
+
+class ExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
-        fields = [
-            "store",
-            "amount",
-            "payment_date",
-            "is_handwritten",
-        ]
+        fields = ["store", "amount", "payment_date", "is_handwritten"]
 
     def validate_payment_date(self, value):
         challenge = self.context["challenge"]
@@ -199,53 +156,3 @@ class ExpenseCreateSerializer(serializers.ModelSerializer):
         if value <= 0:
             raise serializers.ValidationError("결제 금액은 0보다 커야 합니다")
         return value
-
-
-class ExpenseListSerializer(serializers.ModelSerializer):
-    user_nickname = serializers.CharField(source="user.nickname", read_only=True)
-
-    class Meta:
-        model = Expense
-        fields = [
-            "id",
-            "user_nickname",
-            "store",
-            "amount",
-            "payment_date",
-            "is_handwritten",
-            "created_at",
-        ]
-
-
-class ChallengeLikeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ChallengeLike
-        fields = [
-            "challenge",
-            "encourage",
-            "want_to_join",
-        ]
-
-    def validate(self, data):
-        if not data.get("encourage") and not data.get("want_to_join"):
-            raise serializers.ValidationError("최소 하나의 반응은 선택해야 합니다")
-        return data
-
-
-class ChallengeInviteSerializer(serializers.ModelSerializer):
-    from_user_nickname = serializers.CharField(
-        source="from_user.nickname", read_only=True
-    )
-    challenge_title = serializers.CharField(source="challenge.title", read_only=True)
-
-    class Meta:
-        model = ChallengeInvite
-        fields = [
-            "id",
-            "challenge",
-            "from_user_nickname",
-            "to_user",
-            "challenge_title",
-            "created_at",
-        ]
-        read_only_fields = ["from_user", "created_at"]

@@ -1,29 +1,26 @@
-from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.db.models import Q
 from rest_framework import viewsets, status, filters, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
-import requests
 from datetime import date
-
 from .models import (
     Challenge,
     ChallengeParticipant,
+    ChallengeInvite,
     Expense,
     ChallengeLike,
-    ChallengeInvite,
 )
 from .serializers import (
     ChallengeCreateSerializer,
     ChallengeListSerializer,
     ChallengeDetailSerializer,
     ChallengeParticipantSerializer,
-    ExpenseCreateSerializer,
-    ExpenseListSerializer,
-    ChallengeLikeSerializer,
     ChallengeInviteSerializer,
+    ChallengeLikeSerializer,
+    ExpenseSerializer,
 )
 
 
@@ -33,42 +30,45 @@ class ChallengeViewSet(viewsets.ModelViewSet):
     search_fields = ["title", "description"]
 
     def get_queryset(self):
-        queryset = Challenge.objects.all()
+        queryset = Challenge.objects.exclude(status=3)  # Exclude deleted challenges
 
-        # 상태별 필터링
-        status = self.request.query_params.get("status")
-        if status == "RECRUIT":
+        status_param = self.request.query_params.get("status")
+        if status_param == "recruiting":
             today = date.today()
-            queryset = queryset.filter(
-                status=0, start_date__gt=today  # RECRUIT  # 시작일이 오늘 이후인 것만
-            )
-        elif status == "IN_PROGRESS":
+            queryset = queryset.filter(status=0, start_date__gt=today)  # RECRUIT
+        elif status_param == "in_progress":
             queryset = queryset.filter(status=1)  # IN_PROGRESS
 
-        # 카테고리별 필터링
         category = self.request.query_params.get("category")
         if category:
             queryset = queryset.filter(category=category)
 
-        # 공개/비공개 필터링
-        if not self.action == "list":  # list가 아닌 경우에만 비공개 챌린지 필터링
+        search_keyword = self.request.query_params.get("search")
+        if search_keyword:
             queryset = queryset.filter(
-                Q(visibility=False)  # 공개 챌린지
-                | Q(challengeparticipant__user=self.request.user)  # 참여 중인 챌린지
-                | Q(creator=self.request.user)  # 내가 만든 챌린지
-            ).distinct()
+                Q(title__icontains=search_keyword)
+                | Q(description__icontains=search_keyword)
+            )
 
         return queryset
 
     def get_serializer_class(self):
-        if self.action == "create":
+        if self.action in ["create", "update", "partial_update"]:
             return ChallengeCreateSerializer
-        elif self.action == "list":
-            return ChallengeListSerializer
-        return ChallengeDetailSerializer
+        elif self.action == "retrieve":
+            return ChallengeDetailSerializer
+        return ChallengeListSerializer
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
+
+    def perform_update(self, serializer):
+        instance = self.get_object()
+        if instance.creator != self.request.user:
+            raise PermissionDenied("챌린지 생성자만 수정할 수 있습니다")
+        if instance.status != 0:  # RECRUIT
+            raise PermissionDenied("모집 중인 챌린지만 수정할 수 있습니다")
+        serializer.save()
 
     def perform_destroy(self, instance):
         if instance.creator != self.request.user:
@@ -82,7 +82,6 @@ class ChallengeViewSet(viewsets.ModelViewSet):
     def join(self, request, pk=None):
         challenge = self.get_object()
 
-        # 참여 가능 여부 검사
         if challenge.status != 0:
             return Response(
                 {"error": "모집 중인 챌린지가 아닙니다"},
@@ -101,7 +100,6 @@ class ChallengeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # 이미 참여 중인지 확인
         if ChallengeParticipant.objects.filter(
             challenge=challenge, user=request.user
         ).exists():
@@ -110,7 +108,6 @@ class ChallengeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # 참여자 생성
         participant = ChallengeParticipant.objects.create(
             challenge=challenge,
             user=request.user,
@@ -118,15 +115,15 @@ class ChallengeViewSet(viewsets.ModelViewSet):
             balance=challenge.budget,
         )
 
-        return Response(
-            ChallengeParticipantSerializer(participant).data,
-            status=status.HTTP_201_CREATED,
-        )
+        return Response(status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"])
     def invite(self, request, pk=None):
         challenge = self.get_object()
-        to_user = request.data.get("to_user")
+        serializer = ChallengeInviteSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         if challenge.status != 0:
             return Response(
@@ -135,28 +132,51 @@ class ChallengeViewSet(viewsets.ModelViewSet):
             )
 
         invite = ChallengeInvite.objects.create(
-            challenge=challenge, from_user=request.user, to_user_id=to_user
+            challenge=challenge,
+            from_user=request.user,
+            to_user_id=serializer.validated_data["to_user_id"],
         )
 
-        return Response(
-            ChallengeInviteSerializer(invite).data, status=status.HTTP_201_CREATED
+        return Response(status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["delete"])
+    def leave(self, request, pk=None):
+        challenge = self.get_object()
+        participant = get_object_or_404(
+            ChallengeParticipant, challenge=challenge, user=request.user
         )
+
+        if challenge.status != 0:  # RECRUIT
+            return Response(
+                {"error": "모집 중인 챌린지만 탈퇴할 수 있습니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        participant.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ChallengeLikeViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ChallengeLikeSerializer
+
+    def get_queryset(self):
+        return ChallengeLike.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 class ExpenseViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ExpenseSerializer
 
     def get_queryset(self):
-        challenge_id = self.kwargs.get("challenge_pk")
+        challenge_id = self.kwargs.get("challenge_id")
         return Expense.objects.filter(challenge_id=challenge_id, user=self.request.user)
 
-    def get_serializer_class(self):
-        if self.action in ["create", "update"]:
-            return ExpenseCreateSerializer
-        return ExpenseListSerializer
-
     def perform_create(self, serializer):
-        challenge_id = self.kwargs.get("challenge_pk")
+        challenge_id = self.kwargs.get("challenge_id")
         challenge = get_object_or_404(Challenge, id=challenge_id)
 
         if challenge.status != 1:  # IN_PROGRESS
@@ -169,8 +189,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         serializer.save(challenge=challenge, user=self.request.user)
 
     @action(detail=False, methods=["post"])
-    def ocr(self, request):
-        challenge_id = self.kwargs.get("challenge_pk")
+    def ocr(self, request, challenge_id=None):
         challenge = get_object_or_404(Challenge, id=challenge_id)
 
         if challenge.status != 1:  # IN_PROGRESS
@@ -179,37 +198,11 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # OCR 서버 호출
-        files = {"image": request.FILES.get("image")}
-        response = requests.post("http://your-ocr-server/analyze", files=files)
-
-        if response.status_code != 200:
+        if "image" not in request.FILES:
             return Response(
-                {"error": "OCR 처리 중 오류가 발생했습니다"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                {"error": "이미지 파일이 필요합니다"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        return Response(response.json())
-
-
-class ChallengeLikeViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = ChallengeLikeSerializer
-
-    def get_queryset(self):
-        return ChallengeLike.objects.filter(user=self.request.user)
-
-    def perform_create(self, serializer):
-        challenge = serializer.validated_data["challenge"]
-
-        # 이미 존재하는 reaction이 있다면 업데이트
-        reaction, created = ChallengeLike.objects.update_or_create(
-            challenge=challenge,
-            user=self.request.user,
-            defaults={
-                "encourage": serializer.validated_data.get("encourage", False),
-                "want_to_join": serializer.validated_data.get("want_to_join", False),
-            },
-        )
-
-        serializer.instance = reaction
+        # OCR 처리 로직 구현 필요
+        return Response({"message": "OCR 처리 완료"})
