@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,22 +26,35 @@ SECRET_KEY = 'django-insecure-^_l)cbv!^9zhdhapot6o_o5(c+zqcbn9p58oa1fhlc#th)s8^)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # database definition
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'ssafy-sns',
+#         'USER': 'ssafy',
+#         'PASSWORD': 'ssafy1234!',
+#         'HOST': '127.0.0.1',
+#         'PORT': '3306',
+#     }
+# }
+# 환경 변수로부터 데이터베이스 설정 읽기
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ssafy-sns',
-        'USER': 'ssafy',
-        'PASSWORD': 'ssafy1234!',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.mysql',  # MariaDB 사용
+        'NAME': os.environ.get('DJANGO_DB_NAME', 'mydb'),  # 환경변수에서 DB 이름 읽기
+        'USER': os.environ.get('DJANGO_DB_USER', 'user'),  # 환경변수에서 DB 유저 읽기
+        'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD', 'password'),  # 환경변수에서 DB 비밀번호 읽기
+        'HOST': os.environ.get('DJANGO_DB_HOST', 'mariadb'),  # 환경변수에서 DB 호스트 읽기
+        'PORT': os.environ.get('DJANGO_DB_PORT', '3306'),  # 환경변수에서 DB 포트 읽기
     }
 }
 
-
+# MongoDB 환경 설정 (FastAPI에서 MongoDB를 사용하는 경우)
+MONGO_HOST = os.environ.get('MONGO_HOST', 'mongodb')
+MONGO_PORT = os.environ.get('MONGO_PORT', '27017')
 # Application definition
 
 INSTALLED_APPS = [
@@ -149,6 +163,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
+    
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -203,3 +218,4 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
