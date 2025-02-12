@@ -8,7 +8,7 @@ from api_error.system_exception import (
     SystemException,
 )
 
-
+# 사용자 전체 조회 : 필요 없는데..?
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -16,25 +16,35 @@ class UserListSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+# 유저 생성
 class UserCreateSerializer(serializers.ModelSerializer):
-    password1 = serializers.RegexField(
-        regex=r"^(?=.{8,15}$)(?=.*[A-Za-z])(?=.*[0-9])(?=.*\W).*$", write_only=True
+    password = serializers.RegexField(
+        regex=r"^(?=.{8,15}$)(?=.*[A-Za-z])(?=.*[0-9])(?=.*\W).*$", write_only=True,
+        error_messages ={
+            'invalid': _("비밀번호는 8-15자리의 영문, 숫자, 특수문자를 포함해야 합니다.")
+        }
     )
-    password2 = serializers.RegexField(
-        regex=r"^(?=.{8,15}$)(?=.*[A-Za-z])(?=.*[0-9])(?=.*\W).*$", write_only=True
+    password_confirm = serializers.RegexField(
+        regex=r"^(?=.{8,15}$)(?=.*[A-Za-z])(?=.*[0-9])(?=.*\W).*$", write_only=True,
+        error_messages ={
+            'invalid': _("비밀번호는 8-15자리의 영문, 숫자, 특수문자를 포함해야 합니다.")
+        }
     )
     tokens = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
+        # 사용자가 직접 입력하는 값들만 직렬화
         fields = [
+            "username",
             "email",
+            "password",
             "nickname",
-            "password1",
-            "password2",
             "sex",
             "birth_date",
             "career",
+            "introduction",
+            "profile_image",
             "tokens",
         ]
 
@@ -46,7 +56,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        if validated_data["password1"] != validated_data["password2"]:
+        if validated_data["password"] != validated_data["password_confirm"]:
             raise SystemException(
                 SystemErrorList.errors[Error.USER_TWO_PASSWORD_DOES_NOT_EQUAL.value]
             )
@@ -60,14 +70,21 @@ class UserCreateSerializer(serializers.ModelSerializer):
         except User.DoesNotExist:
             pass
 
+
         user = User(
+            # 필수 필드는 직접 데이터를 넘기고 필수로 받는 값이 아닌 경우는 get으로 데이터 받음음
             email=validated_data["email"],
+            username=validated_data["username"],
             nickname=validated_data["nickname"],
-            sex=validated_data.get("sex", "M"),
-            birth_date=validated_data.get("birth_date"),
-            career=validated_data.get("career"),
+            sex=validated_data["sex"],
+            birth_date=validated_data["birth_date"],
+            career=validated_data["career"],
+            introduction=validated_data.get("introduction"),
+            profile_image=validated_data.get("profile_image"),
+            social_login=validated_data.get("social_login"),
         )
-        user.set_password(validated_data["password1"])
+        user.set_password(validated_data["password"])
+
         user.save()
         return user
 
