@@ -23,6 +23,7 @@ from rest_framework import routers, permissions
 from django.conf import settings
 
 from account.views import UserListView, UserCreateView, UserDetailView
+from accounts.views import AccountViewSet
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -45,9 +46,9 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('account', UserListView.as_view()),
-    path('account/<int:pk>', UserDetailView.as_view()),
-    path('account/signup', UserCreateView.as_view()),
+    path('accounts', UserListView.as_view()),
+    path('accounts/<int:pk>', UserDetailView.as_view()),
+    path('accounts/signup', AccountViewSet.as_view()),
 ]
 
 if settings.DEBUG:
