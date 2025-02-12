@@ -7,61 +7,65 @@ router.register("", views.ChallengeViewSet, basename="challenge")
 
 urlpatterns = [
     # 챌린지 기본 CRUD
-    path("<int:challenge_id>/join/", views.ChallengeViewSet.as_view({"post": "join"})),
+    path("", views.ChallengeViewSet.as_view({"get": "list", "post": "create"})),
     path(
-        "<int:challenge_id>/leave/", views.ChallengeViewSet.as_view({"delete": "leave"})
-    ),
-    # OCR & 소비내역
-    path(
-        "<int:challenge_id>/expenses/ocr/",
-        views.ExpenseViewSet.as_view({"post": "ocr"}),
-    ),
-    path(
-        "<int:challenge_id>/expenses/ocr/<int:ocr_id>/",
-        views.ExpenseViewSet.as_view(
-            {"get": "get_ocr_result", "put": "update_ocr_result"}
+        "<int:pk>/",
+        views.ChallengeViewSet.as_view(
+            {"get": "retrieve", "put": "update", "delete": "destroy"}
         ),
     ),
+    # 챌린지 참여/탈퇴/초대
+    path(
+        "<int:pk>/join/",
+        views.ChallengeViewSet.as_view({"post": "join"}),
+        name="challenge-join",
+    ),
+    path(
+        "<int:pk>/leave/",
+        views.ChallengeViewSet.as_view({"delete": "leave"}),
+        name="challenge-leave",
+    ),
+    path(
+        "<int:pk>/invite/",
+        views.ChallengeViewSet.as_view({"post": "invite"}),
+        name="challenge-invite",
+    ),
+    # 챌린지 반응(응원/참여희망)
+    path(
+        "<int:challenge_id>/reactions/",
+        views.ChallengeLikeViewSet.as_view(
+            {
+                "post": "create",
+                "get": "list",
+            }
+        ),
+        name="challenge-reactions",
+    ),
+    path(
+        "<int:challenge_id>/reactions/<int:pk>/",
+        views.ChallengeLikeViewSet.as_view({"delete": "destroy"}),
+        name="challenge-reaction-detail",
+    ),
+    # 소비내역 및 OCR
     path(
         "<int:challenge_id>/expenses/",
         views.ExpenseViewSet.as_view({"get": "list", "post": "create"}),
+        name="challenge-expenses",
     ),
     path(
-        "<int:challenge_id>/expenses/<int:expense_id>/",
+        "<int:challenge_id>/expenses/<int:pk>/",
         views.ExpenseViewSet.as_view(
             {"get": "retrieve", "put": "update", "delete": "destroy"}
         ),
-    ),
-    # 게시글
-    path(
-        "<int:challenge_id>/posts/",
-        views.PostViewSet.as_view({"get": "list", "post": "create"}),
+        name="challenge-expense-detail",
     ),
     path(
-        "<int:challenge_id>/posts/<int:post_id>/",
-        views.PostViewSet.as_view(
-            {"get": "retrieve", "put": "update", "delete": "destroy"}
-        ),
+        "<int:challenge_id>/expenses/ocr/",
+        views.ExpenseViewSet.as_view({"post": "ocr"}),
+        name="challenge-expense-ocr",
     ),
-    path(
-        "<int:challenge_id>/posts/drafts/",
-        views.PostViewSet.as_view({"get": "list_drafts", "post": "create_draft"}),
-    ),
-    # 댓글
-    path(
-        "<int:challenge_id>/posts/<int:post_id>/comments/",
-        views.CommentViewSet.as_view({"get": "list", "post": "create"}),
-    ),
-    path(
-        "<int:challenge_id>/posts/<int:post_id>/comments/<int:comment_id>/",
-        views.CommentViewSet.as_view({"put": "update", "delete": "destroy"}),
-    ),
-    # 반응 (좋아요, 응원해요 등)
-    path(
-        "<int:challenge_id>/reactions/",
-        views.ReactionViewSet.as_view(
-            {"get": "list", "post": "create", "delete": "destroy"}
-        ),
-    ),
+    # 게시판 기능은 posts 앱의 URL을 include
+    path("<int:challenge_id>/posts/", include("posts.urls")),
+    # 기본 라우터 포함
     path("", include(router.urls)),
 ]
