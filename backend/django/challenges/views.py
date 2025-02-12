@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db.models import Q
@@ -6,8 +7,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 import requests
+import json
 import logging
 from datetime import date
+from accounts.models import User
 from .models import (
     Challenge,
     ChallengeParticipant,
@@ -226,6 +229,71 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                 {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+    # OCR 데이터 저장
+    @action(detail=False, methods=["post"])
+    def ocr_save(self, request, challenge_id=None):
+        challenge = get_object_or_404(Challenge, id=challenge_id)
+        participant = get_object_or_404(
+            ChallengeParticipant, 
+            challenge=challenge,
+            user=request.user
+        )
+
+        if challenge.status != 1:  # IN_PROGRESS
+            return Response(
+                {"error": "진행 중인 챌린지만 OCR 데이터를 저장할 수 있습니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            data = request.data
+            
+            # 필수 필드 검증
+            required_fields = ['store', 'amount', 'payment_date', 'is_handwritten']
+            if not all(field in data for field in required_fields):
+                return Response(
+                    {"error": "필수 필드가 누락되었습니다"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # 참가자의 잔액 확인 및 업데이트
+            expense_amount = int(data['amount'])
+            if participant.balance < expense_amount:
+                return Response(
+                    {"error": "예산이 부족합니다"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+    
+
+            # 잔액 업데이트
+            participant.balance -= expense_amount
+            participant.save()
+
+            # 지출 데이터 저장
+            expense = Expense.objects.create(
+                challenge=challenge,
+                user=request.user,
+                store=data['store'],
+                amount=expense_amount,
+                payment_date=data['payment_date'],
+            )
+            
+            return Response(
+                {
+                    "message": "지출 내역이 저장되었습니다",
+                    "expense_id": expense.id,
+                    "remaining_balance": participant.balance,
+                    "ocr_count": participant.ocr_count
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 
 class ChallengeLikeViewSet(viewsets.ModelViewSet):
