@@ -55,13 +55,13 @@ urlpatterns = [
     ),
     # OCR 저장
     path(
-        "<int:challenge_id>/expenses/verifications",
+        "<int:challenge_id>/expenses/verifications/",
         views.ExpenseViewSet.as_view({"post": "ocr_save"}),
         name="challenge-expense-ocr-save"
     ),
     # 간편 인증 소비내역 저장
     path(
-        "<int:challenge_id>/expenses/verifications/simple",
+        "<int:challenge_id>/expenses/verifications/simple/",
         views.SimpleExpenseViewSet.as_view({"post": "simple_save"}),
         name="challenge-expense-simple-save",
     ),
