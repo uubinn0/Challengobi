@@ -50,7 +50,21 @@ class ChallengeViewSet(viewsets.ModelViewSet):
 
         category = self.request.query_params.get("category")
         if category:
-            queryset = queryset.filter(category=category)
+            # 카테고리명으로 매핑
+            category_mapping = {
+                'cafe': 1,
+                'restaurant': 2,
+                'grocery': 3,
+                'shopping': 4,
+                'culture': 5,
+                'hobby': 6,
+                'drink': 7,
+                'transportation': 8,
+                'etc': 9
+            }
+            category_id = category_mapping.get(category.lower())
+            if category_id:
+                queryset = queryset.filter(category=category_id)
 
         search_keyword = self.request.query_params.get("search")
         if search_keyword:
