@@ -30,13 +30,16 @@ from .serializers import (
 
 logger = logging.getLogger(__name__)
 
+
 class ChallengeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ["title", "description"]
 
     def get_queryset(self):
-        queryset = Challenge.objects.exclude(status=3)  # Exclude deleted challenges
+        queryset = Challenge.objects.exclude(status=3).select_related(
+            "creator"
+        )  # Exclude deleted challenges
 
         status_param = self.request.query_params.get("status")
         if status_param == "recruiting":
@@ -66,18 +69,26 @@ class ChallengeViewSet(viewsets.ModelViewSet):
         return ChallengeListSerializer
 
     def perform_create(self, serializer):
-        serializer.save(creator=self.request.user)
+        challenge = serializer.save(creator=self.request.user)
+
+        # 챌린지 생성자를 참여자로 자동 등록
+        ChallengeParticipant.objects.create(
+            challenge=challenge,
+            user=self.request.user,
+            initial_budget=challenge.budget,
+            balance=challenge.budget,
+        )
 
     def perform_update(self, serializer):
         instance = self.get_object()
-        if instance.creator != self.request.user:
+        if instance.creator.id != self.request.user.id:
             raise PermissionDenied("챌린지 생성자만 수정할 수 있습니다")
         if instance.status != 0:  # RECRUIT
             raise PermissionDenied("모집 중인 챌린지만 수정할 수 있습니다")
         serializer.save()
 
     def perform_destroy(self, instance):
-        if instance.creator != self.request.user:
+        if instance.creator.id != self.request.user.id:
             raise PermissionDenied("챌린지 생성자만 삭제할 수 있습니다")
         if instance.status != 0:  # RECRUIT
             raise PermissionDenied("모집 중인 챌린지만 삭제할 수 있습니다")
@@ -205,38 +216,34 @@ class ExpenseViewSet(viewsets.ModelViewSet):
             )
 
         try:
-        # 다중 이미지 받은 후 OCR 서버 호출
+            # 다중 이미지 받은 후 OCR 서버 호출
             files = []
             for file_key, file in request.FILES.items():
-                files.append(('files', file))  # files 파라미터로 여러 파일 전송
+                files.append(("files", file))  # files 파라미터로 여러 파일 전송
 
             response = requests.post(
-                "http://54.180.9.205:8001/extract_text/",
-                files=files,
-                timeout=90
+                "http://54.180.9.205:8001/extract_text/", files=files, timeout=90
             )
 
             if response.status_code != 200:
                 return Response(
-                {"error": "OCR 처리 중 오류가 발생했습니다"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    {"error": "OCR 처리 중 오류가 발생했습니다"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
-            
+
             return Response(response.json())
 
         except Exception as e:
             return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
     # OCR 데이터 저장
     @action(detail=False, methods=["post"])
     def ocr_save(self, request, challenge_id=None):
         challenge = get_object_or_404(Challenge, id=challenge_id)
         participant = get_object_or_404(
-            ChallengeParticipant, 
-            challenge=challenge,
-            user=request.user
+            ChallengeParticipant, challenge=challenge, user=request.user
         )
 
         if challenge.status != 1:  # IN_PROGRESS
@@ -247,23 +254,21 @@ class ExpenseViewSet(viewsets.ModelViewSet):
 
         try:
             data = request.data
-            
+
             # 필수 필드 검증
-            required_fields = ['store', 'amount', 'payment_date', 'is_handwritten']
+            required_fields = ["store", "amount", "payment_date", "is_handwritten"]
             if not all(field in data for field in required_fields):
                 return Response(
                     {"error": "필수 필드가 누락되었습니다"},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             # 참가자의 잔액 확인 및 업데이트
-            expense_amount = int(data['amount'])
+            expense_amount = int(data["amount"])
             if participant.balance < expense_amount:
                 return Response(
-                    {"error": "예산이 부족합니다"},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {"error": "예산이 부족합니다"}, status=status.HTTP_400_BAD_REQUEST
                 )
-    
 
             # 잔액 업데이트
             participant.balance -= expense_amount
@@ -273,27 +278,25 @@ class ExpenseViewSet(viewsets.ModelViewSet):
             expense = Expense.objects.create(
                 challenge=challenge,
                 user=request.user,
-                store=data['store'],
+                store=data["store"],
                 amount=expense_amount,
-                payment_date=data['payment_date'],
+                payment_date=data["payment_date"],
             )
-            
+
             return Response(
                 {
                     "message": "지출 내역이 저장되었습니다",
                     "expense_id": expense.id,
                     "remaining_balance": participant.balance,
-                    "ocr_count": participant.ocr_count
+                    "ocr_count": participant.ocr_count,
                 },
-                status=status.HTTP_201_CREATED
+                status=status.HTTP_201_CREATED,
             )
 
         except Exception as e:
             return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
 
 
 class ChallengeLikeViewSet(viewsets.ModelViewSet):
