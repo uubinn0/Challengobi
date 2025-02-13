@@ -132,7 +132,7 @@ class ChallengeViewSet(viewsets.ModelViewSet):
             )
 
         if ChallengeParticipant.objects.filter(
-            challenge=challenge, user=request.user
+                challenge=challenge, user=request.user
         ).exists():
             return Response(
                 {"error": "이미 참여 중인 챌린지입니다"},
@@ -212,6 +212,13 @@ class ChallengeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # 챌린지 생성자 본인은 제외할 수 없음
+        if int(user_id) == request.user.id:
+            return Response(
+                {"error": "챌린지 생성자는 제외할 수 없습니다"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         # 참가자 제외
         participant = get_object_or_404(
             ChallengeParticipant,
@@ -221,6 +228,7 @@ class ChallengeViewSet(viewsets.ModelViewSet):
         participant.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class ExpenseViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
