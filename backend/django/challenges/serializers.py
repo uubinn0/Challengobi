@@ -259,11 +259,13 @@ class ChallengeLikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChallengeLike
         fields = ["user", "challenge", "encourage", "want_to_join"]
+        read_only_fields = ["user", "challenge"]
 
-    def validate(self, data):
-        if not data.get("encourage") and not data.get("want_to_join"):
-            raise serializers.ValidationError("최소 하나의 반응은 선택해야 합니다")
-        return data
+    # 반응 둘 다 취소하는 경우도 있어야 하나?
+    # def validate(self, data):
+    #     if not data.get("encourage") and not data.get("want_to_join"):
+    #         raise serializers.ValidationError("최소 하나의 반응은 선택해야 합니다")
+    #     return data
 
 
 class ExpenseSerializer(serializers.ModelSerializer):

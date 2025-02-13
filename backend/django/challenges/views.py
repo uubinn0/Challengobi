@@ -296,15 +296,25 @@ class ChallengeLikeViewSet(viewsets.ModelViewSet):
         return ChallengeLike.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        challenge = serializer.validated_data["challenge"]
+        challenge_id = self.kwargs.get('challenge_id')
+        encourage = serializer.validated_data.get("encourage", False)
+        want_to_join = serializer.validated_data.get("want_to_join", False)
+
+        # 둘 다 False면 reaction 삭제
+        if not encourage and not want_to_join:
+            ChallengeLike.objects.filter(
+                challenge_id=challenge_id,
+                user=self.request.user
+            ).delete()
+            return
 
         # 이미 존재하는 reaction이 있다면 업데이트
         reaction, created = ChallengeLike.objects.update_or_create(
-            challenge=challenge,
+            challenge_id=challenge_id,
             user=self.request.user,
             defaults={
-                "encourage": serializer.validated_data.get("encourage", False),
-                "want_to_join": serializer.validated_data.get("want_to_join", False),
+                "encourage": encourage,
+                "want_to_join": want_to_join,
             },
         )
 
