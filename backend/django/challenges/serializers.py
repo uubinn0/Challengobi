@@ -171,4 +171,43 @@ class ExpenseCreateSerializer(serializers.ModelSerializer):
             **validated_data
         )
         return expense
+    
+class SimpleExpenseCreateSerializer(serializers.ModelSerializer):
+    amount = serializers.IntegerField()
 
+    class Meta:
+        model = Expense
+        fields = ['amount']
+
+    def validate_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("결제 금액은 0보다 커야 합니다")
+        return value
+
+    def create(self, validated_data):
+        challenge = self.context.get('challenge')
+        user = self.context.get('user')
+
+        # Challenge의 카테고리를 store 필드에 저장
+        category_map = {
+            1: "카페/디저트",
+            2: "외식",
+            3: "장보기", 
+            4: "쇼핑",
+            5: "문화생활",
+            6: "취미/여가",
+            7: "술/담배",
+            8: "교통",
+            9: "기타"
+        }
+        store = category_map.get(challenge.category, "기타")
+
+        expense = Expense.objects.create(
+            challenge=challenge,
+            user=user,
+            store=store,
+            amount=validated_data['amount'],
+            payment_date=timezone.now().date(),
+            is_handwritten=True
+        )
+        return expense
