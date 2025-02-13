@@ -49,7 +49,7 @@ services:
     command: >
       sh -c "pip install -r requirements.txt &&
              python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000"
+             python manage.py runserver 0.0.0.0:8000"  
 
   react-app:
     image: taromilktea/pjt01_react_test:latest
