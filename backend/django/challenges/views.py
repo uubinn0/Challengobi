@@ -223,12 +223,15 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         try:
         # 다중 이미지 받은 후 OCR 서버 호출
             files = []
-            for file_key, file in request.FILES.items():
-                files.append(('files', file))  # files 파라미터로 여러 파일 전송
-
+            uploaded_files = request.FILES.getlist('files')  # 다중 파일 받기
+            
+            for file in uploaded_files:
+                files.append(('files', file))
+                
             response = requests.post(
                 # settings.py에 OCR_SERVICE_URL 설정하지 않으면 기본 주소로 호출
-                f"{settings.OCR_SERVICE_URL}/extract_text/",
+                # f"{settings.OCR_SERVICE_URL}/extract_text/",
+                f"http://fastapi-app:8001/extract_text/",
                 files=files,
                 timeout=90
             )
