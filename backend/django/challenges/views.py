@@ -26,6 +26,7 @@ from .serializers import (
     ChallengeInviteSerializer,
     ChallengeLikeSerializer,
     ExpenseCreateSerializer,
+    SimpleExpenseCreateSerializer,
 )
 from django.conf import settings
 
@@ -192,6 +193,10 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         participant = get_object_or_404(
             ChallengeParticipant, challenge=challenge, user=self.request.user
         )
+        
+        # 실패한 참가자 검증 추가
+        if participant.is_failed:
+            raise PermissionDenied("이미 실패한 챌린지는 소비내역을 등록할 수 없습니다")
 
         serializer.save(challenge=challenge, user=self.request.user)
 
@@ -202,6 +207,16 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         if challenge.status != 1:  # IN_PROGRESS
             return Response(
                 {"error": "진행 중인 챌린지만 OCR을 사용할 수 있습니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 실패한 참가자 검증 추가
+        participant = get_object_or_404(
+            ChallengeParticipant, challenge=challenge, user=request.user
+        )
+        if participant.is_failed:
+            return Response(
+                {"error": "이미 실패한 챌린지는 OCR을 사용할 수 없습니다"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -231,6 +246,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                 {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
     # OCR 데이터 저장
     @action(detail=False, methods=["post"])
     def ocr_save(self, request, challenge_id=None):
@@ -244,6 +260,13 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         if challenge.status != 1:  # IN_PROGRESS
             return Response(
                 {"error": "진행 중인 챌린지만 OCR 데이터를 저장할 수 있습니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 실패한 참가자 검증 추가
+        if participant.is_failed:
+            return Response(
+                {"error": "이미 실패한 챌린지는 OCR 데이터를 저장할 수 없습니다"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -324,7 +347,97 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                 {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+        
+class SimpleExpenseViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SimpleExpenseCreateSerializer
 
+    # 수기 데이터 저장
+    @action(detail=False, methods=["post"])
+    def simple_save(self, request, challenge_id):
+        try:
+            # 챌린지 존재 여부 확인
+            challenge = get_object_or_404(Challenge, id=challenge_id)
+
+            # 참가자 확인
+            participant = get_object_or_404(
+                ChallengeParticipant,
+                challenge=challenge,
+                user=request.user
+            )
+
+            # 챌린지가 진행중인지 확인
+            if challenge.status != 1:  # IN_PROGRESS
+                return Response(
+                    {"error": "진행중인 챌린지가 아닙니다"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # 이미 실패한 참가자인지 확인
+            if participant.is_failed:
+                return Response(
+                    {"error": "이미 실패한 챌린지입니다"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            serializer = SimpleExpenseCreateSerializer(
+                data=request.data,
+                context={'challenge': challenge, 'user': request.user}
+            )
+            
+            if not serializer.is_valid():
+                return Response(
+                    serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # 잔액 확인
+            amount = serializer.validated_data['amount']
+            if participant.balance < amount:
+                return Response(
+                    {"error": "잔액이 부족합니다"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # 지출 내역 저장
+            expense = serializer.save()
+
+            # 잔액 업데이트
+            participant.balance -= amount
+            participant.save()
+
+            # 잔액이 0 이하가 되면 챌린지 실패 처리
+            if participant.balance <= 0:
+                participant.is_failed = 1
+                participant.save()
+
+                # 챌린지의 모든 참가자가 실패했는지 확인
+                all_failed = not ChallengeParticipant.objects.filter(
+                    challenge=challenge,
+                    is_failed=0
+                ).exists()
+
+                # 모든 참가자가 실패했다면 챌린지도 종료
+                if all_failed:
+                    challenge.status = 3
+                    challenge.save()
+
+            return Response(
+                {
+                    "message": "지출 내역이 저장되었습니다",
+                    "expense_id": expense.id,
+                    "amount": amount,
+                    "remaining_balance": participant.balance
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class ChallengeLikeViewSet(viewsets.ModelViewSet):
