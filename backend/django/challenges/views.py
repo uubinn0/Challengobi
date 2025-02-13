@@ -144,6 +144,7 @@ class ChallengeViewSet(viewsets.ModelViewSet):
             user=request.user,
             initial_budget=challenge.budget,
             balance=challenge.budget,
+            is_failed=False,
         )
 
         return Response(status=status.HTTP_201_CREATED)
@@ -186,6 +187,40 @@ class ChallengeViewSet(viewsets.ModelViewSet):
         participant.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    # 참여자 목록 조회
+    @action(detail=True, methods=['get'])
+    def participants(self, request, pk=None):
+        challenge = self.get_object()
+        participants = ChallengeParticipant.objects.filter(challenge=challenge)
+        # ChallengeParticipant에 대한 serializer가 필요합니다
+        serializer = ChallengeParticipantSerializer(participants, many=True)
+        return Response(serializer.data)
+
+    # 관리자가 참여자 제거
+    @action(detail=True, methods=['delete'])
+    def remove_participant(self, request, pk=None, user_id=None):
+        challenge = self.get_object()
+
+        # 챌린지 생성자 확인
+        if challenge.creator != request.user:
+            raise PermissionDenied("챌린지 생성자만 참가자를 제외할 수 있습니다")
+
+        # 모집 중인 챌린지인지 확인
+        if challenge.status != 0:  # RECRUIT
+            return Response(
+                {"error": "모집 중인 챌린지에서만 참가자를 제외할 수 있습니다"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 참가자 제외
+        participant = get_object_or_404(
+            ChallengeParticipant,
+            challenge=challenge,
+            user_id=user_id
+        )
+        participant.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class ExpenseViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]

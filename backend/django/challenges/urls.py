@@ -30,6 +30,18 @@ urlpatterns = [
         views.ChallengeViewSet.as_view({"post": "invite"}),
         name="challenge-invite",
     ),
+    # 챌린지 참여자 조회
+    path(
+        "<int:pk>/participants/",
+        views.ChallengeViewSet.as_view({"get": "participants"}),
+        name="challenge-participants",
+    ),
+    # 챌린지 참여자 강퇴
+    path(
+        "<int:pk>/participants/<int:user_id>/",
+        views.ChallengeViewSet.as_view({"delete": "remove_participant"}),
+        name="challenge-remove-participant",
+    ),
     # 챌린지 반응(응원/참여희망)
     path(
         "<int:challenge_id>/reactions/",
