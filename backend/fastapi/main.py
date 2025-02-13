@@ -107,7 +107,7 @@ def process_with_openai(arr: List[str]) -> List[OCRResult]:
 
 
 @app.post("/extract_text/", response_model=OCRResponse)
-async def extract_text(files: List[UploadFile] = File(...)):
+async def extract_text(files: List[UploadFile] = File(None, alias="files")):
     """여러 장의 이미지에서 텍스트를 추출하여 단일 JSON으로 반환"""
     if not files:
         raise HTTPException(status_code=400, detail="No files uploaded.")
