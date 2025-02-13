@@ -489,6 +489,14 @@ class SimpleExpenseViewSet(viewsets.ViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
+            # 오늘 날짜에 지출내역이 있는지 확인
+            today = timezone.now().date()
+            today_expense = Expense.objects.filter(
+                challenge=challenge,
+                user=request.user,
+                payment_date=today
+            ).exists()
+
             # 잔액 확인
             amount = serializer.validated_data['amount']
             if participant.balance < amount:
@@ -504,8 +512,16 @@ class SimpleExpenseViewSet(viewsets.ViewSet):
             participant.balance -= amount
             participant.save()
 
-            # 잔액이 0 이하가 되면 챌린지 실패 처리
-            if participant.balance <= 0:
+            # 오늘 첫 인증이면 ocr_count 증가
+            if not today_expense:
+                participant.ocr_count += 1
+                participant.save()
+
+            # 잔액이 0 이하거나 예산을 초과한 경우 챌린지 실패 처리
+            challenge_budget = challenge.budget
+            total_spent = challenge_budget - participant.balance
+            
+            if participant.balance <= 0 or total_spent > challenge_budget:
                 participant.is_failed = 1
                 participant.save()
 
@@ -517,7 +533,7 @@ class SimpleExpenseViewSet(viewsets.ViewSet):
 
                 # 모든 참가자가 실패했다면 챌린지도 종료
                 if all_failed:
-                    challenge.status = 3
+                    challenge.status = 3  # FINISHED
                     challenge.save()
 
             return Response(
@@ -525,7 +541,8 @@ class SimpleExpenseViewSet(viewsets.ViewSet):
                     "message": "지출 내역이 저장되었습니다",
                     "expense_id": expense.id,
                     "amount": amount,
-                    "remaining_balance": participant.balance
+                    "remaining_balance": participant.balance,
+                    "ocr_count": participant.ocr_count
                 },
                 status=status.HTTP_201_CREATED
             )
