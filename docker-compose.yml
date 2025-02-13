@@ -1,51 +1,52 @@
-version: '3.8'
-
 services:
   mariadb:
     image: mariadb:10.7
     container_name: mariadb
     ports:
       - "3306:3306"
+    env_file:
+      - .env
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: mydb
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mariadb_data:/var/lib/mysql
-
-  mongodb:
-    image: mongo:5.0
-    container_name: mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
 
   django-app:
     image: taromilktea/pjt01_django:latest
     container_name: django-app
     working_dir: /app
+    volumes:
+      - ./backend/django:/app
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       DJANGO_DB_HOST: mariadb
       DJANGO_DB_PORT: 3306
-      DJANGO_DB_NAME: mydb
-      DJANGO_DB_USER: user
-      DJANGO_DB_PASSWORD: password
-      MONGO_HOST: mongodb
-      MONGO_PORT: 27017
+      DJANGO_DB_NAME: ${DB_NAME}
+      DJANGO_DB_USER: ${DB_USER}
+      DJANGO_DB_PASSWORD: ${DB_PASSWORD}
     depends_on:
       - mariadb
-      - mongodb
     restart: always
+    command: >
+      sh -c "pip install -r requirements.txt &&
+             sleep 5 &&
+             python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
 
   react-app:
     image: taromilktea/pjt01_react:latest
     container_name: react-app
     ports:
       - "3000:80"
+    volumes:
+      - ./frontend:/app
     environment:
       REACT_APP_API_URL: "http://django-app:8000/"
     depends_on:
@@ -56,20 +57,26 @@ services:
     image: taromilktea/pjt01_fastapi:latest
     container_name: fastapi-app
     working_dir: /app
+    volumes:
+      - ./backend/fastapi:/app
     ports:
       - "8001:8001"
+    env_file:
+      - .env
     environment:
       DJANGO_API_URL: "http://django-app:8000/"
       MARIADB_HOST: mariadb
       MARIADB_PORT: 3306
-      MARIADB_DB: mydb
-      MARIADB_USER: user
-      MARIADB_PASSWORD: password
+      MARIADB_DB: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
     depends_on:
       - mariadb
       - django-app
     restart: always
+    command: >
+      sh -c "uvicorn main:app --host 0.0.0.0 --port 8001 --reload"
 
 volumes:
   mariadb_data:
-  mongodb_data:
