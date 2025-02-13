@@ -62,7 +62,7 @@ urlpatterns = [
     # 간편 인증 소비내역 저장
     path(
         "<int:challenge_id>/expenses/verifications/simple",
-        views.ExpenseViewSet.as_view({"post": "simple_save"}),
+        views.SimpleExpenseViewSet.as_view({"post": "simple_save"}),
         name="challenge-expense-simple-save",
     ),
 
