@@ -1,14 +1,3 @@
-# app = FastAPI()
-
-# @app.get("/")
-# def root():
-#     return {"message": "Hello World"}
-#
-# @app.get("/home")
-# def home():
-#     return {"message":"home"}
-
-
 import openai
 from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, HTTPException
@@ -71,7 +60,7 @@ def process_with_openai(arr: List[str]) -> List[OCRResult]:
 
     다음 리스트에서 출금내용(store), 출금금액(expense)을 JSON형식으로 반환하세요.  
     출력은 **반드시 하나의 JSON** 형태여야 합니다. 
-    출금 내역을 누락하지 않도록 하세요.
+    출금 내역을 누락하지 않도록 하세요. 또한 존재하지 않는 출금 내역을 중복해서 추출하지 마세요.
 
     # 꼭 지켜야하는 요청사항
     1. 반드시 JSON 배열([])로 감싸야 합니다. 
@@ -177,6 +166,9 @@ def category_cosine_similarity(user_category, target_category, features):
 
 @app.post("/recommend")
 async def recommend(request: RecommendRequest): # 비동기식
+    """
+    추천의 기본이 되는 사용자 아이디를 받으면 해당 사용자와 유사한 순서대로 사용자 아이디 반환
+    """
     users = get_users()
     category = get_categorys()
 
@@ -188,7 +180,7 @@ async def recommend(request: RecommendRequest): # 비동기식
     
     # 기준이 될 사용자
     TARGET = request.id
-    target_user = users[users["user_id"] == TARGET]
+    target_user = users[users["id"] == TARGET]
     target_user_category = category[category["user_id"] == TARGET]
 
     if target_user.empty:
@@ -215,10 +207,9 @@ async def recommend(request: RecommendRequest): # 비동기식
     final_weights = [0.5, 0.5] # 카테고리 - 유저
     # 상위 RECOMMENDED_PERSON_NUM명 추천 (자기 자신 제외)
     users["similarity"] = category_similarity * final_weights[0] + similarity_matrix * final_weights[1]
-    recommended_users = users[users["user_id"] != TARGET].nlargest(RECOMMENDED_PERSON_NUM, "similarity")
+    recommended_users = users[users["id"] != TARGET].nlargest(RECOMMENDED_PERSON_NUM, "similarity")
 
-    return recommended_users[["user_id"]].to_dict(orient="records")
+    return recommended_users[["id"]].to_dict(orient="records")
 # if __name__ == "__main__":
 #     import uvicorn
-
 #     uvicorn.run(app, host="0.0.0.0", port=8000)
