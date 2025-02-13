@@ -33,11 +33,13 @@ class PostListSerializer(serializers.ModelSerializer):
             "user_nickname",
             "challenge",
             "title",
+            "content",
             "created_at",
             "like_count",
             "comment_count",
             "is_liked",
         ]
+        read_only_fields = ["user", "challenge", "created_at"]
 
     def get_like_count(self, obj):
         return obj.postlike_set.count()

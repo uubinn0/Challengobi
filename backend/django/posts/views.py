@@ -6,10 +6,17 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Post, Comment
 from .serializers import PostListSerializer, PostDetailSerializer, CommentSerializer
+from .permissions import IsParticipant, IsOwnerOrReadOnly
 
 
 class PostViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsParticipant]
+
+    def perform_create(self, serializer):
+        challenge_id = self.kwargs.get("challenge_id")
+        serializer.save(
+            user=self.request.user, challenge_id=challenge_id, is_active=True
+        )
 
     def get_queryset(self):
         queryset = Post.objects.filter(is_active=True)
@@ -42,10 +49,12 @@ class PostViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsParticipant, IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        return Comment.objects.filter(is_active=True)
+        post_id = self.kwargs.get("post_id")
+        return Comment.objects.filter(post_id=post_id, is_active=True)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        post_id = self.kwargs.get("post_id")
+        serializer.save(user=self.request.user, post_id=post_id, is_active=True)
