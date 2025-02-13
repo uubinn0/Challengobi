@@ -56,9 +56,8 @@ urlpatterns = [
     path(
         "<int:challenge_id>/expenses/ocr/<int:ocr_id>",
         views.ExpenseViewSet.as_view({"post": "ocr_save"}),
-        name="challenge-expense-ocr-save"
-    )
-
+        name="challenge-expense-ocr-save",
+    ),
     # 게시판 기능은 posts 앱의 URL을 include
     path("<int:challenge_id>/posts/", include("posts.urls")),
     # 기본 라우터 포함

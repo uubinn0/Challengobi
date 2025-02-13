@@ -13,3 +13,4 @@ pytz
 sqlparse
 toml
 Pillow
+requests
