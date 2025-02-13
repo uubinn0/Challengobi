@@ -47,6 +47,12 @@ urlpatterns = [
         name="challenge-reaction-detail",
     ),
     # 소비내역 및 OCR
+    # 이미지 업로드
+    path(
+        "<int:challenge_id>/expenses/upload/",
+        views.ExpenseViewSet.as_view({"post": "upload_images"}),
+        name="challenge-expense-upload",
+    ),
     # OCR 호출 및 JSON 반환
     path(
         "<int:challenge_id>/expenses/ocr/",
