@@ -36,7 +36,7 @@ class PostViewSet(viewsets.ModelViewSet):
         return PostDetailSerializer
 
     @action(detail=True, methods=["post"])
-    def like(self, request, pk=None):
+    def like(self, request, challenge_id=None, pk=None):
         post = self.get_object()
         like, created = post.postlike_set.get_or_create(
             user=request.user, defaults={"challenge": post.challenge}

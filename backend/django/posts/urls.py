@@ -15,7 +15,7 @@ urlpatterns = [
     ),
     # 게시글 좋아요
     path(
-        "<int:pk>/like/", views.PostViewSet.as_view({"post": "like"}), name="post-like"
+        "<int:pk>/likes/", views.PostViewSet.as_view({"post": "like"}), name="post-like"
     ),
     # 댓글
     path(
