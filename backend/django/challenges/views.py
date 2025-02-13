@@ -269,7 +269,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
             # 총 지출 금액 계산
             total_amount = sum(int(expense['amount']) for expense in expenses_data)
             
-            # 잔액 확인 : 예산이 부족하면 에러를 발생하는데 우리는 에러보다는 챌린지 실패 상태로 변경하는 로직직
+            # 잔액 확인 : 예산이 부족하면 에러를 발생하는데 우리는 에러보다는 챌린지 실패 상태로 변경하는 로직
             # if participant.balance < total_amount:
             #     return Response(
             #         {"error": "예산이 부족합니다"},
