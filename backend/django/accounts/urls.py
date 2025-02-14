@@ -1,54 +1,27 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 from . import views
 
-router = DefaultRouter()
-router.register("", views.AccountViewSet, basename="account")
-
 urlpatterns = [
-    # 기본 CRUD
-    path(
-        "",
-        views.AccountViewSet.as_view({"get": "list", "post": "create"}),
-        name="account-list",
-    ),
-    path(
-        "<int:pk>/",
-        views.AccountViewSet.as_view(
-            {
-                "get": "retrieve",
-                "put": "update",
-                "patch": "partial_update",
-                "delete": "destroy",
-            }
-        ),
-        name="account-detail",
-    ),
     # 회원가입/로그인/로그아웃
+    path("register/", views.UserRegistrationView.as_view(), name="register"),
+    path("login/", views.UserLoginView.as_view(), name="login"),
+    path("logout/", views.LogoutView.as_view(), name="logout"),
+    # 유효성 검사
+    path("validate/", views.ValidationView.as_view(), name="validate"),
+    # 프로필 관련
+    path("me/", views.UserProfileView.as_view(), name="profile"),
+    # 팔로우 관련
+    path("users/<int:pk>/follow/", views.FollowView.as_view(), name="follow"),
     path(
-        "register/",
-        views.AccountViewSet.as_view({"post": "register"}),
-        name="account-register",
+        "users/<int:pk>/followers/", views.UserFollowersView.as_view(), name="followers"
     ),
     path(
-        "login/",
-        views.AccountViewSet.as_view({"post": "login"}),
-        name="account-login",
+        "users/<int:pk>/following/", views.UserFollowingView.as_view(), name="following"
     ),
+    # 챌린지 카테고리
     path(
-        "logout/",
-        views.AccountViewSet.as_view({"post": "logout"}),
-        name="account-logout",
+        "me/categories/",
+        views.UserChallengeCategoryView.as_view(),
+        name="challenge-categories",
     ),
-    path(
-        "<int:pk>/followers/",
-        views.AccountViewSet.as_view({"get": "followers"}),
-        name="account-followers",
-    ),
-    path(
-        "<int:pk>/following/",
-        views.AccountViewSet.as_view({"get": "following"}),
-        name="account-following",
-    ),
-    path("", include(router.urls)),
 ]
