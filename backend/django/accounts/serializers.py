@@ -176,6 +176,24 @@ class UserProfileSerializer(serializers.ModelSerializer):
             return Follow.objects.filter(follower=request.user, following=obj).exists()
         return False
 
+# 프로필 사진 변경
+class ProfileImageUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['profile_image']
+
+# 개인정보 변경 (닉네임, 한줄소개, 휴대폰 번호, 생년월일, 직업)
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['nickname', 'introduction', 'birth_date', 'career']
+
+    def validate_nickname(self, value):
+        user = self.context['request'].user
+        # 현재 사용자의 닉네임이 아닌 다른 닉네임이 이미 존재하는 경우에만 에러
+        if User.objects.exclude(id=user.id).filter(nickname=value).exists():
+            raise serializers.ValidationError("이미 존재하는 닉네임입니다.")
+        return value
 
 class FollowSerializer(serializers.ModelSerializer):
     follower_nickname = serializers.CharField(

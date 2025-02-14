@@ -11,7 +11,9 @@ from .serializers import (
     UserCreateSerializer,
     NicknameCheckSerializer,
     EmailCheckSerializer,
-    UserDeleteSerializer
+    UserDeleteSerializer,
+    ProfileImageUpdateSerializer,
+    UserProfileUpdateSerializer
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.views.decorators.csrf import csrf_exempt
@@ -154,3 +156,69 @@ class UserRegistrationCompleteView(views.APIView):
             "message": "회원가입이 완료되었습니다.",
             "data": UserCreateSerializer(request.user).data
         }, status=status.HTTP_200_OK)
+
+class ProfileImageUpdateView(generics.UpdateAPIView):
+    """프로필 사진 변경"""
+    queryset = User.objects.all()
+    serializer_class = ProfileImageUpdateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+    
+class UserProfileUpdateView(generics.UpdateAPIView):
+    """닉네임, 한줄소개, 휴대폰번호, 생년월일, 직업 변경"""
+    queryset = User.objects.all()
+    serializer_class = UserProfileUpdateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+    
+class UserProfileView(views.APIView):
+    """프로필 조회/수정/탈퇴"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """프로필 조회"""
+        # 디버깅용 정보 출력
+        print("Authorization Header:", request.headers.get('Authorization'))
+        print("User ID:", request.user.id)
+        print("User:", request.user)
+        print("Is Anonymous:", request.user.is_anonymous)
+        print("Is Authenticated:", request.user.is_authenticated)
+        
+        if request.user.is_anonymous:
+            return Response({
+                "message": "인증되지 않은 사용자입니다."
+            }, status=status.HTTP_401_UNAUTHORIZED)
+            
+        serializer = UserCreateSerializer(request.user)
+        return Response({
+            "message": "프로필 조회 성공",
+            "data": serializer.data
+        }, status=status.HTTP_200_OK)
+    
+    def put(self, request):
+        """프로필 수정"""
+        serializer = UserCreateSerializer(
+            request.user,
+            data=request.data,
+            partial=True  # 부분 업데이트 허용
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "message": "프로필이 수정되었습니다.",
+                "data": serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request):
+        """회원 탈퇴"""
+        user = request.user
+        user.is_active = False  # 실제 삭제 대신 비활성화
+        user.save()
+        return Response({
+            "message": "회원 탈퇴가 완료되었습니다."
+        }, status=status.HTTP_204_NO_CONTENT)
