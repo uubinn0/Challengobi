@@ -35,6 +35,48 @@ class PostViewSet(viewsets.ModelViewSet):
             return PostListSerializer
         return PostDetailSerializer
 
+    @action(detail=False, methods=["get"])
+    def my_posts(self, request):
+        """내가 작성한 게시글 목록을 조회합니다."""
+        queryset = Post.objects.filter(user=request.user, is_active=True).order_by(
+            "-created_at"
+        )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = PostListSerializer(
+                page, many=True, context={"request": request}
+            )
+            return self.get_paginated_response(serializer.data)
+
+        serializer = PostListSerializer(
+            queryset, many=True, context={"request": request}
+        )
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"], url_path="users/(?P<user_id>[^/.]+)")
+    def user_posts(self, request, user_id=None):
+        """특정 사용자가 작성한 게시글 목록을 조회합니다."""
+        # user_id가 현재 로그인한 사용자의 ID와 같은 경우
+        if str(request.user.id) == str(user_id):
+            return self.my_posts(request)
+
+        queryset = Post.objects.filter(user_id=user_id, is_active=True).order_by(
+            "-created_at"
+        )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = PostListSerializer(
+                page, many=True, context={"request": request}
+            )
+            return self.get_paginated_response(serializer.data)
+
+        serializer = PostListSerializer(
+            queryset, many=True, context={"request": request}
+        )
+        return Response(serializer.data)
+
     @action(detail=True, methods=["post"])
     def like(self, request, challenge_id=None, pk=None):
         post = self.get_object()

@@ -20,7 +20,13 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class PostListSerializer(serializers.ModelSerializer):
+    post_id = serializers.IntegerField(source="id")
+    user_id = serializers.IntegerField(source="user.id")
     user_nickname = serializers.CharField(source="user.nickname", read_only=True)
+    challenge_id = serializers.IntegerField(source="challenge.id")
+    post_title = serializers.CharField(source="title")
+    post_content = serializers.CharField(source="content")
+    post_created_at = serializers.DateTimeField(source="created_at")
     like_count = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
@@ -28,18 +34,18 @@ class PostListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = [
-            "id",
-            "user",
+            "post_id",
+            "user_id",
             "user_nickname",
-            "challenge",
-            "title",
-            "content",
-            "created_at",
+            "challenge_id",
+            "post_title",
+            "post_content",
+            "post_created_at",
             "like_count",
             "comment_count",
             "is_liked",
         ]
-        read_only_fields = ["user", "challenge", "created_at"]
+        read_only_fields = ["user_id", "challenge_id", "post_created_at"]
 
     def get_like_count(self, obj):
         return obj.postlike_set.count()
