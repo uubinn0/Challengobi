@@ -59,17 +59,31 @@ urlpatterns = [
         name="challenge-reaction-detail",
     ),
     # 소비내역 및 OCR
-    # OCR 호출 및 JSON 반환환
+    # 이미지 업로드
+    path(
+        "<int:challenge_id>/expenses/upload/",
+        views.ExpenseViewSet.as_view({"post": "upload_images"}),
+        name="challenge-expense-upload",
+    ),
+    # OCR 호출 및 JSON 반환
     path(
         "<int:challenge_id>/expenses/ocr/",
         views.ExpenseViewSet.as_view({"post": "ocr"}),
         name="challenge-expense-ocr",
     ),
+    # OCR 저장
     path(
-        "<int:challenge_id>/expenses/ocr/<int:ocr_id>",
+        "<int:challenge_id>/expenses/verifications/",
         views.ExpenseViewSet.as_view({"post": "ocr_save"}),
-        name="challenge-expense-ocr-save",
+        name="challenge-expense-ocr-save"
     ),
+    # 간편 인증 소비내역 저장
+    path(
+        "<int:challenge_id>/expenses/verifications/simple/",
+        views.SimpleExpenseViewSet.as_view({"post": "simple_save"}),
+        name="challenge-expense-simple-save",
+    ),
+
     # 게시판 기능은 posts 앱의 URL을 include
     path("<int:challenge_id>/posts/", include("posts.urls")),
     # 기본 라우터 포함

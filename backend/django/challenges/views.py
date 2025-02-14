@@ -25,46 +25,36 @@ from .serializers import (
     ChallengeParticipantSerializer,
     ChallengeInviteSerializer,
     ChallengeLikeSerializer,
-    ExpenseSerializer,
+    ExpenseCreateSerializer,
+    SimpleExpenseCreateSerializer,
 )
+from django.conf import settings
+import os
 
 logger = logging.getLogger(__name__)
 
 
 class ChallengeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["title", "description"]
-
+    
     def get_queryset(self):
-        queryset = Challenge.objects.exclude(status=3).select_related(
-            "creator"
-        )  # Exclude deleted challenges
-
-        status_param = self.request.query_params.get("status")
-        if status_param == "recruiting":
-            today = date.today()
-            queryset = queryset.filter(status=0, start_date__gt=today)  # RECRUIT
-        elif status_param == "in_progress":
-            queryset = queryset.filter(status=1)  # IN_PROGRESS
-
-        category = self.request.query_params.get("category")
+        # 기본 쿼리셋 (삭제된 챌린지 제외)
+        queryset = Challenge.objects.exclude(status=3)
+        
+        # 검색어와 카테고리 파라미터 가져오기
+        search = self.request.query_params.get('search')
+        category = self.request.query_params.get('category')
+        
+        # 검색어가 있는 경우
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search) | 
+                Q(description__icontains=search)
+            )
+        
+        # 카테고리 필터링이 있는 경우
         if category:
-            # 카테고리명으로 매핑
-            category_mapping = {
-                'cafe': 1,
-                'restaurant': 2,
-                'grocery': 3,
-                'shopping': 4,
-                'culture': 5,
-                'hobby': 6,
-                'drink': 7,
-                'transportation': 8,
-                'etc': 9
-            }
-            category_id = category_mapping.get(category.lower())
-            if category_id:
-                queryset = queryset.filter(category=category_id)
+            queryset = queryset.filter(category=category)
 
         search_keyword = self.request.query_params.get("search")
         if search_keyword:
@@ -76,10 +66,8 @@ class ChallengeViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_serializer_class(self):
-        if self.action in ["create", "update", "partial_update"]:
+        if self.action == 'create':
             return ChallengeCreateSerializer
-        elif self.action == "retrieve":
-            return ChallengeDetailSerializer
         return ChallengeListSerializer
 
     def perform_create(self, serializer):
@@ -232,7 +220,7 @@ class ChallengeViewSet(viewsets.ModelViewSet):
 
 class ExpenseViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = ExpenseSerializer
+    serializer_class = ExpenseCreateSerializer
 
     def get_queryset(self):
         challenge_id = self.kwargs.get("challenge_id")
@@ -248,9 +236,69 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         participant = get_object_or_404(
             ChallengeParticipant, challenge=challenge, user=self.request.user
         )
+        
+        # 실패한 참가자 검증 추가
+        if participant.is_failed:
+            raise PermissionDenied("이미 실패한 챌린지는 소비내역을 등록할 수 없습니다")
 
         serializer.save(challenge=challenge, user=self.request.user)
 
+    # 이미지 업로드를 위한 새로운 액션
+    @action(detail=False, methods=["post"])
+    def upload_images(self, request, challenge_id=None):
+        challenge = get_object_or_404(Challenge, id=challenge_id)
+
+        if challenge.status != 1:  # IN_PROGRESS
+            return Response(
+                {"error": "진행 중인 챌린지만 이미지를 업로드할 수 있습니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        participant = get_object_or_404(
+            ChallengeParticipant, challenge=challenge, user=request.user
+        )
+        if participant.is_failed:
+            return Response(
+                {"error": "이미 실패한 챌린지는 이미지를 업로드할 수 없습니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            uploaded_files = request.FILES.getlist('files')
+            if not uploaded_files:
+                return Response(
+                    {"error": "업로드된 이미지가 없습니다"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 이미지를 임시 저장하고 파일 경로 저장
+            temp_files = []
+            for file in uploaded_files:
+                # 임시 파일 저장 경로 생성
+                temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp', str(challenge_id), str(request.user.id))
+                os.makedirs(temp_dir, exist_ok=True)
+                
+                temp_path = os.path.join(temp_dir, file.name)
+                with open(temp_path, 'wb+') as destination:
+                    for chunk in file.chunks():
+                        destination.write(chunk)
+                temp_files.append(temp_path)
+
+            # 세션에 임시 파일 경로 저장
+            request.session[f'temp_files_{challenge_id}'] = temp_files
+
+            return Response(
+                {"message": "이미지가 성공적으로 업로드되었습니다"},
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    # OCR 처리를 위한 기존 액션 수정
     @action(detail=False, methods=["post"])
     def ocr(self, request, challenge_id=None):
         challenge = get_object_or_404(Challenge, id=challenge_id)
@@ -261,15 +309,38 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # 실패한 참가자 검증 추가
+        participant = get_object_or_404(
+            ChallengeParticipant, challenge=challenge, user=request.user
+        )
+        if participant.is_failed:
+            return Response(
+                {"error": "이미 실패한 챌린지는 OCR을 사용할 수 없습니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
-            # 다중 이미지 받은 후 OCR 서버 호출
+        # 다중 이미지 받은 후 OCR 서버 호출
             files = []
             for file_key, file in request.FILES.items():
-                files.append(("files", file))  # files 파라미터로 여러 파일 전송
+                files.append(('files', file))  # files 파라미터로 여러 파일 전송
 
+            # FastAPI 호출
             response = requests.post(
-                "http://54.180.9.205:8001/extract_text/", files=files, timeout=90
+                "http://54.180.9.205:8001/extract_text/",
+                files=files,
+                timeout=90
             )
+
+            # 임시 파일 삭제
+            for file in files:
+                file[1].close()
+            for temp_path in temp_files:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+            
+            # 세션에서 임시 파일 정보 삭제
+            del request.session[f'temp_files_{challenge_id}']
 
             if response.status_code != 200:
                 return Response(
@@ -280,6 +351,17 @@ class ExpenseViewSet(viewsets.ModelViewSet):
             return Response(response.json())
 
         except Exception as e:
+            # 에러 발생 시에도 임시 파일 정리
+            try:
+                for file in files:
+                    file[1].close()
+                for temp_path in temp_files:
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
+                del request.session[f'temp_files_{challenge_id}']
+            except:
+                pass
+
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
@@ -298,41 +380,52 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # 실패한 참가자 검증
+        if participant.is_failed:
+            return Response(
+                {"error": "이미 실패한 챌린지는 OCR 데이터를 저장할 수 없습니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
             data = request.data
-
+            
             # 필수 필드 검증
-            required_fields = ["store", "amount", "payment_date", "is_handwritten"]
+            required_fields = ['store', 'amount', 'payment_date', 'is_handwritten']
             if not all(field in data for field in required_fields):
                 return Response(
                     {"error": "필수 필드가 누락되었습니다"},
-                    status=status.HTTP_400_BAD_REQUEST,
+                    status=status.HTTP_400_BAD_REQUEST
                 )
 
             # 참가자의 잔액 확인 및 업데이트
-            expense_amount = int(data["amount"])
+            expense_amount = int(data['amount'])
             if participant.balance < expense_amount:
                 return Response(
-                    {"error": "예산이 부족합니다"}, status=status.HTTP_400_BAD_REQUEST
+                    {"error": "예산이 부족합니다"},
+                    status=status.HTTP_400_BAD_REQUEST
                 )
+    
 
             # 잔액 업데이트
             participant.balance -= expense_amount
             participant.save()
 
-            # 지출 데이터 저장
-            expense = Expense.objects.create(
+            # 오늘 날짜에 지출내역이 있는지 확인
+            today = timezone.now().date()
+            today_expense = Expense.objects.filter(
                 challenge=challenge,
                 user=request.user,
-                store=data["store"],
+                store=data['store'],
                 amount=expense_amount,
-                payment_date=data["payment_date"],
+                payment_date=data['payment_date'],
             )
-
+            
             return Response(
                 {
                     "message": "지출 내역이 저장되었습니다",
                     "expense_id": expense.id,
+                    "amount": amount,
                     "remaining_balance": participant.balance,
                     "ocr_count": participant.ocr_count,
                 },

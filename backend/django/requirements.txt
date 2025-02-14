@@ -5,12 +5,12 @@ django-cors-headers
 djangorestframework
 djangorestframework-jwt
 drf-yasg
-djangorestframework-simplejwt
+djangorestframework-simplejwt>=5.3.1
 mysqlclient
 pycodestyle
 PyJWT
 pytz
 sqlparse
 toml
-Pillow
 requests
+Pillow
