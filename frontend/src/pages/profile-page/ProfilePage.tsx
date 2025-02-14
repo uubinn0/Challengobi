@@ -1,12 +1,12 @@
-import React from "react";
+import React from 'react';
+import { Outlet } from 'react-router-dom';
 
 const ProfilePage: React.FC = () => {
   return (
     <div>
-      <h1>Profile Page</h1>
-      <p>This is the profile page.</p>
+      <Outlet />
     </div>
   );
-}
+};
 
 export default ProfilePage;

@@ -1,0 +1,233 @@
+body {
+  font-family: 'SuseongHyejeong', sans-serif;
+}
+
+input, button, select {
+  font-family: 'SuseongHyejeong', sans-serif;
+}
+
+.signupContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background-color: #F5F5F2;
+}
+
+.signupTitle {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+  width: 100%;
+  padding: 10px 0;
+  font-size: 1.3rem;
+}
+
+.signupForm {
+  background: white;
+  padding: 1.2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.formGroup {
+  margin-bottom: 0.8rem;
+  position: relative;
+  width: 100%;
+
+  label {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: #141412;
+    text-align: left;
+    padding-left: 0.25rem;
+    font-size: 0.9rem;
+  }
+
+  input, select, .dateInput {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+
+    &:focus {
+      outline: none;
+      border-color: #666;
+    }
+  }
+
+  .errorMessage {
+    position: absolute;
+    right: 0;
+    bottom: -20px;
+    color: #ff0000;
+    font-size: 13px;
+  }
+}
+
+.submitButton, .cancelButton {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  background-color: #8A6E59;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: #725a49;
+  }
+}
+
+.inputWithButton {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+
+  input {
+    flex: 1;
+    width: 100%;
+    max-width: none;
+  }
+
+  button {
+    min-width: 80px;
+    font-size: 0.85rem;
+    padding: 0.5rem;
+  }
+}
+
+.verifyButton, .checkButton {
+  width: 30%;
+  display: inline-block;
+  padding: 0.5rem;
+  margin-top: 0;
+  margin-left: 8px;
+  background-color: #8A6E59;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+
+  &:hover {
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+  }
+
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.8;
+  }
+}
+
+.profileImageUpload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.profilePreview {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.imageInput {
+  width: 100%;
+  padding: 0.5rem;
+}
+
+.loginLinkWrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.loginQuestion {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.loginLinkButton {
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+
+  &:hover {
+    color: #795548;
+  }
+}
+
+// DatePicker 관련 스타일은 global 스타일로 처리해야 할 수 있습니다
+:global {
+  .react-datepicker-wrapper {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .react-datepicker__input-container {
+    input {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+
+  // ... 나머지 DatePicker 관련 스타일
+}
+
+.genderButtons {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.genderButton {
+  flex: 1;
+  padding: 0.8rem 2rem;
+  border: 1px solid #8A6E59;
+  border-radius: 8px;
+  background-color: white;
+  color: #8A6E59;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+
+  &.selected {
+    background-color: #8A6E59;
+    color: white;
+  }
+}
+
+.submitButton {
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+} 
