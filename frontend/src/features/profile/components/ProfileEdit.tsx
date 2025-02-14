@@ -1,33 +1,120 @@
-import React, { useState, ChangeEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, ChangeEvent, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './ProfileEdit.module.scss';
-import type { UserProfile } from '../../auth/types/user';
 import { existingNicknames } from '../../auth/data/dummyNicknames';
 import ConfirmModal from '../../../components/modals/ConfirmModal';
+import { accountApi } from '../api';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
+import { ko } from 'date-fns/locale';
+
+// 타입 정의 추가
+interface ProfileData {
+  id: number;
+  email: string;
+  nickname: string;
+  sex: 'M' | 'F';
+  birth_date: string;
+  career: number;
+  challenge_streak: number;
+  follower_count: number;
+  following_count: number;
+  introduction: string | null;
+  is_following: boolean;
+  profile_image: string | null;
+  total_saving: number;
+}
 
 const ProfileEdit: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const initialProfileData = location.state?.profileData as ProfileData;
   const [showPopup, setShowPopup] = useState<boolean>(false);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(['외식', '술/담배']);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   
-  // userData state를 먼저 선언
-  const [userData, setUserData] = useState<UserProfile>({
-    email: 'ssafy@ssafy.com',
-    userId: 'ssafy',
-    password: '********',
-    confirmPassword: '********',
-    nickname: '쿨비',
-    gender: '남성',
-    birthDate: new Date('2025-01-22'),
-    occupation: '취업준비생',
-    profileImage: '/profile-fish.png',
-    introduction: '돈을 적당히 쓰자',
-    keywords: ['외식', '술/담배']
+  // userData state 선언
+  const [userData, setUserData] = useState<ProfileData>({
+    id: initialProfileData?.id || 0,
+    email: initialProfileData?.email || '',
+    nickname: initialProfileData?.nickname || '',
+    sex: initialProfileData?.sex || 'M',
+    birth_date: initialProfileData?.birth_date || '',
+    career: initialProfileData?.career || 0,
+    challenge_streak: initialProfileData?.challenge_streak || 0,
+    follower_count: initialProfileData?.follower_count || 0,
+    following_count: initialProfileData?.following_count || 0,
+    introduction: initialProfileData?.introduction || '',
+    is_following: initialProfileData?.is_following || false,
+    profile_image: initialProfileData?.profile_image || null,
+    total_saving: initialProfileData?.total_saving || 0
   });
 
   const [isNicknameChecked, setIsNicknameChecked] = useState<boolean>(false);
-  const [tempNickname, setTempNickname] = useState<string>(userData.nickname);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+  const [tempNickname, setTempNickname] = useState<string>('');
+
+  // 성별 선택 상태 추가
+  const [selectedGender, setSelectedGender] = useState<string>(
+    initialProfileData?.sex === 'M' ? '남' : 
+    initialProfileData?.sex === 'F' ? '여' : ''
+  );
+
+  const [birthDate, setBirthDate] = useState<Date | null>(
+    initialProfileData?.birth_date ? new Date(initialProfileData.birth_date) : null
+  );
+
+  // 컴포넌트 마운트 시 전달받은 데이터로 초기화
+  useEffect(() => {
+    if (initialProfileData) {
+      console.log('전달받은 프로필 데이터:', initialProfileData);
+      setUserData(prev => ({
+        ...prev,
+        email: initialProfileData.email,
+        nickname: initialProfileData.nickname,
+        sex: initialProfileData.sex,
+        birth_date: initialProfileData.birth_date,
+        career: initialProfileData.career,
+        challenge_streak: initialProfileData.challenge_streak,
+        follower_count: initialProfileData.follower_count,
+        following_count: initialProfileData.following_count,
+        introduction: initialProfileData.introduction,
+        is_following: initialProfileData.is_following,
+        profile_image: initialProfileData.profile_image,
+        total_saving: initialProfileData.total_saving
+      }));
+      setSelectedCategories(initialProfileData.categories || []);
+      setTempNickname(initialProfileData.nickname);
+      setSelectedGender(initialProfileData.sex === 'M' ? '남' : initialProfileData.sex === 'F' ? '여' : '');
+      setBirthDate(initialProfileData.birth_date ? new Date(initialProfileData.birth_date) : null);
+    } else {
+      // 데이터가 없는 경우 API로 로드
+      loadUserProfile();
+    }
+  }, [initialProfileData]);
+
+  const loadUserProfile = async () => {
+    try {
+      const profileData = await accountApi.getMyProfile();
+      console.log('API로 받아온 프로필 데이터:', profileData);
+      setUserData(prev => ({
+        ...prev,
+        nickname: profileData.nickname,
+        // API 응답에 맞게 다른 필드들도 설정
+      }));
+      setSelectedCategories(profileData.categories || []);
+      setTempNickname(profileData.nickname);
+      setSelectedGender(profileData.sex === 'M' ? '남' : profileData.sex === 'F' ? '여' : '');
+      setBirthDate(profileData.birth_date ? new Date(profileData.birth_date) : null);
+    } catch (error) {
+      console.error('프로필 로드 실패:', error);
+      alert('프로필 정보를 불러오는데 실패했습니다.');
+    }
+  };
+
+  // userData가 변경될 때마다 콘솔에 출력
+  useEffect(() => {
+    console.log('현재 userData:', userData);
+  }, [userData]);
 
   const handlePasswordChange = () => {
     navigate('/login/password');  // PasswordForm으로 이동
@@ -66,14 +153,14 @@ const ProfileEdit: React.FC = () => {
       reader.onloadend = () => {
         setUserData(prev => ({
           ...prev,
-          profileImage: reader.result as string
+          profile_image: reader.result as string
         }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setUserData(prev => ({
       ...prev,
@@ -105,33 +192,79 @@ const ProfileEdit: React.FC = () => {
     alert('사용 가능한 닉네임입니다!');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!isNicknameChecked && userData.nickname !== tempNickname) {
       alert('닉네임 중복 확인이 필요합니다.');
       return;
     }
 
-    // TODO: API 연동 시 저장 로직 구현
-    console.log('저장된 사용자 정보:', userData);
-    alert('프로필이 수정되었습니다.');
+    try {
+      await accountApi.updateProfile({
+        user_id: userData.id,
+        nickname: userData.nickname,
+        categories: selectedCategories,
+        // 다른 필드들도 필요에 따라 추가
+      });
+      
+      alert('프로필이 수정되었습니다.');
+      navigate('/profile');
+    } catch (error) {
+      console.error('프로필 수정 실패:', error);
+      alert('프로필 수정에 실패했습니다.');
+    }
   };
 
-  const handleDeleteAccount = () => {
-    setShowDeleteConfirm(true);
+  const handleDeleteAccount = async () => {
+    try {
+      await accountApi.deleteAccount(userData.id);
+      alert('회원 탈퇴가 완료되었습니다.');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      navigate('/');
+    } catch (error) {
+      console.error('회원 탈퇴 실패:', error);
+      alert('회원 탈퇴에 실패했습니다.');
+    }
   };
 
-  const handleConfirmDelete = () => {
-    // TODO: API 연동 시 회원 탈퇴 로직 구현
-    console.log('회원 탈퇴 처리');
-    alert('회원 탈퇴가 완료되었습니다.');
-    navigate('/');  // 홈으로 이동
+  // 성별 선택 핸들러 추가
+  const handleGenderSelect = (gender: string) => {
+    setSelectedGender(gender);
+    setUserData(prev => ({
+      ...prev,
+      sex: gender === '남' ? 'M' : 'F'
+    }));
+  };
+
+  // 직업 매핑 함수
+  const getCareerDisplay = (career: number) => {
+    const careerMap: { [key: number]: string } = {
+      1: '학생(초/중/고)',
+      2: '대학(원)생',
+      3: '취업준비생',
+      4: '직장인',
+      5: '주부',
+      6: '프리랜서'
+    };
+    return careerMap[career] || '';
+  };
+
+  const handleDateChange = (date: Date | null) => {
+    setBirthDate(date);
+    if (date) {
+      const formattedDate = date.toISOString().split('T')[0];
+      setUserData(prev => ({
+        ...prev,
+        birth_date: formattedDate
+      }));
+    }
   };
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.profileImage}>
-          <img src={userData.profileImage} alt="프로필 이미지" />
+          <img src={userData.profile_image || '/default-profile.jpg'} alt="프로필 이미지" />
         </div>
         <input
           type="file"
@@ -140,7 +273,7 @@ const ProfileEdit: React.FC = () => {
           onChange={handleImageChange}
           style={{ display: 'none' }}
         />
-        <button 
+        <button
           className={styles.editButton}
           onClick={() => document.getElementById('profileImage')?.click()}
         >
@@ -151,13 +284,17 @@ const ProfileEdit: React.FC = () => {
       <div className={styles.form}>
         <div className={styles.formGroup}>
           <label>이메일</label>
-          <input type="email" value={userData.email} readOnly />
+          <input 
+            type="email" 
+            value={userData.email} 
+            readOnly 
+          />
         </div>
 
         <div className={styles.formGroup}>
           <label>비밀번호</label>
           <div className={styles.inputWithButton}>
-            <input type="password" value={userData.password} readOnly />
+            <input type="password" value="********" readOnly />
             <button 
               className={styles.changeButton}
               onClick={handlePasswordChange}
@@ -173,8 +310,9 @@ const ProfileEdit: React.FC = () => {
             <input
               type="text"
               name="introduction"
-              value={userData.introduction}
+              value={userData.introduction || ''}
               onChange={handleInputChange}
+              placeholder="한줄 소개를 입력해주세요"
             />
           </div>
         </div>
@@ -191,7 +329,7 @@ const ProfileEdit: React.FC = () => {
             <button 
               className={styles.checkButton}
               onClick={handleNicknameCheck}
-              disabled={isNicknameChecked && tempNickname === userData.nickname}
+              disabled={isNicknameChecked && tempNickname === initialProfileData?.nickname}
             >
               {isNicknameChecked ? '확인 완료' : '중복 확인'}
             </button>
@@ -199,45 +337,117 @@ const ProfileEdit: React.FC = () => {
         </div>
 
         <div className={styles.formGroup}>
-          <label>아이디</label>
-          <input type="text" value={userData.userId} readOnly />
-        </div>
-
-        <div className={styles.formGroup}>
           <label>성별</label>
-          <input 
-            type="text" 
-            value={userData.gender} 
-            readOnly
-          />
+          <div className={styles.genderButtons}>
+            <button
+              type="button"
+              className={`${styles.genderButton} ${userData.sex === 'M' ? styles.selected : ''}`}
+              onClick={() => handleGenderSelect('M')}
+            >
+              남
+            </button>
+            <button
+              type="button"
+              className={`${styles.genderButton} ${userData.sex === 'F' ? styles.selected : ''}`}
+              onClick={() => handleGenderSelect('F')}
+            >
+              여
+            </button>
+          </div>
         </div>
 
         <div className={styles.formGroup}>
           <label>생년월일</label>
-          <input 
-            type="text" 
-            value={userData.birthDate?.toISOString().split('T')[0]} 
-            readOnly
-          />
+          <div className={styles.calendarWrapper}>
+            <DatePicker
+              selected={birthDate}
+              onChange={handleDateChange}
+              dateFormat="yyyy년 MM월 dd일"
+              className={styles.dateInput}
+              locale={ko}
+              showMonthDropdown
+              showYearDropdown
+              dropdownMode="select"
+              maxDate={new Date()}
+              yearDropdownItemNumber={100}
+              scrollableYearDropdown
+              renderCustomHeader={({
+                date,
+                changeYear,
+                changeMonth,
+              }) => (
+                <div 
+                  className={styles.reactDatepickerHeaderDropdown}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className={styles.reactDatepickerYearDropdownContainer}>
+                    <select
+                      value={date.getFullYear()}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        changeYear(Number(e.target.value));
+                      }}
+                      className={styles.reactDatepickerYearSelect}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {Array.from({ length: 100 }, (_, i) => (
+                        <option key={i} value={new Date().getFullYear() - i}>
+                          {new Date().getFullYear() - i}년
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <select
+                      value={date.getMonth()}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        changeMonth(Number(e.target.value));
+                      }}
+                      className={styles.reactDatepickerMonthSelect}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {Array.from({ length: 12 }, (_, i) => (
+                        <option key={i} value={i}>
+                          {i + 1}월
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+              customInput={
+                <input
+                  className={styles.dateInput}
+                  value={birthDate ? birthDate.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                  }) : ''}
+                  readOnly
+                  placeholder="생년월일을 선택하세요"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              }
+            />
+          </div>
         </div>
 
         <div className={styles.formGroup}>
           <label>직업</label>
-          <div className={styles.inputWithButton}>
-            <select
-              name="occupation"
-              value={userData.occupation}
-              onChange={handleInputChange}
-              className={styles.selectInput}
-            >
-              <option value="student">학생(초/중/고)</option>
-              <option value="university">대학(원)생</option>
-              <option value="jobseeker">취업준비생</option>
-              <option value="employee">직장인</option>
-              <option value="housewife">주부</option>
-              <option value="freelancer">프리랜서</option>
-            </select>
-          </div>
+          <select
+            name="career"
+            value={userData.career}
+            onChange={handleInputChange}
+            className={styles.selectInput}
+          >
+            <option value={1}>학생(초/중/고)</option>
+            <option value={2}>대학(원)생</option>
+            <option value={3}>취업준비생</option>
+            <option value={4}>직장인</option>
+            <option value={5}>주부</option>
+            <option value={6}>프리랜서</option>
+          </select>
         </div>
  
         <div className={styles.formGroup}>
@@ -260,7 +470,7 @@ const ProfileEdit: React.FC = () => {
         <div className={styles.buttons}>
           <button 
             className={styles.deleteButton} 
-            onClick={handleDeleteAccount}
+            onClick={() => setShowDeleteConfirm(true)}
           >
             회원 탈퇴
           </button>
@@ -311,7 +521,7 @@ const ProfileEdit: React.FC = () => {
       <ConfirmModal
         isOpen={showDeleteConfirm}
         message="정말로 탈퇴하시겠습니까?"
-        onConfirm={handleConfirmDelete}
+        onConfirm={handleDeleteAccount}
         onCancel={() => setShowDeleteConfirm(false)}
       />
     </div>

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import styles from './Header.module.scss';
 import BellIcon from '../../icons/BellIcon';
 import logo2 from '@/assets/logo3.png';
@@ -11,6 +11,7 @@ import profileTest from '@/assets/profile-test.jpg';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([
@@ -70,8 +71,34 @@ const Header: React.FC = () => {
   const [selectedChallenge, setSelectedChallenge] = useState<any>(null);
   const [showChallengeModal, setShowChallengeModal] = useState(false);
 
-  // 로그인 상태 관리
-  const [isLoggedIn, setIsLoggedIn] = useState(true);  // 임시로 true로 시작
+  // 토큰 기반 로그인 상태 확인
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return !!localStorage.getItem('access_token');
+  });
+
+  // 토큰이 없어도 접근 가능한 경로들
+  const publicPaths = [
+    '/login',
+    '/login/signup',
+    '/login/passwordForm'
+  ];
+
+  // 현재 경로가 public path인지 확인하는 함수
+  const isPublicPath = () => {
+    return publicPaths.some(path => location.pathname.startsWith(path));
+  };
+
+  // 컴포넌트 마운트 시 토큰 확인
+  useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    if (!token && !isPublicPath()) {
+      // 토큰이 없고 public path가 아닌 경우에만 로그인 페이지로 이동
+      setIsLoggedIn(false);
+      navigate('/login');
+    } else if (token) {
+      setIsLoggedIn(true);
+    }
+  }, [navigate, location.pathname]);
 
   const handleCloseNotifications = () => {
     setShowNotifications(false);
@@ -103,16 +130,26 @@ const Header: React.FC = () => {
     setShowNotifications(false);
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);  // 로그아웃 시 상태 변경
-    logout();
-    navigate('/');
-  };
-
   // 임시 사용자 데이터
   const user = {
     nickname: '물고기',
     profileImage: profileTest
+  };
+
+  // 로그아웃 처리
+  const handleLogout = () => {
+    // 로컬 스토리지에서 토큰 제거
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    
+    // 상태 업데이트
+    setIsLoggedIn(false);
+    
+    // Context API의 logout 함수 호출
+    logout();
+    
+    // 로그인인으로 리다이렉트
+    navigate('/login');
   };
 
   return (

@@ -24,6 +24,10 @@ export default function ChallengePage() {
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null)
   const navigate = useNavigate()
 
+  // 토큰 확인을 위한 콘솔 로그 추가
+  console.log('Access Token:', localStorage.getItem('access_token'));
+  console.log('Refresh Token:', localStorage.getItem('refresh_token'));
+
   const ongoingChallenges: Challenge[] = [
     {
       id: 1,
