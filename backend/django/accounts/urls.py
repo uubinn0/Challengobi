@@ -34,5 +34,15 @@ urlpatterns = [
          views.UserProfileView.as_view(), 
          name='profile'
          ),
+    path(
+        "<int:pk>/followers/",
+        views.AccountViewSet.as_view({"get": "followers"}),
+        name="account-followers",
+    ),
+    path(
+        "<int:pk>/following/",
+        views.AccountViewSet.as_view({"get": "following"}),
+        name="account-following",
+    ),
     path("", include(router.urls)),
 ]

@@ -223,3 +223,135 @@ class UserProfileView(views.APIView):
         return Response({
             "message": "회원 탈퇴가 완료되었습니다."
         }, status=status.HTTP_204_NO_CONTENT)
+            return Response(serializer.data)
+
+        elif request.method == "DELETE":
+            request.user.is_active = False
+            request.user.save()
+            logout(request)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=["post", "delete"])
+    def follow(self, request, pk=None):
+        target_user = self.get_object()
+        if target_user == request.user:
+            return Response(
+                {"error": "자기 자신을 팔로우할 수 없습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if request.method == "POST":
+            follow, created = Follow.objects.get_or_create(
+                follower=request.user, following=target_user
+            )
+            if created:
+                return Response(
+                    {"message": f"{target_user.nickname}님을 팔로우했습니다."}
+                )
+            return Response(
+                {"message": "이미 팔로우하고 있습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        elif request.method == "DELETE":
+            follow = Follow.objects.filter(
+                follower=request.user, following=target_user
+            ).first()
+            if follow:
+                follow.delete()
+                return Response(
+                    {"message": f"{target_user.nickname}님을 언팔로우했습니다."}
+                )
+            return Response(
+                {"message": "팔로우하고 있지 않습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    @action(detail=False, methods=["get", "post"])
+    def categories(self, request):
+        if request.method == "GET":
+            try:
+                category = UserChallengeCategory.objects.get(user=request.user)
+                serializer = UserChallengeCategorySerializer(category)
+                return Response(serializer.data)
+            except UserChallengeCategory.DoesNotExist:
+                return Response(
+                    {
+                        "cafe": False,
+                        "restaurant": False,
+                        "grocery": False,
+                        "shopping": False,
+                        "culture": False,
+                        "hobby": False,
+                        "drink": False,
+                        "transportation": False,
+                        "etc": False,
+                    }
+                )
+
+        elif request.method == "POST":
+            serializer = UserChallengeCategorySerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=request.user)
+            return Response(serializer.data)
+
+    @action(detail=True, methods=["get"])
+    def followers(self, request, pk=None):
+        """
+        특정 사용자의 팔로워 목록을 조회합니다.
+        """
+        user = self.get_object()
+        followers = Follow.objects.filter(following=user)
+        serializer = FollowSerializer(followers, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"])
+    def following(self, request, pk=None):
+        """
+        특정 사용자의 팔로잉 목록을 조회합니다.
+        """
+        user = self.get_object()
+        following = Follow.objects.filter(follower=user)
+        serializer = FollowSerializer(following, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["post", "delete"])
+    def follow(self, request, pk=None):
+        """
+        팔로우/언팔로우 기능을 토글합니다.
+        POST: 팔로우
+        DELETE: 언팔로우
+        """
+        target_user = self.get_object()
+        if target_user == request.user:
+            return Response(
+                {"error": "자기 자신을 팔로우할 수 없습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if request.method == "POST":
+            follow, created = Follow.objects.get_or_create(
+                follower=request.user, following=target_user
+            )
+            if created:
+                return Response(
+                    {"message": f"{target_user.nickname}님을 팔로우했습니다."}
+                )
+            return Response(
+                {"message": "이미 팔로우하고 있습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        elif request.method == "DELETE":
+            follow = Follow.objects.filter(
+                follower=request.user, following=target_user
+            ).first()
+            if follow:
+                follow.delete()
+                return Response(
+                    {"message": f"{target_user.nickname}님을 언팔로우했습니다."}
+                )
+            return Response(
+                {"message": "팔로우하고 있지 않습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
