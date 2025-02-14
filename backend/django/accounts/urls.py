@@ -30,5 +30,9 @@ urlpatterns = [
          views.UserDeleteView.as_view(), 
          name='user-delete'
          ),
+    path('me/', 
+         views.UserProfileView.as_view(), 
+         name='profile'
+         ),
     path("", include(router.urls)),
 ]
