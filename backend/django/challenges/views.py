@@ -35,17 +35,41 @@ logger = logging.getLogger(__name__)
 
 class ChallengeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["title", "description"]
     
     def get_queryset(self):
-        # 기본 쿼리셋 (삭제된 챌린지 제외)
-        queryset = Challenge.objects.exclude(status=3)
-        
-        # 검색어와 카테고리 파라미터 가져오기
-        search = self.request.query_params.get('search')
-        category = self.request.query_params.get('category')
-        
-        # 검색어가 있는 경우
-        if search:
+        queryset = Challenge.objects.exclude(status=3).select_related(
+            "creator"
+        )  # Exclude deleted challenges
+
+        status_param = self.request.query_params.get("status")
+        if status_param == "recruiting":
+            today = date.today()
+            queryset = queryset.filter(status=0, start_date__gt=today)  # RECRUIT
+        elif status_param == "in_progress":
+            queryset = queryset.filter(status=1)  # IN_PROGRESS
+
+        category = self.request.query_params.get("category")
+        if category:
+            # 카테고리명으로 매핑
+            category_mapping = {
+                'cafe': 1,
+                'restaurant': 2,
+                'grocery': 3,
+                'shopping': 4,
+                'culture': 5,
+                'hobby': 6,
+                'drink': 7,
+                'transportation': 8,
+                'etc': 9
+            }
+            category_id = category_mapping.get(category.lower())
+            if category_id:
+                queryset = queryset.filter(category=category_id)
+
+        search_keyword = self.request.query_params.get("search")
+        if search_keyword:
             queryset = queryset.filter(
                 Q(title__icontains=search_keyword) | 
                 Q(description__icontains=search_keyword)
@@ -77,7 +101,6 @@ class ChallengeViewSet(viewsets.ModelViewSet):
             'recruiting': recruiting_serializer.data,
             'in_progress': in_progress_serializer.data
         })
-
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -153,6 +176,28 @@ class ChallengeViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=["post"])
+    def invite(self, request, pk=None):
+        challenge = self.get_object()
+        serializer = ChallengeInviteSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        if challenge.status != 0:
+            return Response(
+                {"error": "모집 중인 챌린지가 아닙니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        invite = ChallengeInvite.objects.create(
+            challenge=challenge,
+            from_user=request.user,
+            to_user_id=serializer.validated_data["to_user_id"],
+        )
+
+        return Response(status=status.HTTP_201_CREATED)
+
     @action(detail=True, methods=["delete"])
     def leave(self, request, pk=None):
         challenge = self.get_object()
@@ -201,27 +246,15 @@ class ChallengeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    @action(detail=True, methods=["post"])
-    def invite(self, request, pk=None):
-        challenge = self.get_object()
-        serializer = ChallengeInviteSerializer(data=request.data)
-
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        if challenge.status != 0:
-            return Response(
-                {"error": "모집 중인 챌린지가 아닙니다"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        invite = ChallengeInvite.objects.create(
+        # 참가자 제외
+        participant = get_object_or_404(
+            ChallengeParticipant,
             challenge=challenge,
-            from_user=request.user,
-            to_user_id=serializer.validated_data["to_user_id"],
+            user_id=user_id
         )
+        participant.delete()
 
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ExpenseViewSet(viewsets.ModelViewSet):
