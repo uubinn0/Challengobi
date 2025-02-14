@@ -10,6 +10,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 
+
 class MyUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -34,6 +35,10 @@ class MyUserManager(BaseUserManager):
 
 
 class User(AbstractUser):
+    first_name = None
+    last_name = None
+    # date_joined = None
+
     id = models.AutoField(primary_key=True)
     username = models.CharField(_("username"), max_length=150, blank=True)
     email = models.EmailField(_("email"), max_length=150, unique=True)
