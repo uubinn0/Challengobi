@@ -41,14 +41,18 @@ services:
              python manage.py runserver 0.0.0.0:8000"
 
   react-app:
-    image: taromilktea/pjt01_react:latest
+    image: taromilktea/pjt01_react_test:latest
     container_name: react-app
     ports:
-      - "3000:80"
+      - "3000:3000"
     volumes:
       - ./frontend:/app
+      - /app/node_modules
+    working_dir: /app
+    command: ["npm", "run", "dev"]
     environment:
-      REACT_APP_API_URL: "http://django-app:8000/"
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_API_URL=http://django-app:8000/
     depends_on:
       - django-app
     restart: always
