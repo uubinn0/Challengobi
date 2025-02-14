@@ -47,8 +47,8 @@ class ChallengeViewSet(viewsets.ModelViewSet):
         # 검색어가 있는 경우
         if search:
             queryset = queryset.filter(
-                Q(title__icontains=search) | 
-                Q(description__icontains=search)
+                Q(title__icontains=search_keyword) | 
+                Q(description__icontains=search_keyword)
             )
         
         # 카테고리 필터링이 있는 경우
@@ -80,23 +80,33 @@ class ChallengeViewSet(viewsets.ModelViewSet):
 
 
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action in ["create", "update", "partial_update"]:
             return ChallengeCreateSerializer
+        elif self.action == "retrieve":
+            return ChallengeDetailSerializer
         return ChallengeListSerializer
 
     def perform_create(self, serializer):
-        serializer.save(creator=self.request.user)
+        challenge = serializer.save(creator=self.request.user)
+
+        # 챌린지 생성자를 참여자로 자동 등록
+        ChallengeParticipant.objects.create(
+            challenge=challenge,
+            user=self.request.user,
+            initial_budget=challenge.budget,
+            balance=challenge.budget,
+        )
 
     def perform_update(self, serializer):
         instance = self.get_object()
-        if instance.creator != self.request.user:
+        if instance.creator.id != self.request.user.id:
             raise PermissionDenied("챌린지 생성자만 수정할 수 있습니다")
         if instance.status != 0:  # RECRUIT
             raise PermissionDenied("모집 중인 챌린지만 수정할 수 있습니다")
         serializer.save()
 
     def perform_destroy(self, instance):
-        if instance.creator != self.request.user:
+        if instance.creator.id != self.request.user.id:
             raise PermissionDenied("챌린지 생성자만 삭제할 수 있습니다")
         if instance.status != 0:  # RECRUIT
             raise PermissionDenied("모집 중인 챌린지만 삭제할 수 있습니다")
@@ -138,9 +148,58 @@ class ChallengeViewSet(viewsets.ModelViewSet):
             user=request.user,
             initial_budget=challenge.budget,
             balance=challenge.budget,
+            is_failed=False,
         )
 
         return Response(status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["delete"])
+    def leave(self, request, pk=None):
+        challenge = self.get_object()
+        participant = get_object_or_404(
+            ChallengeParticipant, challenge=challenge, user=request.user
+        )
+
+        if challenge.status != 0:  # RECRUIT
+            return Response(
+                {"error": "모집 중인 챌린지만 탈퇴할 수 있습니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        participant.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # 참여자 목록 조회
+    @action(detail=True, methods=['get'])
+    def participants(self, request, pk=None):
+        challenge = self.get_object()
+        participants = ChallengeParticipant.objects.filter(challenge=challenge)
+        # ChallengeParticipant에 대한 serializer가 필요합니다
+        serializer = ChallengeParticipantSerializer(participants, many=True)
+        return Response(serializer.data)
+
+    # 관리자가 참여자 제거
+    @action(detail=True, methods=['delete'])
+    def remove_participant(self, request, pk=None, user_id=None):
+        challenge = self.get_object()
+
+        # 챌린지 생성자 확인
+        if challenge.creator != request.user:
+            raise PermissionDenied("챌린지 생성자만 참가자를 제외할 수 있습니다")
+
+        # 모집 중인 챌린지인지 확인
+        if challenge.status != 0:  # RECRUIT
+            return Response(
+                {"error": "모집 중인 챌린지에서만 참가자를 제외할 수 있습니다"},
+                status=status.HTTP_400_BAD_REQUEST
+            ) 
+
+        # 챌린지 생성자 본인은 제외할 수 없음
+        if int(user_id) == request.user.id:
+            return Response(
+                {"error": "챌린지 생성자는 제외할 수 없습니다"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     @action(detail=True, methods=["post"])
     def invite(self, request, pk=None):
@@ -163,33 +222,6 @@ class ChallengeViewSet(viewsets.ModelViewSet):
         )
 
         return Response(status=status.HTTP_201_CREATED)
-
-    @action(detail=True, methods=["delete"])
-    def leave(self, request, pk=None):
-        challenge = self.get_object()
-        participant = get_object_or_404(
-            ChallengeParticipant, challenge=challenge, user=request.user
-        )
-
-        if challenge.status != 0:  # RECRUIT
-            return Response(
-                {"error": "모집 중인 챌린지만 탈퇴할 수 있습니다"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        participant.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class ChallengeLikeViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = ChallengeLikeSerializer
-
-    def get_queryset(self):
-        return ChallengeLike.objects.filter(user=self.request.user)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
 
 
 class ExpenseViewSet(viewsets.ModelViewSet):
@@ -578,15 +610,25 @@ class ChallengeLikeViewSet(viewsets.ModelViewSet):
         return ChallengeLike.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        challenge = serializer.validated_data["challenge"]
+        challenge_id = self.kwargs.get('challenge_id')
+        encourage = serializer.validated_data.get("encourage", False)
+        want_to_join = serializer.validated_data.get("want_to_join", False)
+
+        # 둘 다 False면 reaction 삭제
+        if not encourage and not want_to_join:
+            ChallengeLike.objects.filter(
+                challenge_id=challenge_id,
+                user=self.request.user
+            ).delete()
+            return
 
         # 이미 존재하는 reaction이 있다면 업데이트
         reaction, created = ChallengeLike.objects.update_or_create(
-            challenge=challenge,
+            challenge_id=challenge_id,
             user=self.request.user,
             defaults={
-                "encourage": serializer.validated_data.get("encourage", False),
-                "want_to_join": serializer.validated_data.get("want_to_join", False),
+                "encourage": encourage,
+                "want_to_join": want_to_join,
             },
         )
 
