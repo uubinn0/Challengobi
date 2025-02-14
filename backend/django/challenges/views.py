@@ -35,37 +35,53 @@ logger = logging.getLogger(__name__)
 
 class ChallengeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["title", "description"]
-
+    
     def get_queryset(self):
-        queryset = Challenge.objects.exclude(status=3)  # Exclude deleted challenges
-
-        status_param = self.request.query_params.get("status")
-        if status_param == "recruiting":
-            today = date.today()
-            queryset = queryset.filter(status=0, start_date__gt=today)  # RECRUIT
-        elif status_param == "in_progress":
-            queryset = queryset.filter(status=1)  # IN_PROGRESS
-
-        category = self.request.query_params.get("category")
+        # 기본 쿼리셋 (삭제된 챌린지 제외)
+        queryset = Challenge.objects.exclude(status=3)
+        
+        # 검색어와 카테고리 파라미터 가져오기
+        search = self.request.query_params.get('search')
+        category = self.request.query_params.get('category')
+        
+        # 검색어가 있는 경우
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search) | 
+                Q(description__icontains=search)
+            )
+        
+        # 카테고리 필터링이 있는 경우
         if category:
             queryset = queryset.filter(category=category)
+        
+        return queryset.order_by('-created_at')
 
-        search_keyword = self.request.query_params.get("search")
-        if search_keyword:
-            queryset = queryset.filter(
-                Q(title__icontains=search_keyword)
-                | Q(description__icontains=search_keyword)
-            )
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()  # 검색 및 카테고리 필터가 적용된 상태
+        
+        today = date.today()
+        
+        # 기존 queryset에서 필터링
+        recruiting_challenges = queryset.filter(
+            status=0,
+            start_date__gt=today
+        )
+        
+        in_progress_challenges = queryset.filter(status=1)
+        
+        recruiting_serializer = ChallengeListSerializer(recruiting_challenges, many=True)
+        in_progress_serializer = ChallengeListSerializer(in_progress_challenges, many=True)
+        
+        return Response({
+            'recruiting': recruiting_serializer.data,
+            'in_progress': in_progress_serializer.data
+        })
 
-        return queryset
 
     def get_serializer_class(self):
-        if self.action in ["create", "update", "partial_update"]:
+        if self.action == 'create':
             return ChallengeCreateSerializer
-        elif self.action == "retrieve":
-            return ChallengeDetailSerializer
         return ChallengeListSerializer
 
     def perform_create(self, serializer):
