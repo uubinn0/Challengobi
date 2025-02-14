@@ -140,41 +140,60 @@ class UserDeleteSerializer(serializers.Serializer):
         user = self.context['request'].user
         user.delete()
 
+# 임시 -> 팔로우 관련 필드 추가해야함
 class UserProfileSerializer(serializers.ModelSerializer):
-    follower_count = serializers.SerializerMethodField()
-    following_count = serializers.SerializerMethodField()
-    is_following = serializers.SerializerMethodField()
+    challenge_categories = UserChallengeCategorySerializer(source='challenge_category', required=False)
 
     class Meta:
         model = User
-        fields = [
-            "id",
-            "email",
-            "nickname",
-            "sex",
-            "birth_date",
-            "career",
-            "total_saving",
-            "introduction",
-            "profile_image",
-            "challenge_streak",
-            "follower_count",
-            "following_count",
-            "is_following",
-        ]
-        read_only_fields = ["email", "challenge_streak"]
+        fields = (
+            'id',
+            'username',
+            'email',
+            'nickname',
+            'sex',
+            'birth_date',
+            'career',
+            'introduction',
+            'profile_image',
+            'total_saving',  # total_saving 필드 추가
+            'challenge_categories'  # UserChallengeCategorySerializer를 통해 가져옴
+        )
+# class UserProfileSerializer(serializers.ModelSerializer):
+    # follower_count = serializers.SerializerMethodField()
+    # following_count = serializers.SerializerMethodField()
+    # is_following = serializers.SerializerMethodField()
 
-    def get_follower_count(self, obj):
-        return obj.followers.count()
+    # class Meta:
+    #     model = User
+    #     fields = [
+    #         "id",
+    #         "email",
+    #         "nickname",
+    #         "sex",
+    #         "birth_date",
+    #         "career",
+    #         "total_saving",
+    #         "introduction",
+    #         "profile_image",
+    #         "challenge_streak",
+    #         "follower_count",
+    #         "following_count",
+    #         "is_following",
+    #     ]
+    #     read_only_fields = ["email", "challenge_streak"]
 
-    def get_following_count(self, obj):
-        return obj.following.count()
+    # def get_follower_count(self, obj):
+    #     return obj.followers.count()
 
-    def get_is_following(self, obj):
-        request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            return Follow.objects.filter(follower=request.user, following=obj).exists()
-        return False
+    # def get_following_count(self, obj):
+    #     return obj.following.count()
+
+    # def get_is_following(self, obj):
+    #     request = self.context.get("request")
+    #     if request and request.user.is_authenticated:
+    #         return Follow.objects.filter(follower=request.user, following=obj).exists()
+    #     return False
 
 # 프로필 사진 변경
 class ProfileImageUpdateSerializer(serializers.ModelSerializer):
