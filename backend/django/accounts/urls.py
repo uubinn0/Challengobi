@@ -3,43 +3,37 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 router = DefaultRouter()
-router.register("", views.AccountViewSet, basename="account")
 
 urlpatterns = [
-    # 기본 CRUD
-    path(
-        "",
-        views.AccountViewSet.as_view({"get": "list", "post": "create"}),
-        name="account-list",
-    ),
-    path(
-        "<int:pk>/",
-        views.AccountViewSet.as_view(
-            {
-                "get": "retrieve",
-                "put": "update",
-                "patch": "partial_update",
-                "delete": "destroy",
-            }
-        ),
-        name="account-detail",
-    ),
-    # 회원가입/로그인/로그아웃
+    # 회원가입/회원가입완료/로그인/로그아웃/회원탈퇴
     path(
         "register/",
-        views.AccountViewSet.as_view({"post": "register"}),
+        views.UserRegistrationView.as_view(),
         name="account-register",
     ),
     path(
+        'register/complete/', 
+        views.UserRegistrationCompleteView.as_view(), 
+        name='register-complete'
+        ),
+    path(
         "login/",
-        views.AccountViewSet.as_view({"post": "login"}),
+        views.UserLoginView.as_view(),
         name="account-login",
     ),
     path(
         "logout/",
-        views.AccountViewSet.as_view({"post": "logout"}),
+        views.LogoutView.as_view(),
         name="account-logout",
     ),
+    path('me/delete/', 
+         views.UserDeleteView.as_view(), 
+         name='user-delete'
+         ),
+    path('me/', 
+         views.UserProfileView.as_view(), 
+         name='profile'
+         ),
     path(
         "<int:pk>/followers/",
         views.AccountViewSet.as_view({"get": "followers"}),
