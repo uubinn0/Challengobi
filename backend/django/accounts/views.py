@@ -6,7 +6,7 @@ from rest_framework.decorators import action
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate,logout
+from django.contrib.auth import authenticate, logout
 from rest_framework import status, generics, views
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -27,21 +27,30 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
+
 class EmailCheckView(views.APIView):
     """이메일 중복 검사"""
+
     def post(self, request):
         serializer = EmailCheckSerializer(data=request.data)
         if serializer.is_valid():
-            return Response({"message": "사용 가능한 이메일입니다."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "사용 가능한 이메일입니다."}, status=status.HTTP_200_OK
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 class NicknameCheckView(views.APIView):
     """닉네임 중복 검사"""
+
     def post(self, request):
         serializer = NicknameCheckSerializer(data=request.data)
         if serializer.is_valid():
-            return Response({"message": "사용 가능한 닉네임입니다."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "사용 가능한 닉네임입니다."}, status=status.HTTP_200_OK
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @method_decorator(csrf_exempt, name="dispatch")
 class UserRegistrationView(generics.CreateAPIView):
@@ -90,46 +99,51 @@ class UserLoginView(views.APIView):
                     "access": str(refresh.access_token),
                 },
                 "user": UserProfileSerializer(user, context={"request": request}).data,
-            }
-        }, status=status.HTTP_201_CREATED)
-    
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
     def perform_create(self, serializer):
         return serializer.save()
-    
-@method_decorator(csrf_exempt, name='dispatch')
+
+
+@method_decorator(csrf_exempt, name="dispatch")
 class UserLoginView(views.APIView):
     """로그인"""
+
     permission_classes = [AllowAny]
     authentication_classes = []  # 인증 클래스 비활성화
-    
+
     def post(self, request):
-        email = request.data.get('email')
-        password = request.data.get('password')
-        
+        email = request.data.get("email")
+        password = request.data.get("password")
+
         if not email or not password:
-            return Response({
-                'error': '이메일과 비밀번호를 모두 입력해주세요.'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {"error": "이메일과 비밀번호를 모두 입력해주세요."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         user = authenticate(email=email, password=password)
-        
+
         if user:
             refresh = RefreshToken.for_user(user)
-            return Response({
-                'message': '로그인 성공',
-                'tokens': {
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token),
+            return Response(
+                {
+                    "message": "로그인 성공",
+                    "tokens": {
+                        "refresh": str(refresh),
+                        "access": str(refresh.access_token),
+                    },
+                    "user": {"email": user.email, "nickname": user.nickname},
                 },
-                'user': {
-                    'email': user.email,
-                    'nickname': user.nickname
-                }
-            }, status=status.HTTP_200_OK)
+                status=status.HTTP_200_OK,
+            )
         else:
-            return Response({
-                'error': '이메일 또는 비밀번호가 잘못되었습니다.'
-            }, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {"error": "이메일 또는 비밀번호가 잘못되었습니다."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
 
 class UserProfileView(views.APIView):
