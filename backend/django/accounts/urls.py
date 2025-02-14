@@ -1,48 +1,27 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 from . import views
 
-router = DefaultRouter()
-
 urlpatterns = [
-    # 회원가입/회원가입완료/로그인/로그아웃/회원탈퇴
+    # 회원가입/로그인/로그아웃
+    path("register/", views.UserRegistrationView.as_view(), name="register"),
+    path("login/", views.UserLoginView.as_view(), name="login"),
+    path("logout/", views.LogoutView.as_view(), name="logout"),
+    # 유효성 검사
+    path("validate/", views.ValidationView.as_view(), name="validate"),
+    # 프로필 관련
+    path("me/", views.UserProfileView.as_view(), name="profile"),
+    # 팔로우 관련
+    path("users/<int:pk>/follow/", views.FollowView.as_view(), name="follow"),
     path(
-        "register/",
-        views.UserRegistrationView.as_view(),
-        name="account-register",
+        "users/<int:pk>/followers/", views.UserFollowersView.as_view(), name="followers"
     ),
     path(
-        'register/complete/', 
-        views.UserRegistrationCompleteView.as_view(), 
-        name='register-complete'
-        ),
-    path(
-        "login/",
-        views.UserLoginView.as_view(),
-        name="account-login",
+        "users/<int:pk>/following/", views.UserFollowingView.as_view(), name="following"
     ),
+    # 챌린지 카테고리
     path(
-        "logout/",
-        views.LogoutView.as_view(),
-        name="account-logout",
+        "me/categories/",
+        views.UserChallengeCategoryView.as_view(),
+        name="challenge-categories",
     ),
-    path('me/delete/', 
-         views.UserDeleteView.as_view(), 
-         name='user-delete'
-         ),
-    path('me/', 
-         views.UserProfileView.as_view(), 
-         name='profile'
-         ),
-    path(
-        "<int:pk>/followers/",
-        views.AccountViewSet.as_view({"get": "followers"}),
-        name="account-followers",
-    ),
-    path(
-        "<int:pk>/following/",
-        views.AccountViewSet.as_view({"get": "following"}),
-        name="account-following",
-    ),
-    path("", include(router.urls)),
 ]

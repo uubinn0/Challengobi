@@ -49,7 +49,7 @@ class ChallengeParticipant(models.Model):
     challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     balance = models.IntegerField()
-    is_failed = models.IntegerField(default=0)
+    is_failed = models.BooleanField(default=False)
     ocr_count = models.IntegerField(default=0)
     last_ocr_date = models.DateField(null=True)  # 마지막 OCR 카운트 증가 날짜
     initial_budget = models.IntegerField()
