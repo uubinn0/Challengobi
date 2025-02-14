@@ -57,8 +57,8 @@ DATABASES = {
 }
 
 # MongoDB 환경 설정 (FastAPI에서 MongoDB를 사용하는 경우)
-MONGO_HOST = os.environ.get("MONGO_HOST", "mongodb")
-MONGO_PORT = os.environ.get("MONGO_PORT", "27017")
+# MONGO_HOST = os.environ.get("MONGO_HOST", "mongodb")
+# MONGO_PORT = os.environ.get("MONGO_PORT", "27017")
 # Application definition
 
 INSTALLED_APPS = [
