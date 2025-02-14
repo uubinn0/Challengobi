@@ -47,11 +47,12 @@ class Challenge(models.Model):
 
 class ChallengeParticipant(models.Model):
     challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE)
-    user = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
-    ocr_count = models.PositiveSmallIntegerField(default=0)
-    initial_budget = models.IntegerField()
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     balance = models.IntegerField()
-    is_failed = models.BooleanField(null=True)
+    is_failed = models.BooleanField(default=False)
+    ocr_count = models.IntegerField(default=0)
+    last_ocr_date = models.DateField(null=True)  # 마지막 OCR 카운트 증가 날짜
+    initial_budget = models.IntegerField()
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
