@@ -13,7 +13,8 @@ from .serializers import (
     EmailCheckSerializer,
     UserDeleteSerializer,
     ProfileImageUpdateSerializer,
-    UserProfileUpdateSerializer
+    UserProfileUpdateSerializer,
+    UserProfileSerializer
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.views.decorators.csrf import csrf_exempt
@@ -182,18 +183,18 @@ class UserProfileView(views.APIView):
     def get(self, request):
         """프로필 조회"""
         # 디버깅용 정보 출력
-        print("Authorization Header:", request.headers.get('Authorization'))
-        print("User ID:", request.user.id)
-        print("User:", request.user)
-        print("Is Anonymous:", request.user.is_anonymous)
-        print("Is Authenticated:", request.user.is_authenticated)
+        # print("Authorization Header:", request.headers.get('Authorization'))
+        # print("User ID:", request.user.id)
+        # print("User:", request.user)
+        # print("Is Anonymous:", request.user.is_anonymous)
+        # print("Is Authenticated:", request.user.is_authenticated)
         
         if request.user.is_anonymous:
             return Response({
                 "message": "인증되지 않은 사용자입니다."
             }, status=status.HTTP_401_UNAUTHORIZED)
             
-        serializer = UserCreateSerializer(request.user)
+        serializer = UserProfileSerializer(request.user)
         return Response({
             "message": "프로필 조회 성공",
             "data": serializer.data
@@ -201,7 +202,7 @@ class UserProfileView(views.APIView):
     
     def put(self, request):
         """프로필 수정"""
-        serializer = UserCreateSerializer(
+        serializer = UserProfileSerializer(
             request.user,
             data=request.data,
             partial=True  # 부분 업데이트 허용
