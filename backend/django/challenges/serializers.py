@@ -8,7 +8,7 @@ from .models import (
     Expense,
     ChallengeLike,
 )
-from accounts.models import User, UserChallengeCategory
+from accounts.models import User, UserChallengeCategory, Follow
 
 
 def convert_number_to_korean(number):
@@ -42,6 +42,7 @@ class ChallengeCreateSerializer(serializers.ModelSerializer):
     challenge_title = serializers.CharField(source="title")
     challenge_info = serializers.CharField(source="description")
     period = serializers.IntegerField(source="duration")
+    is_private = serializers.BooleanField(source="visibility")
 
     class Meta:
         model = Challenge
@@ -53,6 +54,7 @@ class ChallengeCreateSerializer(serializers.ModelSerializer):
             "start_date",
             "budget",
             "max_participants",
+            "is_private",
         ]
 
     def validate_start_date(self, value):
@@ -246,13 +248,55 @@ class ChallengeParticipantSerializer(serializers.ModelSerializer):
 
 
 class ChallengeInviteSerializer(serializers.ModelSerializer):
-    from_user_id = serializers.IntegerField(source="from_user.id")
-    to_user_id = serializers.IntegerField(source="to_user.id")
-    challenge_id = serializers.IntegerField(source="challenge.id")
+    to_user_id = serializers.IntegerField(write_only=True)
+    to_user_nickname = serializers.CharField(source="to_user.nickname", read_only=True)
+    from_user_nickname = serializers.CharField(
+        source="from_user.nickname", read_only=True
+    )
+    challenge_title = serializers.CharField(source="challenge.title", read_only=True)
 
     class Meta:
         model = ChallengeInvite
-        fields = ["from_user_id", "to_user_id", "challenge_id"]
+        fields = [
+            "id",
+            "to_user_id",
+            "to_user_nickname",
+            "from_user_nickname",
+            "challenge_title",
+            "created_at",
+        ]
+        read_only_fields = ["from_user", "challenge"]
+
+    def validate(self, data):
+        challenge = self.context["challenge"]
+        to_user_id = data["to_user_id"]
+        from_user = self.context["request"].user
+
+        # 자기 자신 초대 불가
+        if to_user_id == from_user.id:
+            raise serializers.ValidationError("자기 자신은 초대할 수 없습니다")
+
+        # Private 챌린지인 경우 팔로워만 초대 가능
+        if challenge.visibility:
+            is_follower = Follow.objects.filter(
+                follower=to_user_id, following=from_user
+            ).exists()
+            if not is_follower:
+                raise serializers.ValidationError("팔로워만 초대할 수 있습니다")
+
+        # 이미 초대된 사용자인지 확인
+        if ChallengeInvite.objects.filter(
+            challenge=challenge, to_user_id=to_user_id
+        ).exists():
+            raise serializers.ValidationError("이미 초대된 사용자입니다")
+
+        # 이미 참여 중인 사용자인지 확인
+        if ChallengeParticipant.objects.filter(
+            challenge=challenge, user_id=to_user_id
+        ).exists():
+            raise serializers.ValidationError("이미 참여 중인 사용자입니다")
+
+        return data
 
 
 class ChallengeLikeSerializer(serializers.ModelSerializer):
@@ -272,10 +316,17 @@ class ChallengeLikeSerializer(serializers.ModelSerializer):
 class ExpenseCreateSerializer(serializers.ModelSerializer):
     challenge_id = serializers.IntegerField()
     user_id = serializers.IntegerField()
-    
+
     class Meta:
         model = Expense
-        fields = ['challenge_id', 'user_id', 'store', 'amount', 'payment_date', 'is_handwritten']
+        fields = [
+            "challenge_id",
+            "user_id",
+            "store",
+            "amount",
+            "payment_date",
+            "is_handwritten",
+        ]
 
     def validate_amount(self, value):
         if value <= 0:
@@ -283,28 +334,27 @@ class ExpenseCreateSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        challenge_id = validated_data.pop('challenge_id')
-        user_id = validated_data.pop('user_id')
+        challenge_id = validated_data.pop("challenge_id")
+        user_id = validated_data.pop("user_id")
 
         # 무슨 의미인지 모르겠어서 사용 안 함
         # challenge = get_object_or_404(Challenge, id=challenge_id)
         # user = get_object_or_404(User, id=user_id)
 
-        validated_data['payment_date'] = timezone.now().date()
+        validated_data["payment_date"] = timezone.now().date()
 
         expense = Expense.objects.create(
-            challenge_id=challenge_id,
-            user_id=user_id,
-            **validated_data
+            challenge_id=challenge_id, user_id=user_id, **validated_data
         )
         return expense
-    
+
+
 class SimpleExpenseCreateSerializer(serializers.ModelSerializer):
     amount = serializers.IntegerField()
 
     class Meta:
         model = Expense
-        fields = ['amount']
+        fields = ["amount"]
 
     def validate_amount(self, value):
         if value <= 0:
@@ -312,20 +362,20 @@ class SimpleExpenseCreateSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        challenge = self.context.get('challenge')
-        user = self.context.get('user')
+        challenge = self.context.get("challenge")
+        user = self.context.get("user")
 
         # Challenge의 카테고리를 store 필드에 저장
         category_map = {
             1: "카페/디저트",
             2: "외식",
-            3: "장보기", 
+            3: "장보기",
             4: "쇼핑",
             5: "문화생활",
             6: "취미/여가",
             7: "술/담배",
             8: "교통",
-            9: "기타"
+            9: "기타",
         }
         store = category_map.get(challenge.category, "기타")
 
@@ -333,8 +383,8 @@ class SimpleExpenseCreateSerializer(serializers.ModelSerializer):
             challenge=challenge,
             user=user,
             store=store,
-            amount=validated_data['amount'],
+            amount=validated_data["amount"],
             payment_date=timezone.now().date(),
-            is_handwritten=True
+            is_handwritten=True,
         )
         return expense

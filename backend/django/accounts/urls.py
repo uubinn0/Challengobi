@@ -30,4 +30,10 @@ urlpatterns = [
         views.UserRecommendationsView.as_view(),
         name="user-recommendations",
     ),
+    # 사용자 초대
+    path(
+        "<int:challenge_id>/invite/",
+        views.ChallengeViewSet.as_view({"post": "invite"}),
+        name="challenge-invite",
+    ),
 ]
