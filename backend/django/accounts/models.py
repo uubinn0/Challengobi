@@ -37,7 +37,7 @@ class MyUserManager(BaseUserManager):
 class User(AbstractUser):
     first_name = None
     last_name = None
-    # date_joined = None
+    date_joined = None
 
     id = models.AutoField(primary_key=True)
     username = models.CharField(_("username"), max_length=150, blank=True)
