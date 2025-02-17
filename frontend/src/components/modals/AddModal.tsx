@@ -24,7 +24,8 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
     startDate: tomorrow, // 기본값을 내일로 설정
     period: "",
     price: "",
-    people: ""
+    people: "",
+    isPrivate: true  // 기본값을 private으로 설정
   });
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -62,7 +63,8 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
         period: Number(formData.period),
         start_date: formData.startDate,
         budget: Number(formData.price),
-        max_participants: Number(formData.people)
+        max_participants: Number(formData.people),
+        is_private: formData.isPrivate  // isPrivate 값을 is_private으로 전송
       };
 
       // 챌린지 생성 API 호출
@@ -96,6 +98,13 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
   const handleSuccessClose = () => {
     setShowSuccess(false);
     onClose();
+  };
+
+  const handlePrivacyToggle = (isPrivate: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      isPrivate
+    }));
   };
 
   // 모든 필드가 채워졌는지 확인하는 함수
@@ -210,6 +219,26 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
                   min="1"
                 />
                 <span className={styles.unit}>명</span>
+              </div>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>챌린지 공개 여부</label>
+              <div className={styles.privacyButtons}>
+                <button
+                  type="button"
+                  className={`${styles.privacyButton} ${formData.isPrivate ? styles.active : ''}`}
+                  onClick={() => handlePrivacyToggle(true)}
+                >
+                  Private
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.privacyButton} ${!formData.isPrivate ? styles.active : ''}`}
+                  onClick={() => handlePrivacyToggle(false)}
+                >
+                  Public
+                </button>
               </div>
             </div>
 
