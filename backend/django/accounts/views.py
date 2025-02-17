@@ -26,6 +26,8 @@ from .serializers import (
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.conf import settings
+import requests
 
 
 class EmailCheckView(views.APIView):
@@ -328,3 +330,51 @@ class ValidationView(views.APIView):
             {"message": "email 또는 nickname 파라미터가 필요합니다."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+
+class UserRecommendationsView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            # FastAPI 서버로 요청 보내기
+            response = requests.post(
+                f"{settings.FASTAPI_URL}/recommend",
+                json={"id": request.user.id},
+                timeout=10,
+            )
+            response.raise_for_status()
+
+            # FastAPI로부터 받은 추천 사용자 ID 목록
+            recommended_users_data = response.json()
+
+            # 추천된 사용자들의 상세 정보 조회
+            recommendations = []
+            for user_data in recommended_users_data:
+                user_id = user_data["id"]
+                try:
+                    user = User.objects.get(id=user_id)
+                    user_info = {
+                        "id": user.id,
+                        "nickname": user.nickname,
+                        "profile_image": user.profile_image,
+                        "similarity": round(float(user_data.get("similarity", 0)), 3),
+                    }
+                    recommendations.append(user_info)
+                except User.DoesNotExist:
+                    continue
+
+            return Response(
+                {"message": "추천 사용자 조회 성공", "data": recommendations}
+            )
+
+        except requests.RequestException as e:
+            return Response(
+                {"error": "추천 시스템 서버와 통신 중 오류가 발생했습니다."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        except Exception as e:
+            return Response(
+                {"error": "추천 사용자 조회 중 오류가 발생했습니다."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

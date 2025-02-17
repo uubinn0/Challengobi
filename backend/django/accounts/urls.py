@@ -24,4 +24,10 @@ urlpatterns = [
         views.UserChallengeCategoryView.as_view(),
         name="challenge-categories",
     ),
+    # 사용자 추천
+    path(
+        "recommendations/",
+        views.UserRecommendationsView.as_view(),
+        name="user-recommendations",
+    ),
 ]
