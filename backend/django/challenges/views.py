@@ -286,6 +286,35 @@ class ChallengeViewSet(viewsets.ModelViewSet):
         participant.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=False, methods=["get"])
+    def my_challenges(self, request):
+        # 내가 참여중인 챌린지들 조회
+        my_challenges = Challenge.objects.filter(
+            challengeparticipant__user=request.user
+        ).select_related("creator")
+
+        # 모집중/진행중 챌린지 분리
+        today = date.today()
+        recruiting_challenges = my_challenges.filter(
+            status=0, start_date__gt=today  # RECRUIT
+        )
+        in_progress_challenges = my_challenges.filter(status=1)  # IN_PROGRESS
+
+        # 시리얼라이즈
+        recruiting_serializer = ChallengeListSerializer(
+            recruiting_challenges, many=True
+        )
+        in_progress_serializer = ChallengeListSerializer(
+            in_progress_challenges, many=True
+        )
+
+        return Response(
+            {
+                "recruiting": recruiting_serializer.data,
+                "in_progress": in_progress_serializer.data,
+            }
+        )
+
     # 참여자 목록 조회
     @action(detail=True, methods=["get"])
     def participants(self, request, pk=None):
