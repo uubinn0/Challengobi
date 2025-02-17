@@ -75,7 +75,7 @@ urlpatterns = [
     path(
         "<int:challenge_id>/expenses/verifications/",
         views.ExpenseViewSet.as_view({"post": "ocr_save"}),
-        name="challenge-expense-ocr-save"
+        name="challenge-expense-ocr-save",
     ),
     # 간편 인증 소비내역 저장
     path(
@@ -83,7 +83,12 @@ urlpatterns = [
         views.SimpleExpenseViewSet.as_view({"post": "simple_save"}),
         name="challenge-expense-simple-save",
     ),
-
+    # 사용자 초대
+    path(
+        "<int:challenge_id>/invite/",
+        views.ChallengeViewSet.as_view({"post": "invite"}),
+        name="challenge-invite",
+    ),
     # 게시판 기능은 posts 앱의 URL을 include
     path("<int:challenge_id>/posts/", include("posts.urls")),
     # 기본 라우터 포함
