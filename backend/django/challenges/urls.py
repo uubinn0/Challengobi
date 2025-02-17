@@ -14,6 +14,12 @@ urlpatterns = [
             {"get": "retrieve", "put": "update", "delete": "destroy"}
         ),
     ),
+    # 내 챌린지 조회
+    path(
+        "my-challenges/",
+        views.ChallengeViewSet.as_view({"get": "my_challenges"}),
+        name="my-challenges",
+    ),
     # 챌린지 참여/탈퇴/초대
     path(
         "<int:pk>/join/",
