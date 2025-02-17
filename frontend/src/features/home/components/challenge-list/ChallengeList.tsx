@@ -13,6 +13,8 @@ interface ChallengeListProps {
 }
 
 const ChallengeList: React.FC<ChallengeListProps> = ({ challenges }) => {
+  console.log('ChallengeList props:', challenges); // 데이터 확인용
+
   const [likeStates, setLikeStates] = useState<{ [key: number]: boolean }>({})
   const [wantStates, setWantStates] = useState<{ [key: number]: boolean }>({})
   const [likeCounts, setLikeCounts] = useState<{ [key: number]: number }>({})
@@ -24,7 +26,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({ challenges }) => {
       challenges.reduce(
         (acc, challenge) => ({
           ...acc,
-          [challenge.id]: challenge.likes,
+          [challenge.challenge_id]: challenge.encourage_cnt,
         }),
         {},
       ),
@@ -33,7 +35,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({ challenges }) => {
       challenges.reduce(
         (acc, challenge) => ({
           ...acc,
-          [challenge.id]: challenge.wants,
+          [challenge.challenge_id]: challenge.want_cnt,
         }),
         {},
       ),
@@ -87,41 +89,42 @@ const ChallengeList: React.FC<ChallengeListProps> = ({ challenges }) => {
       <div className={styles.challengeList}>
         {challenges.map((challenge) => (
           <div 
-            key={challenge.id} 
+            key={challenge.challenge_id} 
             className={styles.challengeCard}
             onClick={() => handleChallengeClick(challenge)}
           >
             <div className={styles.cardContent}>
               <div className={styles.content}>
-                <h3 className={styles.title}>{challenge.title}</h3>
+                <h3 className={styles.title}>{challenge.challenge_title}</h3>
                 <div className={styles.info}>
-                  <p>고비: {challenge.period}</p>
-                  <p>금액: {challenge.amount}</p>
-                  <p>카테고리: {challenge.category}</p>
-                  <p>모집인원: {challenge.currentMembers}/{challenge.maxMembers}</p>
+                  <p>생성자: {challenge.creator_nickname}</p>
+                  <p>기간: {challenge.period_display}</p>
+                  <p>예산: {challenge.budget_display}</p>
+                  <p>카테고리: {challenge.category_name}</p>
+                  <p>참여자: {challenge.participants_display}</p>
                 </div>
               </div>
               <div className={styles.challengeImage}>
                 <img 
-                  src={getChallengeImage(challenge.currentMembers, challenge.maxMembers)} 
+                  src={getChallengeImage(challenge.current_participants, challenge.max_participants)} 
                   alt="챌린지 상태"
                 />
               </div>
             </div>
             <div className={styles.actions}>
               <button
-                className={`${styles.likeButton} ${likeStates[challenge.id] ? styles.active : ""}`}
-                onClick={(e) => handleLike(challenge.id, e)}
+                className={`${styles.likeButton} ${likeStates[challenge.challenge_id] ? styles.active : ""}`}
+                onClick={(e) => handleLike(challenge.challenge_id, e)}
               >
                 <SupportFish className={styles.fishIcon} />
-                응원하기 {likeCounts[challenge.id]}
+                응원하기 {likeCounts[challenge.challenge_id]}
               </button>
               <button
-                className={`${styles.wantButton} ${wantStates[challenge.id] ? styles.active : ""}`}
-                onClick={(e) => handleWant(challenge.id, e)}
+                className={`${styles.wantButton} ${wantStates[challenge.challenge_id] ? styles.active : ""}`}
+                onClick={(e) => handleWant(challenge.challenge_id, e)}
               >
                 <WantFish className={styles.fishIcon} />
-                하고싶어요 {wantCounts[challenge.id]}
+                하고싶어요 {wantCounts[challenge.challenge_id]}
               </button>
             </div>
           </div>

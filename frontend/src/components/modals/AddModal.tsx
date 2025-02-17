@@ -17,16 +17,19 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(0, 0, 0, 0);  // 시간을 00:00:00으로 설정
 
-  const [formData, setFormData] = useState({
+  // 초기 상태값 정의
+  const initialFormData = {
     category: "",
     title: "",
     description: "",
-    startDate: tomorrow, // 기본값을 내일로 설정
+    startDate: tomorrow,
     period: "",
     price: "",
     people: "",
-    isPrivate: true  // 기본값을 private으로 설정
-  });
+    isPrivate: true
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const categories = [
@@ -54,7 +57,6 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     
     try {
-      // API에 전송할 데이터 형식에 맞게 변환
       const challengeData = {
         challenge_category: Number(formData.category),
         creator_id: 1,
@@ -64,13 +66,13 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
         start_date: formData.startDate,
         budget: Number(formData.price),
         max_participants: Number(formData.people),
-        is_private: formData.isPrivate  // isPrivate 값을 is_private으로 전송
+        is_private: formData.isPrivate
       };
 
-      // 챌린지 생성 API 호출
       await ChallengeAPI.createChallenge(challengeData);
       
-      // 성공 모달 표시
+      // 성공 시 폼 초기화
+      setFormData(initialFormData);
       setShowSuccess(true);
     } catch (error) {
       console.error('챌린지 생성 실패:', error);
