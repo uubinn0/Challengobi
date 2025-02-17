@@ -1,130 +1,154 @@
 import type React from "react"
-import { useState, useMemo } from "react"
-import { Routes, Route, useLocation } from "react-router-dom"
+import { useState, useMemo, useEffect } from "react"
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom"
 import styles from "./Home.module.scss"
 import SearchBar from "./search-bar/SearchBar"
 import CategoryTabs from "./category-tabs/CategoryTabs"
 import ChallengeList from "./challenge-list/ChallengeList"
 import OngoingChallengeList from "./ongoing-challenge-list/OngoingChallengeList"
 import ChallengeDetail from "./ChallengeDetail"
+import HomeAPI from "../api"
+import axios from "axios"
 
-import type { Challenge, OngoingChallenge } from "../types"
-
-// Dummy data for ongoing challenges
-const ongoingChallenges: OngoingChallenge[] = [
-  {
-    id: 1,
-    title: "커피 끊기 챌린지",
-    subtitle: "하루 한 잔만 마시자",
-    category: "카페/디저트",
-    amount: "2만원",
-    period: "14일",
-    progress: 80,
-    successRate: 75,
-    supports: 100,
-    wants: 65,
-  },
-  {
-    id: 2,
-    title: "장을 적당히 보자",
-    subtitle: "이번달은 적게 써봅시다",
-    category: "장보기",
-    amount: "10만원",
-    period: "30일",
-    progress: 50,
-    successRate: 80,
-    supports: 40,
-    wants: 19,
-  },
-  {
-    id: 3,
-    title: "담배에 돈 쓰지 맙시다",
-    subtitle: "올해는 금연해봅시다 우리",
-    category: "술/담배",
-    amount: "20,000원",
-    period: "1월 1일 - 1월 29일",
-    progress: 60,
-    successRate: 70,
-    supports: 85,
-    wants: 30,
-  },
-]
+import type { Challenge } from "../types"
 
 const HomePage: React.FC = () => {
   const location = useLocation()
+  const navigate = useNavigate()
   const categories = [
-    "전체",
-    "외식",
-    "장보기",
-    "카페/디저트",
-    "교통",
-    "문화생활",
-    "쇼핑",
-    "취미/여가",
-    "술/담배",
-    "기타",
+    { value: "전체", label: "전체" },
+    { value: "카페/디저트", label: "카페/디저트" },
+    { value: "외식", label: "외식" },
+    { value: "장보기", label: "장보기" },
+    { value: "쇼핑", label: "쇼핑" },
+    { value: "문화생활", label: "문화생활" },
+    { value: "취미/여가", label: "취미/여가" },
+    { value: "술/담배", label: "술/담배" },
+    { value: "교통", label: "교통" },
+    { value: "기타", label: "기타" }
   ]
 
-  const [activeCategory, setActiveCategory] = useState("전체")
+  const [recruitingChallenges, setRecruitingChallenges] = useState<Challenge[]>([])
+  const [inProgressChallenges, setInProgressChallenges] = useState<Challenge[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<"recruiting" | "ongoing">("recruiting")
+  const [activeCategory, setActiveCategory] = useState("전체")
 
-  const challenges = useMemo((): Challenge[] => [
-    {
-      id: 1,
-      title: "외식을 줄입시다!!",
-      period: "1주일",
-      amount: "10만원",
-      category: "외식",
-      currentMembers: 1,
-      maxMembers: 5,
-      likes: 10,
-      wants: 5
-    },
-    {
-      id: 2,
-      title: "올해는 금연한다 내가",
-      period: "1주일",
-      amount: "2만원",
-      category: "술/담배",
-      currentMembers: 6,
-      maxMembers: 6,
-      likes: 76,
-      wants: 12,
-    },
-    {
-      id: 3,
-      title: "커피를 줄이자",
-      period: "1주일",
-      amount: "2만원",
-      category: "카페/디저트",
-      currentMembers: 2,
-      maxMembers: 6,
-      likes: 76,
-      wants: 12,
-    },
+  // 카테고리 매핑 정의
+  const categoryMapping: { [key: number]: string } = {
+    1: "카페/디저트",
+    2: "외식",
+    3: "장보기",
+    4: "쇼핑",
+    5: "문화생활",
+    6: "취미/여가",
+    7: "술/담배",
+    8: "교통",
+    9: "기타"
+  };
 
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      try {
+        setLoading(true)
+        const token = localStorage.getItem('access_token')
+        
+        if (!token) {
+          navigate('/login')
+          return
+        }
+        
+        const [recruitingResponse, inProgressResponse] = await Promise.all([
+          HomeAPI.getRecruitingChallenges(),
+          HomeAPI.getInProgressChallenges()
+        ])
+        
+        console.log('Recruiting Challenges:', recruitingResponse)
+        console.log('In Progress Challenges:', inProgressResponse)
 
-  ], []);
+        setRecruitingChallenges(recruitingResponse as unknown as Challenge[])
+        setInProgressChallenges(inProgressResponse as unknown as Challenge[])
+      } catch (err) {
+        console.error('Error:', err)
+        setError('챌린지 목록을 불러오는데 실패했습니다.')
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  const filteredChallenges = useMemo(() => {
-    if (activeCategory === "전체") return challenges
-    return challenges.filter((challenge) => challenge.category === activeCategory)
-  }, [activeCategory, challenges])
+    fetchChallenges()
+  }, [navigate])
 
-  const filteredOngoingChallenges = useMemo(() => {
-    if (activeCategory === "전체") return ongoingChallenges
-    return ongoingChallenges.filter((challenge) => challenge.category === activeCategory)
-  }, [activeCategory])
+  // 필터링된 챌린지 목록 (모집 중)
+  const filteredRecruitingChallenges = useMemo(() => {
+    console.log('Filtering recruiting challenges:', {
+      activeCategory,
+      challenges: recruitingChallenges,
+    });
+
+    if (activeCategory === "전체") {
+      return recruitingChallenges;
+    }
+
+    return recruitingChallenges.filter((challenge) => {
+      const categoryName = categoryMapping[challenge.challenge_category];
+      console.log('Comparing:', {
+        challengeCategory: challenge.challenge_category,
+        categoryName,
+        activeCategory,
+        matches: categoryName === activeCategory
+      });
+      return categoryName === activeCategory;
+    });
+  }, [activeCategory, recruitingChallenges, categoryMapping]);
+
+  // 필터링된 챌린지 목록 (진행 중)
+  const filteredInProgressChallenges = useMemo(() => {
+    console.log('Filtering in-progress challenges:', {
+      activeCategory,
+      challenges: inProgressChallenges,
+    });
+
+    if (activeCategory === "전체") {
+      return inProgressChallenges;
+    }
+
+    return inProgressChallenges.filter((challenge) => {
+      const categoryName = categoryMapping[challenge.challenge_category];
+      return categoryName === activeCategory;
+    });
+  }, [activeCategory, inProgressChallenges, categoryMapping]);
+
+  const handleCategoryChange = (category: string) => {
+    console.log('Category changed to:', category);
+    setActiveCategory(category);
+  };
 
   const renderMainContent = () => {
-    if (location.pathname !== "/") {
-      return null
+    if (!location.pathname.endsWith('/')) {
+      return null;
     }
 
     return (
       <>
         <SearchBar />
-        <CategoryTabs categories={categories} activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
+        <CategoryTabs 
+          categories={[
+            "전체",
+            "카페/디저트",
+            "외식",
+            "장보기",
+            "쇼핑",
+            "문화생활",
+            "취미/여가",
+            "술/담배",
+            "교통",
+            "기타"
+          ]}
+          activeCategory={activeCategory}
+          onCategoryChange={handleCategoryChange}
+        />
         <div className={styles.challengeTabs}>
           <button
             className={`${styles.tab} ${activeTab === "recruiting" ? styles.activeTab : ""}`}
@@ -139,20 +163,33 @@ const HomePage: React.FC = () => {
             진행 중인 챌린지
           </button>
         </div>
+
         {activeTab === "recruiting" ? (
-          <ChallengeList challenges={filteredChallenges} />
+          <ChallengeList 
+            challenges={filteredRecruitingChallenges} 
+          />
         ) : (
-          <OngoingChallengeList challenges={filteredOngoingChallenges} />
+          <OngoingChallengeList 
+            challenges={filteredInProgressChallenges} 
+          />
         )}
       </>
-    )
+    );
+  };
+
+  if (loading) {
+    return <div>로딩 중...</div>
+  }
+
+  if (error) {
+    return <div>{error}</div>
   }
 
   return (
     <div className={styles.homePage}>
       <Routes>
         <Route path="/" element={renderMainContent()} />
-        <Route path="/challenge/:id" element={<ChallengeDetail challenges={ongoingChallenges} />} />
+        <Route path="/challenge/:id" element={<ChallengeDetail challenges={recruitingChallenges} />} />
       </Routes>
     </div>
   )
