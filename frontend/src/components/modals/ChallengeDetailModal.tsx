@@ -53,7 +53,7 @@ const ChallengeDetailModal: React.FC<ChallengeDetailModalProps> = ({ isOpen, onC
         <h2 className={styles.title}>{challenge.challenge_title}</h2>
         <div className={styles.content}>
           <p className={styles.description}>
-            {challenge.challenge_description || "외식을 줄이고 싶은 챌린저들을 모집합니다."}
+            {challenge.challenge_info || "외식을 줄이고 싶은 챌린저들을 모집합니다."}
           </p>
           <div className={styles.details}>
             <div className={styles.detailItem}>
