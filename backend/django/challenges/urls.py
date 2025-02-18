@@ -20,6 +20,11 @@ urlpatterns = [
         views.ChallengeViewSet.as_view({"get": "my_challenges"}),
         name="my-challenges",
     ),
+    path(
+        "my-history/",
+        views.ChallengeViewSet.as_view({"get": "my_history"}),
+        name="my-history",
+    ),
     # 챌린지 참여/탈퇴/초대
     path(
         "<int:pk>/join/",

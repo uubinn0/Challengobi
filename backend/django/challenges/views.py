@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.db import models
 from django.db.models import Q
 from rest_framework import viewsets, status, filters, permissions
 from rest_framework.decorators import action
@@ -40,7 +41,23 @@ class ChallengeViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ["title", "description"]
 
+    def update_challenge_status(self):
+        today = timezone.now().date()
+
+        # 모집중 -> 진행중
+        Challenge.objects.filter(status=0, start_date=today).update(  # RECRUIT
+            status=1
+        )  # IN_PROGRESS
+
+        # 진행중 -> 완료
+        Challenge.objects.filter(status=1, end_date=today).update(  # IN_PROGRESS
+            status=2
+        )  # COMPLETED
+
     def get_queryset(self):
+        # 상태 업데이트 먼저 수행
+        self.update_challenge_status()
+
         queryset = Challenge.objects.exclude(status=3).select_related(
             "creator"
         )  # Exclude deleted challenges
@@ -289,31 +306,52 @@ class ChallengeViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def my_challenges(self, request):
         # 내가 참여중인 챌린지들 조회
+        today = timezone.now().date()
+
         my_challenges = Challenge.objects.filter(
             challengeparticipant__user=request.user
         ).select_related("creator")
 
-        # 모집중/진행중 챌린지 분리
-        today = date.today()
-        recruiting_challenges = my_challenges.filter(
-            status=0, start_date__gt=today  # RECRUIT
-        )
-        in_progress_challenges = my_challenges.filter(status=1)  # IN_PROGRESS
-
-        # 시리얼라이즈
-        recruiting_serializer = ChallengeListSerializer(
-            recruiting_challenges, many=True
-        )
-        in_progress_serializer = ChallengeListSerializer(
-            in_progress_challenges, many=True
-        )
+        # 모집중/진행중/완료 챌린지 분리
+        recruiting = my_challenges.filter(status=0, start_date__gt=today)  # RECRUIT
+        in_progress = my_challenges.filter(status=1)  # IN_PROGRESS
+        completed = my_challenges.filter(status=2)
 
         return Response(
             {
-                "recruiting": recruiting_serializer.data,
-                "in_progress": in_progress_serializer.data,
+                "recruiting": ChallengeListSerializer(recruiting, many=True).data,
+                "in_progress": ChallengeListSerializer(in_progress, many=True).data,
+                "completed": ChallengeListSerializer(completed, many=True).data,
             }
         )
+
+    @action(detail=False, methods=["get"])
+    def my_history(self, request):
+        # 내가 참여했던 모든 챌린지 이력 조회
+        participations = ChallengeParticipant.objects.filter(
+            user=request.user
+        ).select_related("challenge", "challenge__creator")
+
+        # 성공/실패 여부, 잔여 금액 등의 상세 정보도 포함
+        history_data = []
+        for participation in participations:
+            challenge = participation.challenge
+            history_data.append(
+                {
+                    "challenge_id": challenge.id,
+                    "challenge_title": challenge.title,
+                    "category": challenge.get_category_display(),
+                    "start_date": challenge.start_date,
+                    "end_date": challenge.end_date,
+                    "initial_budget": participation.initial_budget,
+                    "remaining_balance": participation.balance,
+                    "status": challenge.get_status_display(),
+                    "is_failed": participation.is_failed,
+                    "creator_nickname": challenge.creator.nickname,
+                }
+            )
+
+        return Response({"total_count": len(history_data), "histories": history_data})
 
     # 참여자 목록 조회
     @action(detail=True, methods=["get"])
@@ -354,6 +392,49 @@ class ChallengeViewSet(viewsets.ModelViewSet):
         participant.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=["post"])
+    def cancel(self, request, pk=None):
+        challenge = self.get_object()
+
+        # 챌린지 생성자만 취소 가능
+        if challenge.creator != request.user:
+            raise PermissionDenied("챌린지 생성자만 취소할 수 있습니다")
+
+        # 모집 중인 챌린지만 취소 가능
+        if challenge.status != 0:
+            return Response(
+                {"error": "모집 중인 챌린지만 취소할 수 있습니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        challenge.status = 3  # DELETED (취소)
+        challenge.save()
+
+        return Response({"message": "챌린지가 취소되었습니다"})
+
+    def update_challenge_status(self):
+        today = timezone.now().date()
+
+        # 모집중 -> 진행중
+        Challenge.objects.filter(status=0, start_date=today).update(  # RECRUIT
+            status=1
+        )  # IN_PROGRESS
+
+        # 진행중 -> 완료
+        Challenge.objects.filter(status=1, end_date=today).update(  # IN_PROGRESS
+            status=2
+        )  # COMPLETED
+
+        # 모집 중인 챌린지 중 시작일이 된 시점에
+        # 참가자가 1명(생성자)뿐인 챌린지는 자동 취소
+        challenges_to_cancel = (
+            Challenge.objects.filter(status=0, start_date=today)
+            .annotate(participant_count=models.Count("challengeparticipant"))
+            .filter(participant_count=1)
+        )
+
+        challenges_to_cancel.update(status=3)  # DELETED
 
 
 class ExpenseViewSet(viewsets.ModelViewSet):

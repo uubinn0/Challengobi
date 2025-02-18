@@ -111,6 +111,7 @@ class ChallengeCreateSerializer(serializers.ModelSerializer):
 class ChallengeListSerializer(serializers.ModelSerializer):
     challenge_id = serializers.IntegerField(source="id")
     challenge_title = serializers.CharField(source="title")
+    challenge_info = serializers.CharField(source="description")
     creator_nickname = serializers.CharField(source="creator.nickname", read_only=True)
     period = serializers.IntegerField(source="duration")
     period_display = serializers.SerializerMethodField()
@@ -128,6 +129,7 @@ class ChallengeListSerializer(serializers.ModelSerializer):
         fields = [
             "challenge_id",
             "challenge_title",
+            "challenge_info",
             "creator_nickname",
             "period",
             "period_display",
