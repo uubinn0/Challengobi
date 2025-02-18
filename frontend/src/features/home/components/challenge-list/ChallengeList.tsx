@@ -102,6 +102,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({ challenges }) => {
                   <p>예산: {challenge.budget_display}</p>
                   <p>카테고리: {challenge.category_name}</p>
                   <p>참여자: {challenge.participants_display}</p>
+                  <p>시작일: {challenge.start_date}</p>
                 </div>
               </div>
               <div className={styles.challengeImage}>
