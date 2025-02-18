@@ -12,17 +12,20 @@ interface AddModalProps {
 }
 
 const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
+  // 오늘 날짜 계산 (시간을 제외한 날짜만)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   // 내일 날짜 계산
-  const tomorrow = new Date();
+  const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);  // 시간을 00:00:00으로 설정
 
   // 초기 상태값 정의
   const initialFormData = {
     category: "",
     title: "",
     description: "",
-    startDate: tomorrow,
+    startDate: tomorrow,  // 초기값을 내일로 설정
     period: "",
     price: "",
     people: "",
@@ -57,6 +60,15 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     
     try {
+      // 선택된 날짜가 내일 이후인지 확인
+      const selectedDate = new Date(formData.startDate);
+      selectedDate.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < tomorrow) {
+        alert('챌린지 시작일은 내일 이후여야 합니다.');
+        return;
+      }
+
       const challengeData = {
         challenge_category: Number(formData.category),
         creator_id: 1,
@@ -168,7 +180,7 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
                   dateFormat="yyyy년 MM월 dd일"
                   className={styles.dateInput}
                   locale={ko}
-                  minDate={tomorrow}
+                  minDate={today}  // minDate를 오늘로 설정
                   customInput={
                     <input
                       className={styles.dateInput}
