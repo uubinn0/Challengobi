@@ -45,12 +45,12 @@ class ChallengeViewSet(viewsets.ModelViewSet):
         today = timezone.now().date()
 
         # 모집중 -> 진행중
-        Challenge.objects.filter(status=0, start_date=today).update(  # RECRUIT
+        Challenge.objects.filter(status=0, start_date__lte=today).update(  # RECRUIT
             status=1
         )  # IN_PROGRESS
 
         # 진행중 -> 완료
-        Challenge.objects.filter(status=1, end_date=today).update(  # IN_PROGRESS
+        Challenge.objects.filter(status=1, end_date__lte=today).update(  # IN_PROGRESS
             status=2
         )  # COMPLETED
 
