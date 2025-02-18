@@ -41,6 +41,7 @@ class ChallengeViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ["title", "description"]
 
+
     def update_challenge_status(self):
         today = timezone.now().date()
 
