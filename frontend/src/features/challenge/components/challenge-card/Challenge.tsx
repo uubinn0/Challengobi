@@ -1,126 +1,99 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Pencil, Lock } from "lucide-react"
 import styles from "./Challenge.module.scss"
 import AddModal from "../../../../components/modals/AddModal"
 import ChallengeDetailModal from "../../../../components/modals/ChallengeDetailModal"
 import { useNavigate } from "react-router-dom"
+import axios from 'axios';
 
 interface Challenge {
-  id: number
-  title: string
-  category: string
-  period: string
-  amount: string
-  currentMembers: number
-  maxMembers: number
-  likes: number
-  wants: number
-  description?: string
-  isLocked?: boolean
+  challenge_id: number;
+  challenge_title: string;
+  challenge_info: string;
+  creator_nickname: string;
+  period: number;
+  period_display: string;
+  start_date: string;
+  end_date: string;
+  budget: number;
+  budget_display: string;
+  challenge_category: number;
+  category_name: string;
+  max_participants: number;
+  current_participants: number;
+  participants_display: string;
+  encourage_cnt: number;
+  want_cnt: number;
+  participants_nicknames: string[];
+}
+
+interface MyChallenges {
+  recruiting: Challenge[];
+  in_progress: Challenge[];
+  completed: Challenge[];
 }
 
 export default function ChallengePage() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null)
-  const navigate = useNavigate()
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
+  const [myChallenges, setMyChallenges] = useState<MyChallenges>({
+    recruiting: [],
+    in_progress: [],
+    completed: []
+  });
+  const navigate = useNavigate();
 
-  // 토큰 확인을 위한 콘솔 로그 추가
-  console.log('Access Token:', localStorage.getItem('access_token'));
-  console.log('Refresh Token:', localStorage.getItem('refresh_token'));
+  useEffect(() => {
+    const fetchMyChallenges = async () => {
+      try {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          alert('로그인이 필요합니다.');
+          navigate('/login');
+          return;
+        }
 
-  const ongoingChallenges: Challenge[] = [
-    {
-      id: 1,
-      title: "담배에 돈 쓰지 말..",
-      category: "술/담배",
-      period: "1월 1일 - 1월 28일",
-      amount: "20,000원",
-      currentMembers: 3,
-      maxMembers: 5,
-      likes: 35,
-      wants: 20,
-      isLocked: true,
-    },
-    {
-      id: 2,
-      title: "장을 적당히",
-      category: "장보기",
-      period: "1월 1일 - 1월 7일",
-      amount: "100,000원",
-      currentMembers: 3,
-      maxMembers: 5,
-      likes: 3,
-      wants: 2,
-    },
-    // Add more challenges to test scrolling
-    {
-      id: 5,
-      title: "커피 줄이기",
-      category: "카페/디저트",
-      period: "2월 1일 - 2월 28일",
-      amount: "30,000원",
-      currentMembers: 20,
-      maxMembers: 20,
-      likes: 20,
-      wants: 20,
-    },
-  ]
+        const response = await axios.get('http://localhost:8000/api/challenges/my-challenges/', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
-  const recruitingChallenges: Challenge[] = [
-    {
-      id: 3,
-      title: "외식을 줄입시다!!",
-      category: "외식",
-      period: "1월 1일 - 1월 7일",
-      amount: "100,000원",
-      currentMembers: 3,
-      maxMembers: 5,
-      likes: 10,
-      wants: 5,
-      isLocked: true,
-    },
-    {
-      id: 4,
-      title: "택시 안타야지",
-      category: "교통",
-      period: "1월 1일 - 1월 28일",
-      amount: "30,000원",
-      currentMembers: 7,
-      maxMembers: 7,
-      likes: 7,
-      wants: 7,
-    },
-    // Add more challenges to test scrolling
-    {
-      id: 6,
-      title: "영화 대신 넷플릭스",
-      category: "문화생활",
-      period: "2월 1일 - 2월 28일",
-      amount: "50,000원",
-      currentMembers: 15,
-      maxMembers: 15,
-      likes: 15,
-      wants: 15,
-    },
-  ]
+        setMyChallenges(response.data);
+        console.log('My Challenges:', response.data);
+      } catch (error) {
+        console.error('챌린지 조회 중 오류 발생:', error);
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+          navigate('/login');
+        } else {
+          alert('챌린지 조회 중 오류가 발생했습니다.');
+        }
+      }
+    };
+
+    fetchMyChallenges();
+  }, [navigate]);
 
   const handleChallengeClick = (challenge: Challenge, isOngoing: boolean) => {
     if (isOngoing) {
-      navigate(`/challenge/progress/${challenge.id}`)
+      navigate(`/challenge/progress/${challenge.challenge_id}`, {
+        state: { challengeData: challenge }
+      });
     } else {
-      setSelectedChallenge(challenge)
+      setSelectedChallenge(challenge);
     }
-  }
+  };
 
   const handleOpenModal = () => {
-    setIsModalOpen(true)
-    navigate('?modal=add')
-  }
+    setIsModalOpen(true);
+    navigate('?modal=add');
+  };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false)
-    navigate(-1)
-  }
+    setIsModalOpen(false);
+    navigate(-1);
+  };
 
   return (
     <div className={styles.container}>
@@ -133,22 +106,23 @@ export default function ChallengePage() {
         <h2 className={styles.sectionTitle}>진행 중인 챌린지</h2>
         <div className={styles.challengeScrollContainer}>
           <div className={styles.challengeScroll}>
-            {ongoingChallenges.map((challenge) => (
+            {myChallenges.in_progress.map((challenge) => (
               <div 
-                key={challenge.id} 
+                key={challenge.challenge_id} 
                 className={styles.challengeCard}
                 onClick={() => handleChallengeClick(challenge, true)}
                 style={{ cursor: 'pointer' }}
               >
                 <div className={styles.cardHeader}>
-                  <h3 className={styles.cardTitle}>{challenge.title}</h3>
-                  {challenge.isLocked && <Lock size={16} />}
+                  <h3 className={styles.cardTitle}>{challenge.challenge_title}</h3>
                 </div>
                 <div className={styles.cardContent}>
-                  <p>카테고리 : {challenge.category}</p>
-                  <p>챌린지 기간 : {challenge.period}</p>
-                  <p>챌린지 금액 : {challenge.amount}</p>
-                  <p>챌린지 인원 : {challenge.currentMembers}명 / {challenge.maxMembers}명</p>
+                  <p>카테고리: {challenge.category_name}</p>
+                  <p>챌린지 기간: {challenge.period_display}</p>
+                  <p>챌린지 금액: {challenge.budget_display}</p>
+                  <p>챌린지 인원: {challenge.participants_display}</p>
+                  <p>시작일: {challenge.start_date}</p>
+                  <p>생성자: {challenge.creator_nickname}</p>
                 </div>
               </div>
             ))}
@@ -160,22 +134,23 @@ export default function ChallengePage() {
         <h2 className={styles.sectionTitle}>모집 중인 챌린지</h2>
         <div className={styles.challengeScrollContainer}>
           <div className={styles.challengeScroll}>
-            {recruitingChallenges.map((challenge) => (
+            {myChallenges.recruiting.map((challenge) => (
               <div 
-                key={challenge.id} 
+                key={challenge.challenge_id} 
                 className={styles.challengeCard}
                 onClick={() => handleChallengeClick(challenge, false)}
                 style={{ cursor: 'pointer' }}
               >
                 <div className={styles.cardHeader}>
-                  <h3 className={styles.cardTitle}>{challenge.title}</h3>
-                  {challenge.isLocked && <Lock size={16} />}
+                  <h3 className={styles.cardTitle}>{challenge.challenge_title}</h3>
                 </div>
                 <div className={styles.cardContent}>
-                  <p>카테고리 : {challenge.category}</p>
-                  <p>챌린지 기간 : {challenge.period}</p>
-                  <p>챌린지 금액 : {challenge.amount}</p>
-                  <p>챌린지 인원 : {challenge.currentMembers}명 / {challenge.maxMembers}명</p>
+                  <p>카테고리: {challenge.category_name}</p>
+                  <p>챌린지 기간: {challenge.period_display}</p>
+                  <p>챌린지 금액: {challenge.budget_display}</p>
+                  <p>챌린지 인원: {challenge.participants_display}</p>
+                  <p>시작일: {challenge.start_date}</p>
+                  <p>생성자: {challenge.creator_nickname}</p>
                 </div>
               </div>
             ))}
@@ -199,6 +174,6 @@ export default function ChallengePage() {
         순위 보기
       </button>
     </div>
-  )
+  );
 }
 

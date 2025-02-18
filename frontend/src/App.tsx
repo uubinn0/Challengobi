@@ -73,7 +73,7 @@ const App: React.FC = () => {
                   <Route path="progress/:id" element={<Progress />} />
                   <Route path="progress/:id/write" element={<WritePost />} />
                   <Route path="progress/:id/post/:postId" element={<Post />} />
-                  <Route path="ocr" element={<Ocr />} />
+                  <Route path="ocr/:id" element={<Ocr />} />
                   <Route path="consum-image" element={<ConsumImage />} />
                   <Route path="ocr-complete" element={<OcrComplete />} />
                   <Route path="invite-friends" element={<InvitableFriendList />} />

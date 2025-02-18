@@ -1,14 +1,13 @@
-"use client"
-
 import type { FC } from "react"
 import { useState, useEffect } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate, useLocation, useParams } from "react-router-dom"
 import { Pencil, Heart, MessageSquare } from "lucide-react"
 import styles from "./Progress.module.scss"
 import ocrbuttonfish from '../../../../assets/ocr-button-fish.png'
 import profileJaringobi from '../../../../assets/profile-jaringobi.png'
 import type { Challenge } from "../../../../features/home/types"
 import  ChallengeAPI  from "../../api"
+import axios from "axios"
 
 interface Post {
   post_id: number;
@@ -27,10 +26,12 @@ const Progress: FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [likedPosts, setLikedPosts] = useState<number[]>([]);
+  const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(null);
   
   const navigate = useNavigate();
   const location = useLocation();
-  const challengeData = location.state?.challengeData as Challenge;
+  const { id } = useParams<{ id: string }>();
+  const challengeData = location.state?.challengeData;
 
   const isFromHome = location.pathname.includes("/ongoing-challenge/")
 
@@ -40,6 +41,37 @@ const Progress: FC = () => {
       return;
     }
   }, [challengeData, navigate, isFromHome]);
+
+  useEffect(() => {
+    // location.state로 전달된 데이터가 없을 경우 API로 챌린지 정보 가져오기
+    const fetchChallengeData = async () => {
+      if (!challengeData && id) {
+        try {
+          const token = localStorage.getItem('access_token');
+          if (!token) {
+            alert('로그인이 필요합니다.');
+            navigate('/login');
+            return;
+          }
+
+          const response = await axios.get(`http://localhost:8000/api/challenges/${id}/`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          // API 응답 데이터를 state에 저장
+          const challenge = response.data;
+          setCurrentChallenge(challenge);
+        } catch (error) {
+          console.error('챌린지 정보 조회 실패:', error);
+          navigate('/challenge');
+        }
+      }
+    };
+
+    fetchChallengeData();
+  }, [id, challengeData, navigate]);
 
   const formatDate = (dateString: string) => {
     try {
@@ -97,8 +129,10 @@ const Progress: FC = () => {
   };
 
   const handleVerifyClick = () => {
-    navigate("/challenge/ocr");
-  }
+    if (id) {
+      navigate(`/challenge/ocr/${id}`);
+    }
+  };
 
   useEffect(() => {
     document.body.style.overflowY = "auto"
@@ -107,35 +141,39 @@ const Progress: FC = () => {
     }
   }, [])
 
-  if (!challengeData) {
+  // 챌린지 데이터가 없을 때 로딩 표시
+  if (!challengeData && !currentChallenge) {
     return <div>Loading...</div>;
   }
+
+  // 실제 사용할 챌린지 데이터 (location.state나 API 응답 중 하나)
+  const challenge = challengeData || currentChallenge;
 
   return (
     <div className={styles.container}>
       <div className={styles.challengeCard}>
-        <h1 className={styles.title}>{challengeData.challenge_title}</h1>
-        <p className={styles.subtitle}>{challengeData.challenge_info}</p>
+        <h1 className={styles.title}>{challenge.challenge_title}</h1>
+        <p className={styles.subtitle}>{challenge.challenge_info}</p>
         <div className={styles.info}>
           <div className={styles.infoItem}>
             <span>카테고리 :</span>
-            <span>{challengeData.category_name}</span>
+            <span>{challenge.category_name}</span>
           </div>
           <div className={styles.infoItem}>
             <span>챌린지 기간 :</span>
-            <span>{challengeData.start_date} ~ {challengeData.end_date}</span>
+            <span>{challenge.start_date} ~ {challenge.end_date}</span>
           </div>
           <div className={styles.infoItem}>
             <span>챌린지 금액 :</span>
-            <span>{challengeData.budget_display}</span>
+            <span>{challenge.budget_display}</span>
           </div>
           <div className={styles.infoItem}>
             <span>챌린지 인원 :</span>
-            <span>{challengeData.participants_display}</span>
+            <span>{challenge.participants_display}</span>
           </div>
           <div className={styles.infoItem}>
             <span>남은 금액 :</span>
-            <span>{challengeData.budget_display}</span> {/* 실제 남은 금액은 API에서 가져와야 함 */}
+            <span>{challenge.budget_display}</span> {/* 실제 남은 금액은 API에서 가져와야 함 */}
           </div>
         </div>
       </div>
@@ -152,15 +190,15 @@ const Progress: FC = () => {
                 />
               </div>
               <p className={styles.progressText}>
-                {challengeData.creator_nickname}님 챌린지 성공까지
+                {challenge.creator_nickname}님 챌린지 성공까지
                 <br />
-                {challengeData.period}일 남았어요.
+                {challenge.period}일 남았어요.
               </p>
             </div>
             <p className={styles.amountText}>
               현재까지
               <br />
-              {challengeData.budget_display} 남았어요
+              {challenge.budget_display} 남았어요
             </p>
             <button onClick={handleVerifyClick} className={styles.verifyButton}>
               <img 
