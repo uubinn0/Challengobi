@@ -2,15 +2,13 @@ import type React from "react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import styles from "./OngoingChallengeList.module.scss"
-import type { Challenge } from "../../types"
+import type { OngoingChallenge } from "../../types"
 
 interface OngoingChallengeListProps {
-  challenges: Challenge[]
+  challenges: OngoingChallenge[]
 }
 
 const OngoingChallengeList: React.FC<OngoingChallengeListProps> = ({ challenges }) => {
-  console.log('OngoingChallengeList props:', challenges); // 데이터 확인용
-
   const navigate = useNavigate()
   const [supportStates, setSupportStates] = useState<{ [key: number]: boolean }>({})
   const [wantStates, setWantStates] = useState<{ [key: number]: boolean }>({})
@@ -18,7 +16,7 @@ const OngoingChallengeList: React.FC<OngoingChallengeListProps> = ({ challenges 
     challenges.reduce(
       (acc, challenge) => ({
         ...acc,
-        [challenge.challenge_id]: challenge.encourage_cnt,
+        [challenge.id]: challenge.supports,
       }),
       {},
     ),
@@ -27,7 +25,7 @@ const OngoingChallengeList: React.FC<OngoingChallengeListProps> = ({ challenges 
     challenges.reduce(
       (acc, challenge) => ({
         ...acc,
-        [challenge.challenge_id]: challenge.want_cnt,
+        [challenge.id]: challenge.wants,
       }),
       {},
     ),
@@ -71,42 +69,47 @@ const OngoingChallengeList: React.FC<OngoingChallengeListProps> = ({ challenges 
   }
 
   return (
-    <div className={styles.ongoingChallengeList}>
+    <div className={styles.challengeList}>
       {challenges.map((challenge) => (
         <div
-          key={challenge.challenge_id}
+          key={challenge.id}
           className={styles.challengeCard}
-          onClick={() => handleChallengeClick(challenge.challenge_id)}
+          onClick={() => handleChallengeClick(challenge.id)}
           role="button"
           tabIndex={0}
         >
-          <h3>{challenge.challenge_title}</h3>
-          <p>생성자: {challenge.creator_nickname}</p>
-          <p>기간: {challenge.period_display}</p>
-          <p>예산: {challenge.budget_display}</p>
-          <p>카테고리: {challenge.category_name}</p>
-          <p>참여자: {challenge.participants_display}</p>
+          <div className={styles.header}>
+            <h3 className={styles.title}>{challenge.title}</h3>
+            <span className={`${styles.successRate} ${challenge.successRate <= 10 ? styles.lowSuccessRate : ""}`}>
+              성공률 : {challenge.successRate}%
+            </span>
+          </div>
+          <div className={styles.info}>
+            <p>카테고리: {challenge.category}</p>
+            <p>금액: {challenge.amount}</p>
+            <p>기간: {challenge.period}</p>
+          </div>
           <div className={styles.progressSection}>
             <div className={styles.progressLabel}>
               <span>진행도</span>
-              <span>{challenge.current_participants}/{challenge.max_participants}</span>
+              <span>{challenge.progress}%</span>
             </div>
             <div className={styles.progressBar}>
-              <div className={styles.progressFill} style={{ width: `${challenge.current_participants / challenge.max_participants * 100}%` }} />
+              <div className={styles.progressFill} style={{ width: `${challenge.progress}%` }} />
             </div>
           </div>
           <div className={styles.actions}>
             <button
-              className={`${supportStates[challenge.challenge_id] ? styles.active : ""}`}
-              onClick={(e) => handleSupport(e, challenge.challenge_id)}
+              className={`${supportStates[challenge.id] ? styles.active : ""}`}
+              onClick={(e) => handleSupport(e, challenge.id)}
             >
-              응원하기 {supportCounts[challenge.challenge_id]}
+              응원하기 {supportCounts[challenge.id]}
             </button>
             <button
-              className={`${wantStates[challenge.challenge_id] ? styles.active : ""}`}
-              onClick={(e) => handleWant(e, challenge.challenge_id)}
+              className={`${wantStates[challenge.id] ? styles.active : ""}`}
+              onClick={(e) => handleWant(e, challenge.id)}
             >
-              하고싶어요 {wantCounts[challenge.challenge_id]}
+              하고싶어요 {wantCounts[challenge.id]}
             </button>
           </div>
         </div>

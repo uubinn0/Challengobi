@@ -2,7 +2,7 @@
 
 import type { FC } from "react"
 import { useState, useEffect } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate, useLocation, useParams } from "react-router-dom"
 import { Pencil, Heart, MessageSquare } from "lucide-react"
 import styles from "./Progress.module.scss"
 import ocrbuttonfish from '../../../../assets/ocr-button-fish.png'
@@ -22,6 +22,10 @@ const Progress: FC = () => {
  const [likedComments, setLikedComments] = useState<number[]>([])
  const navigate = useNavigate()
  const location = useLocation()
+ const { id } = useParams<{ id: string }>()
+
+ // 디버깅을 위한 로그 추가
+ console.log('Current Challenge ID:', id);
 
  const isFromHome = location.pathname.includes("/ongoing-challenge/")
 
@@ -39,9 +43,14 @@ const Progress: FC = () => {
   navigate(`${location.pathname}/write`);
 };
 
- const handleVerifyClick = () => {
-   navigate("/challenge/ocr");
- }
+ const handleOcrClick = () => {
+   if (id) {
+     console.log('Navigating to OCR with ID:', id);  // 디버깅 로그
+     navigate(`/challenge/ocr/${id}`);
+   } else {
+     console.error('No challenge ID found');
+   }
+ };
 
  const comments: Comment[] = [
    {
@@ -122,7 +131,7 @@ const Progress: FC = () => {
              <br />
              10,000원 남았어요
            </p>
-           <button onClick={handleVerifyClick} className={styles.verifyButton}>
+           <button onClick={handleOcrClick} className={styles.verifyButton}>
              <img 
                src={ocrbuttonfish} 
                alt="물고기 아이콘" 

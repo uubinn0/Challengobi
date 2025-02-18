@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './ConsumImage.css';
 
 interface ConsumItem {
@@ -11,15 +12,33 @@ interface ConsumItem {
   checked: boolean;
 }
 
+interface OcrResultItem {
+  store: string;
+  time: string;
+  amount: string;
+}
+
 export const ConsumImage: React.FC = () => {
   const navigate = useNavigate();
-  const [items, setItems] = useState<ConsumItem[]>([
-    { id: 1, place: 'GS25 한밭대점', time: '08:24', amount: 2400, initialAmount: 2400, checked: true },
-    { id: 2, place: '아빠손칼국수', time: '12:22', amount: 31000, initialAmount: 31000, checked: false },
-    { id: 3, place: '스타벅스 유성점', time: '12:51', amount: 6700, initialAmount: 6700, checked: false },
-    { id: 4, place: '이마트 월평점', time: '19:24', amount: 32500, initialAmount: 32500, checked: true },
-    { id: 5, place: '이이스크림 할인점', time: '20:48', amount: 2400, initialAmount: 2400, checked: false },
-  ]);
+  const [items, setItems] = useState<ConsumItem[]>([]);
+
+  useEffect(() => {
+    // 세션 스토리지에서 OCR 결과 가져오기
+    const ocrResults = sessionStorage.getItem('ocrResults');
+    if (ocrResults) {
+      const parsedResults = JSON.parse(ocrResults);
+      // OCR 결과를 ConsumItem 형식으로 변환
+      const formattedItems = parsedResults.map((item: OcrResultItem, index: number) => ({
+        id: index + 1,
+        place: item.store || '알 수 없는 가맹점',
+        time: item.time || '',
+        amount: parseInt(item.amount) || 0,
+        initialAmount: parseInt(item.amount) || 0,
+        checked: false
+      }));
+      setItems(formattedItems);
+    }
+  }, []);
 
   const [editingItem, setEditingItem] = useState<{
     id: number;
@@ -71,8 +90,52 @@ export const ConsumImage: React.FC = () => {
     .filter(item => item.checked)
     .reduce((sum, item) => sum + item.amount, 0);
 
-  const handleSubmit = () => {
-    navigate('/challenge/ocr-complete');
+  const handleSubmit = async () => {
+    const selectedItems = items.filter(item => item.checked);
+    const challengeId = sessionStorage.getItem('currentChallengeId');
+
+    if (!challengeId) {
+      alert('챌린지 정보를 찾을 수 없습니다.');
+      navigate('/challenge');
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        navigate('/login');
+        return;
+      }
+
+      await axios.post(
+        `http://localhost:8000/api/challenges/${challengeId}/expenses/ocr_save/`,
+        {
+          selected: selectedItems.map(item => ({
+            store: item.place,
+            amount: item.amount,
+            payment_date: new Date().toISOString().split('T')[0]
+          }))
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          withCredentials: true
+        }
+      );
+      
+      navigate('/challenge/ocr-complete');
+    } catch (error) {
+      console.error('데이터 저장 중 오류 발생:', error);
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+        localStorage.removeItem('access_token');
+        navigate('/login');
+        return;
+      }
+      alert('데이터 저장 중 오류가 발생했습니다.');
+    }
   };
 
   return (
