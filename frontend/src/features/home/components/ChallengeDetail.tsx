@@ -69,7 +69,7 @@ export default function ChallengeDetail({ challenges }: ChallengeDetailProps) {
               <span className={styles.value}>{challenge.current_participants}/{challenge.max_participants}</span>
             </div>
             <div className={styles.infoItem}>
-              {/* <span className={styles.label}>성공률 :</span> */}
+              <span className={styles.label}>성공률 :</span>
               {/* <span className={styles.value}>{challenge.success_rate}%</span> */}
             </div>
           </div>

@@ -8,25 +8,12 @@ import ChallengeList from "./challenge-list/ChallengeList"
 import OngoingChallengeList from "./ongoing-challenge-list/OngoingChallengeList"
 import ChallengeDetail from "./ChallengeDetail"
 import HomeAPI from "../api"
-import axios from "axios"
 
 import type { Challenge } from "../types"
 
 const HomePage: React.FC = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const categories = [
-    { value: "전체", label: "전체" },
-    { value: "카페/디저트", label: "카페/디저트" },
-    { value: "외식", label: "외식" },
-    { value: "장보기", label: "장보기" },
-    { value: "쇼핑", label: "쇼핑" },
-    { value: "문화생활", label: "문화생활" },
-    { value: "취미/여가", label: "취미/여가" },
-    { value: "술/담배", label: "술/담배" },
-    { value: "교통", label: "교통" },
-    { value: "기타", label: "기타" }
-  ]
 
   const [recruitingChallenges, setRecruitingChallenges] = useState<Challenge[]>([])
   const [inProgressChallenges, setInProgressChallenges] = useState<Challenge[]>([])
@@ -34,6 +21,7 @@ const HomePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<"recruiting" | "ongoing">("recruiting")
   const [activeCategory, setActiveCategory] = useState("전체")
+  const [searchTerm, setSearchTerm] = useState("");
 
   // 카테고리 매핑 정의
   const categoryMapping: { [key: number]: string } = {
@@ -81,48 +69,32 @@ const HomePage: React.FC = () => {
   }, [navigate])
 
   // 필터링된 챌린지 목록 (모집 중)
-  const filteredRecruitingChallenges = useMemo(() => {
-    console.log('Filtering recruiting challenges:', {
-      activeCategory,
-      challenges: recruitingChallenges,
-    });
-
-    if (activeCategory === "전체") {
-      return recruitingChallenges;
-    }
-
-    return recruitingChallenges.filter((challenge) => {
-      const categoryName = categoryMapping[challenge.challenge_category];
-      console.log('Comparing:', {
-        challengeCategory: challenge.challenge_category,
-        categoryName,
-        activeCategory,
-        matches: categoryName === activeCategory
-      });
-      return categoryName === activeCategory;
-    });
-  }, [activeCategory, recruitingChallenges, categoryMapping]);
+  const filteredRecruitingChallenges = recruitingChallenges.filter(challenge => {
+    const matchesSearch = searchTerm === "" || 
+      challenge.challenge_title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = activeCategory === "전체" || 
+      challenge.category_name === activeCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
 
   // 필터링된 챌린지 목록 (진행 중)
-  const filteredInProgressChallenges = useMemo(() => {
-    console.log('Filtering in-progress challenges:', {
-      activeCategory,
-      challenges: inProgressChallenges,
-    });
-
-    if (activeCategory === "전체") {
-      return inProgressChallenges;
-    }
-
-    return inProgressChallenges.filter((challenge) => {
-      const categoryName = categoryMapping[challenge.challenge_category];
-      return categoryName === activeCategory;
-    });
-  }, [activeCategory, inProgressChallenges, categoryMapping]);
+  const filteredInProgressChallenges = inProgressChallenges.filter(challenge => {
+    const matchesSearch = searchTerm === "" || 
+      challenge.challenge_title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = activeCategory === "전체" || 
+      challenge.category_name === activeCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
 
   const handleCategoryChange = (category: string) => {
     console.log('Category changed to:', category);
     setActiveCategory(category);
+  };
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
   };
 
   const renderMainContent = () => {
@@ -132,7 +104,9 @@ const HomePage: React.FC = () => {
 
     return (
       <>
-        <SearchBar />
+        <div className={styles.searchWrapper}>
+          <SearchBar onSearch={handleSearch} />
+        </div>
         <CategoryTabs 
           categories={[
             "전체",
@@ -164,14 +138,14 @@ const HomePage: React.FC = () => {
           </button>
         </div>
 
-        {activeTab === "recruiting" ? (
-          <ChallengeList 
-            challenges={filteredRecruitingChallenges} 
-          />
+        {loading ? (
+          <div>Loading...</div>
+        ) : error ? (
+          <div>{error}</div>
+        ) : activeTab === "recruiting" ? (
+          <ChallengeList challenges={filteredRecruitingChallenges} />
         ) : (
-          <OngoingChallengeList 
-            challenges={filteredInProgressChallenges} 
-          />
+          <OngoingChallengeList challenges={filteredInProgressChallenges} />
         )}
       </>
     );

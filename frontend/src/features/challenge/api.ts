@@ -228,7 +228,7 @@ const ChallengeAPI = {
 
   async getPosts(challengeId: number): Promise<any[]> {
     const token = localStorage.getItem('access_token');
-    const response = await axiosInstance.get(`/api/challenges/${challengeId}/posts`, {
+    const response = await axiosInstance.get(`http://localhost:8000/api/posts/?challenge_id=${challengeId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
