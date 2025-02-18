@@ -17,8 +17,8 @@ const ChallengeDetailModal: React.FC<ChallengeDetailModalProps> = ({ isOpen, onC
   
   const [isLiked, setIsLiked] = useState(false);
   const [isWanted, setIsWanted] = useState(false);
-  const [likeCount, setLikeCount] = useState(challenge.likes);
-  const [wantCount, setWantCount] = useState(challenge.wants);
+  const [likeCount, setLikeCount] = useState(challenge.encourage_cnt);
+  const [wantCount, setWantCount] = useState(challenge.want_cnt);
 
   if (!isOpen) return null;
 
@@ -50,27 +50,27 @@ const ChallengeDetailModal: React.FC<ChallengeDetailModalProps> = ({ isOpen, onC
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <h2 className={styles.title}>{challenge.title}</h2>
+        <h2 className={styles.title}>{challenge.challenge_title}</h2>
         <div className={styles.content}>
           <p className={styles.description}>
-            {challenge.description || "외식을 줄이고 싶은 챌린저들을 모집합니다."}
+            {challenge.challenge_info || "외식을 줄이고 싶은 챌린저들을 모집합니다."}
           </p>
           <div className={styles.details}>
             <div className={styles.detailItem}>
               <span>카테고리</span>
-              <span>{challenge.category}</span>
+              <span>{challenge.category_name}</span>
             </div>
             <div className={styles.detailItem}>
               <span>챌린지 기간</span>
-              <span>{challenge.period}</span>
+              <span>{challenge.period_display}</span>
             </div>
             <div className={styles.detailItem}>
               <span>챌린지 금액</span>
-              <span>{challenge.amount}</span>
+              <span>{challenge.budget_display}</span>
             </div>
             <div className={styles.detailItem}>
               <span>챌린지 인원</span>
-              <span>{challenge.currentMembers}/{challenge.maxMembers}명</span>
+              <span>{challenge.current_participants}/{challenge.max_participants}명</span>
             </div>
           </div>
 
@@ -107,13 +107,13 @@ const ChallengeDetailModal: React.FC<ChallengeDetailModalProps> = ({ isOpen, onC
           <div className={styles.progressContainer}>
             <div className={styles.progressLabel}>
               <span>모집률</span>
-              <span>{Math.round((challenge.currentMembers / challenge.maxMembers) * 100)}%</span>
+              <span>{Math.round((challenge.current_participants / challenge.max_participants) * 100)}%</span>
             </div>
             <div className={styles.progressBar}>
               <div 
                 className={styles.progressFill}
                 style={{ 
-                  width: `${(challenge.currentMembers / challenge.maxMembers) * 100}%`
+                    width: `${(challenge.current_participants / challenge.max_participants) * 100}%`
                 }}
               />
             </div>

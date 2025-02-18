@@ -4,6 +4,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { ko } from 'date-fns/locale';
 import styles from "./AddModal.module.scss";
 import SuccessModal from './SuccessModal';
+import ChallengeAPI from '../../features/challenge/api';
 
 interface AddModalProps {
   isOpen: boolean;
@@ -11,21 +12,39 @@ interface AddModalProps {
 }
 
 const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
-  const [formData, setFormData] = useState({
+  // 오늘 날짜 계산 (시간을 제외한 날짜만)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // 내일 날짜 계산
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  // 초기 상태값 정의
+  const initialFormData = {
     category: "",
     title: "",
     description: "",
-    startDate: new Date(),
+    startDate: tomorrow,  // 초기값을 내일로 설정
     period: "",
     price: "",
-    people: ""
-  });
+    people: "",
+    isPrivate: true
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const categories = [
-    '외식', '장보기', '카페/디저트',
-    '교통', '문화생활', '쇼핑',
-    '취미/여가', '술/담배', '기타'
+    { value: 1, label: '카페/디저트' },
+    { value: 2, label: '외식' },
+    { value: 3, label: '장보기' },
+    { value: 4, label: '쇼핑' },
+    { value: 5, label: '문화생활' },
+    { value: 6, label: '취미/여가' },
+    { value: 7, label: '술/담배' },
+    { value: 8, label: '교통' },
+    { value: 9, label: '기타' }
   ];
 
   const periods = [
@@ -37,23 +56,40 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 추후 백엔드 통신을 위한 데이터 준비
-    const challengeData = {
-      ...formData,
-      startDate: formData.startDate.toISOString(),
-      currentMembers: 1,
-      maxMembers: parseInt(formData.people),
-      likes: 0,
-      wants: 0,
-    };
+    try {
+      // 선택된 날짜가 내일 이후인지 확인
+      const selectedDate = new Date(formData.startDate);
+      selectedDate.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < tomorrow) {
+        alert('챌린지 시작일은 내일 이후여야 합니다.');
+        return;
+      }
 
-    // 추후 백엔드 API 호출 예정
-    console.log('Challenge Data to be sent:', challengeData);
-    
-    setShowSuccess(true);
+      const challengeData = {
+        challenge_category: Number(formData.category),
+        creator_id: 1,
+        challenge_title: formData.title,
+        challenge_info: formData.description,
+        period: Number(formData.period),
+        start_date: formData.startDate,
+        budget: Number(formData.price),
+        max_participants: Number(formData.people),
+        is_private: formData.isPrivate
+      };
+
+      await ChallengeAPI.createChallenge(challengeData);
+      
+      // 성공 시 폼 초기화
+      setFormData(initialFormData);
+      setShowSuccess(true);
+    } catch (error) {
+      console.error('챌린지 생성 실패:', error);
+      alert('챌린지 생성에 실패했습니다. 다시 시도해주세요.');
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -78,6 +114,25 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
     onClose();
   };
 
+  const handlePrivacyToggle = (isPrivate: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      isPrivate
+    }));
+  };
+
+  // 모든 필드가 채워졌는지 확인하는 함수
+  const isFormValid = () => {
+    return (
+      formData.category !== "" &&
+      formData.title.trim() !== "" &&
+      formData.description.trim() !== "" &&
+      formData.period !== "" &&
+      formData.price.trim() !== "" &&
+      formData.people.trim() !== ""
+    );
+  };
+
   return (
     <>
       <div className={styles.overlay} onClick={onClose}>
@@ -89,7 +144,7 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
               <select name="category" value={formData.category} onChange={handleChange}>
                 <option value="">선택</option>
                 {categories.map((category) => (
-                  <option key={category} value={category}>{category}</option>
+                  <option key={category.value} value={category.value}>{category.label}</option>
                 ))}
               </select>
             </div>
@@ -125,7 +180,7 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
                   dateFormat="yyyy년 MM월 dd일"
                   className={styles.dateInput}
                   locale={ko}
-                  minDate={new Date()}
+                  minDate={today}  // minDate를 오늘로 설정
                   customInput={
                     <input
                       className={styles.dateInput}
@@ -181,7 +236,31 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
 
-            <button type="submit" className={styles.submitButton}>
+            <div className={styles.formGroup}>
+              <label>챌린지 공개 여부</label>
+              <div className={styles.privacyButtons}>
+                <button
+                  type="button"
+                  className={`${styles.privacyButton} ${formData.isPrivate ? styles.active : ''}`}
+                  onClick={() => handlePrivacyToggle(true)}
+                >
+                  Private
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.privacyButton} ${!formData.isPrivate ? styles.active : ''}`}
+                  onClick={() => handlePrivacyToggle(false)}
+                >
+                  Public
+                </button>
+              </div>
+            </div>
+
+            <button 
+              type="submit" 
+              className={`${styles.submitButton} ${!isFormValid() ? styles.disabled : ''}`}
+              disabled={!isFormValid()}
+            >
               챌린지 등록하기
             </button>
           </form>
