@@ -195,7 +195,7 @@ const Progress: FC = () => {
                   <div className={styles.commentInfo}>
                     <h3 className={styles.title}>{post.post_title}</h3>
                     <p className={styles.commentText}>{post.post_content}</p>
-                    <p className={styles.authorName}>
+                    <p className={styles.authorName}>{/*작성자 이름*/}
                       {formatDate(post.post_created_at)}
                     </p>
                   </div>
