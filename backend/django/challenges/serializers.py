@@ -111,6 +111,7 @@ class ChallengeCreateSerializer(serializers.ModelSerializer):
 class ChallengeListSerializer(serializers.ModelSerializer):
     challenge_id = serializers.IntegerField(source="id")
     challenge_title = serializers.CharField(source="title")
+    challenge_info = serializers.CharField(source="description")
     creator_nickname = serializers.CharField(source="creator.nickname", read_only=True)
     period = serializers.IntegerField(source="duration")
     period_display = serializers.SerializerMethodField()
@@ -121,12 +122,14 @@ class ChallengeListSerializer(serializers.ModelSerializer):
     participants_display = serializers.SerializerMethodField()
     encourage_cnt = serializers.SerializerMethodField()
     want_cnt = serializers.SerializerMethodField()
+    participants_nicknames = serializers.SerializerMethodField()
 
     class Meta:
         model = Challenge
         fields = [
             "challenge_id",
             "challenge_title",
+            "challenge_info",
             "creator_nickname",
             "period",
             "period_display",
@@ -141,6 +144,7 @@ class ChallengeListSerializer(serializers.ModelSerializer):
             "participants_display",
             "encourage_cnt",
             "want_cnt",
+            "participants_nicknames",
         ]
 
     def get_period_display(self, obj):
@@ -177,6 +181,13 @@ class ChallengeListSerializer(serializers.ModelSerializer):
     def get_participants_display(self, obj):
         current = self.get_current_participants(obj)
         return f"{current}/{obj.max_participants}"
+
+    def get_participants_nicknames(self, obj):
+        return list(
+            obj.challengeparticipant_set.select_related("user").values_list(
+                "user__nickname", flat=True
+            )
+        )
 
 
 class ChallengeDetailSerializer(serializers.ModelSerializer):
@@ -242,9 +253,23 @@ class ChallengeDetailSerializer(serializers.ModelSerializer):
 
 
 class ChallengeParticipantSerializer(serializers.ModelSerializer):
+    user_nickname = serializers.CharField(source="user.nickname")
+    profile_image = serializers.CharField(source="user.profile_image")
+    user_id = serializers.IntegerField(
+        source="user.id"
+    )  # 프로필 페이지 이동을 위해 추가
+
     class Meta:
         model = ChallengeParticipant
-        fields = ["challenge", "user", "initial_budget", "balance", "is_failed"]
+        fields = [
+            "challenge",
+            "user_id",
+            "user_nickname",
+            "profile_image",
+            "initial_budget",
+            "balance",
+            "is_failed",
+        ]
 
 
 class ChallengeInviteSerializer(serializers.ModelSerializer):
