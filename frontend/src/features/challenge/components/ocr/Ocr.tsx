@@ -6,25 +6,7 @@ import NoSpend from '../../../../components/modals/NoSpend';
 import EasySubmit from '../../../../components/modals/EasySubmit';
 import axios from 'axios';
 
-// JWT 토큰에서 user_id를 추출하는 함수
-const getUserIdFromToken = (token: string): number | null => {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-
-    const payload = JSON.parse(jsonPayload);
-    return payload.user_id;
-  } catch (error) {
-    console.error('Failed to decode token:', error);
-    return null;
-  }
-};
-
 const Ocr: React.FC = () => {
-  const navigate = useNavigate();  // useNavigate 훅 사용
   const { id: challengeId } = useParams<{ id: string }>();
   const [showAmountModal, setShowAmountModal] = useState<boolean>(false);
   const [amount, setAmount] = useState<string>('');
@@ -47,41 +29,6 @@ const Ocr: React.FC = () => {
     }
   }, [challengeId, navigate]);
 
-  // 잔액 조회 함수
-  const fetchBalance = async () => {
-    try {
-      const token = localStorage.getItem('access_token');
-      if (!token || !challengeId) return;
-
-      const response = await axios.get(
-        `http://localhost:8000/api/challenges/${challengeId}/participants/`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-
-      if (response.data && response.data.length > 0) {
-        const userId = getUserIdFromToken(token);
-        const myParticipation = response.data.find(
-          (participant: any) => participant.user_id === userId
-        );
-        
-        if (myParticipation) {
-          setBalance(myParticipation.balance);
-        }
-      }
-    } catch (error) {
-      console.error('잔액 조회 실패:', error);
-    }
-  };
-
-  // 컴포넌트 마운트 시 잔액 조회
-  useEffect(() => {
-    fetchBalance();
-  }, [challengeId]);
-
   const handleNoSpendClick = (): void => {
     setShowNoSpendModal(true);
   };
@@ -94,6 +41,77 @@ const Ocr: React.FC = () => {
     if (event.target.files && event.target.files.length > 0) {
       setSelectedFiles(event.target.files);
       setShowSubmitButton(true);
+    }
+  };
+
+  const handleImageSubmit = async () => {
+    if (!selectedFiles) {
+      alert('이미지를 선택해주세요.');
+      return;
+    }
+
+    if (!challengeId) {
+      alert('챌린지 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 디버깅을 위한 로그 추가
+    console.log('Submitting OCR request for challenge:', challengeId);
+
+    setIsLoading(true);
+    const formData = new FormData();
+    formData.append('image', selectedFiles[0]);
+
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        navigate('/login');
+        return;
+      }
+
+      const response = await axios.post(
+        `http://localhost:8000/api/challenges/${challengeId}/expenses/ocr/`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
+          },
+          withCredentials: true
+        }
+      );
+
+      if (response.data) {
+        sessionStorage.setItem('currentChallengeId', challengeId);
+        sessionStorage.setItem('ocrResults', JSON.stringify(response.data));
+        navigate('/challenge/consum-image');
+      } else {
+        throw new Error('OCR 결과가 없습니다.');
+      }
+    } catch (error) {
+      console.error('OCR 처리 중 오류 발생:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Error response data:', error.response?.data);
+        
+        if (error.response?.status === 401) {
+          alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+          localStorage.removeItem('access_token');
+          navigate('/login');
+          return;
+        }
+        
+        const errorDetail = error.response?.data?.detail;
+        const errorMessage = typeof errorDetail === 'object' ? 
+          JSON.stringify(errorDetail) : 
+          errorDetail || '이미지 처리 중 오류가 발생했습니다.';
+        alert(errorMessage);
+      } else {
+        alert('이미지 처리 중 오류가 발생했습니다.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -321,6 +339,15 @@ const Ocr: React.FC = () => {
             {isLoading ? '처리중...' : '제출하기'}
           </button>
         </div>
+      )}
+
+      {showSubmitButton && (
+        <button 
+          className={styles['submit-action-button']}
+          onClick={handleSubmit}
+        >
+          제출
+        </button>
       )}
 
       <button className={styles['no-spend-button']} onClick={handleNoSpendClick}>

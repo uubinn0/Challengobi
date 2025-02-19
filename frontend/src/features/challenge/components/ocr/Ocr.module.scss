@@ -182,3 +182,28 @@
         }
     }
 }
+
+.selected-files {
+    width: 360px;
+    padding: 15px;
+    background-color: #EBE8E5;
+    border-radius: 10px;
+    margin-top: 20px;
+    text-align: center;
+
+    p {
+        margin: 0 0 10px 0;
+        font-size: 14px;
+        word-break: break-all;
+    }
+}
+
+.submit-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.submit-action-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}

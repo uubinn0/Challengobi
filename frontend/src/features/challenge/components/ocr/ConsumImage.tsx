@@ -18,100 +18,25 @@ interface OcrResultItem {
   amount: string;
 }
 
-// JWT 토큰에서 user_id를 추출하는 함수
-const getUserIdFromToken = (token: string): number | null => {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-
-    const payload = JSON.parse(jsonPayload);
-    return payload.user_id;
-  } catch (error) {
-    console.error('Failed to decode token:', error);
-    return null;
-  }
-};
-
 export const ConsumImage: React.FC = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState<ConsumItem[]>([]);
-  const [balance, setBalance] = useState<number | null>(null);
-  const challengeId = sessionStorage.getItem('currentChallengeId');
-
-  // 잔액 조회 함수
-  const fetchBalance = async () => {
-    try {
-      const token = localStorage.getItem('access_token');
-      if (!token || !challengeId) return;
-
-      const response = await axios.get(
-        `http://localhost:8000/api/challenges/${challengeId}/participants/`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-
-      if (response.data && response.data.length > 0) {
-        const userId = getUserIdFromToken(token);
-        const myParticipation = response.data.find(
-          (participant: any) => participant.user_id === userId
-        );
-        
-        if (myParticipation) {
-          setBalance(myParticipation.balance);
-        }
-      }
-    } catch (error) {
-      console.error('잔액 조회 실패:', error);
-    }
-  };
 
   useEffect(() => {
-    // 컴포넌트 마운트 시 잔액 조회
-    fetchBalance();
-
     // 세션 스토리지에서 OCR 결과 가져오기
     const ocrResults = sessionStorage.getItem('ocrResults');
     if (ocrResults) {
-      try {
-        const parsedResults = JSON.parse(ocrResults);
-        console.log('Original OCR results:', parsedResults);
-
-        // 결과 데이터 구조 처리
-        let resultsArray = [];
-        if (parsedResults[0]?.results) {
-          // results 배열에서 데이터 추출
-          resultsArray = parsedResults[0].results.map((item: any) => ({
-            store: item.store,
-            amount: item.expense,
-            time: '' // 시간 정보가 없는 경우 빈 문자열
-          }));
-        }
-
-        console.log('Formatted results:', resultsArray);
-
-        // OCR 결과를 ConsumItem 형식으로 변환
-        const formattedItems = resultsArray.map((item: OcrResultItem, index: number) => ({
-          id: index + 1,
-          place: item.store || '알 수 없는 가맹점',
-          time: item.time || '',
-          amount: parseInt(String(item.amount)) || 0,
-          initialAmount: parseInt(String(item.amount)) || 0,
-          checked: false
-        }));
-
-        console.log('Final formatted items:', formattedItems);
-        setItems(formattedItems);
-      } catch (error) {
-        console.error('OCR 결과 파싱 오류:', error);
-        // 오류 발생 시 빈 배열로 초기화
-        setItems([]);
-      }
+      const parsedResults = JSON.parse(ocrResults);
+      // OCR 결과를 ConsumItem 형식으로 변환
+      const formattedItems = parsedResults.map((item: OcrResultItem, index: number) => ({
+        id: index + 1,
+        place: item.store || '알 수 없는 가맹점',
+        time: item.time || '',
+        amount: parseInt(item.amount) || 0,
+        initialAmount: parseInt(item.amount) || 0,
+        checked: false
+      }));
+      setItems(formattedItems);
     }
   }, []);
 
@@ -184,7 +109,7 @@ export const ConsumImage: React.FC = () => {
       }
 
       await axios.post(
-        `http://localhost:8000/api/challenges/${challengeId}/expenses/verifications/`,
+        `http://localhost:8000/api/challenges/${challengeId}/expenses/ocr_save/`,
         {
           selected: selectedItems.map(item => ({
             store: item.place,
@@ -194,8 +119,7 @@ export const ConsumImage: React.FC = () => {
         },
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           },
           withCredentials: true
         }
@@ -204,19 +128,13 @@ export const ConsumImage: React.FC = () => {
       navigate('/challenge/ocr-complete');
     } catch (error) {
       console.error('데이터 저장 중 오류 발생:', error);
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          alert('인증이 만료되었습니다. 다시 로그인해주세요.');
-          localStorage.removeItem('access_token');
-          navigate('/login');
-          return;
-        }
-        // 에러 메시지 상세 표시
-        const errorMessage = error.response?.data?.error || '데이터 저장 중 오류가 발생했습니다.';
-        alert(errorMessage);
-      } else {
-        alert('데이터 저장 중 오류가 발생했습니다.');
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+        localStorage.removeItem('access_token');
+        navigate('/login');
+        return;
       }
+      alert('데이터 저장 중 오류가 발생했습니다.');
     }
   };
 

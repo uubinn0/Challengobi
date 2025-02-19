@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom"
 import { Pencil } from "lucide-react"
 import styles from "./ChallengeDetail.module.scss"
 import ChallengobiIcon from "../../../components/icons/ChallengobiIcon"
-import type { Challenge } from "../types"
+import type { OngoingChallenge } from "../types"
 
 interface Comment {
   id: number
@@ -14,12 +14,12 @@ interface Comment {
 }
 
 interface ChallengeDetailProps {
-  challenges: Challenge[]
+  challenges: OngoingChallenge[]
 }
 
 export default function ChallengeDetail({ challenges }: ChallengeDetailProps) {
   const { id } = useParams<{ id: string }>()
-  const challenge = challenges.find((c) => c.challenge_id === Number(id))
+  const challenge = challenges.find((c) => c.id === Number(id))
 
   const comments: Comment[] = [
     {
@@ -48,13 +48,13 @@ export default function ChallengeDetail({ challenges }: ChallengeDetailProps) {
     <div className={styles.container}>
       <div className={styles.content}>
         <div className={styles.challengeCard}>
-          <h2 className={styles.title}>{challenge.challenge_title}</h2>
-          {/* <p className={styles.subtitle}>{challenge.subtitle}</p> */}
-    
+          <h2 className={styles.title}>{challenge.title}</h2>
+          <p className={styles.subtitle}>{challenge.subtitle}</p>
+
           <div className={styles.infoList}>
             <div className={styles.infoItem}>
               <span className={styles.label}>카테고리 :</span>
-              <span className={styles.value}>{challenge.category_name}</span>
+              <span className={styles.value}>{challenge.category}</span>
             </div>
             <div className={styles.infoItem}>
               <span className={styles.label}>챌린지 기간 :</span>
@@ -62,15 +62,15 @@ export default function ChallengeDetail({ challenges }: ChallengeDetailProps) {
             </div>
             <div className={styles.infoItem}>
               <span className={styles.label}>챌린지 금액 :</span>
-              <span className={styles.value}>{challenge.budget}</span>
+              <span className={styles.value}>{challenge.amount}</span>
             </div>
             <div className={styles.infoItem}>
               <span className={styles.label}>진행도 :</span>
-              <span className={styles.value}>{challenge.current_participants}/{challenge.max_participants}</span>
+              <span className={styles.value}>{challenge.progress}%</span>
             </div>
             <div className={styles.infoItem}>
               <span className={styles.label}>성공률 :</span>
-              {/* <span className={styles.value}>{challenge.success_rate}%</span> */}
+              <span className={styles.value}>{challenge.successRate}%</span>
             </div>
           </div>
         </div>

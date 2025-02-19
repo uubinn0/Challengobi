@@ -2,15 +2,13 @@ import type React from "react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import styles from "./OngoingChallengeList.module.scss"
-import type { Challenge } from "../../types"
+import type { OngoingChallenge } from "../../types"
 
 interface OngoingChallengeListProps {
-  challenges: Challenge[]
+  challenges: OngoingChallenge[]
 }
 
 const OngoingChallengeList: React.FC<OngoingChallengeListProps> = ({ challenges }) => {
-  console.log('OngoingChallengeList props:', challenges); // 데이터 확인용
-
   const navigate = useNavigate()
   const [supportStates, setSupportStates] = useState<{ [key: number]: boolean }>({})
   const [wantStates, setWantStates] = useState<{ [key: number]: boolean }>({})
@@ -18,7 +16,7 @@ const OngoingChallengeList: React.FC<OngoingChallengeListProps> = ({ challenges 
     challenges.reduce(
       (acc, challenge) => ({
         ...acc,
-        [challenge.challenge_id]: challenge.encourage_cnt,
+        [challenge.id]: challenge.supports,
       }),
       {},
     ),
@@ -27,7 +25,7 @@ const OngoingChallengeList: React.FC<OngoingChallengeListProps> = ({ challenges 
     challenges.reduce(
       (acc, challenge) => ({
         ...acc,
-        [challenge.challenge_id]: challenge.want_cnt,
+        [challenge.id]: challenge.wants,
       }),
       {},
     ),
@@ -75,7 +73,7 @@ const OngoingChallengeList: React.FC<OngoingChallengeListProps> = ({ challenges 
     <div className={styles.challengeList}>
       {challenges.map((challenge) => (
         <div
-          key={challenge.challenge_id}
+          key={challenge.id}
           className={styles.challengeCard}
           onClick={() => handleChallengeClick(challenge)}
           role="button"
@@ -100,7 +98,7 @@ const OngoingChallengeList: React.FC<OngoingChallengeListProps> = ({ challenges 
           <div className={styles.progressSection}>
             <div className={styles.progressLabel}>
               <span>진행도</span>
-              <span>{challenge.current_participants}/{challenge.max_participants}</span>
+              <span>{challenge.progress}%</span>
             </div>
             <div className={styles.progressBar}>
               <div 
@@ -112,16 +110,16 @@ const OngoingChallengeList: React.FC<OngoingChallengeListProps> = ({ challenges 
 
           <div className={styles.actions}>
             <button
-              className={`${supportStates[challenge.challenge_id] ? styles.active : ""}`}
-              onClick={(e) => handleSupport(e, challenge.challenge_id)}
+              className={`${supportStates[challenge.id] ? styles.active : ""}`}
+              onClick={(e) => handleSupport(e, challenge.id)}
             >
-              응원하기 {supportCounts[challenge.challenge_id]}
+              응원하기 {supportCounts[challenge.id]}
             </button>
             <button
-              className={`${wantStates[challenge.challenge_id] ? styles.active : ""}`}
-              onClick={(e) => handleWant(e, challenge.challenge_id)}
+              className={`${wantStates[challenge.id] ? styles.active : ""}`}
+              onClick={(e) => handleWant(e, challenge.id)}
             >
-              하고싶어요 {wantCounts[challenge.challenge_id]}
+              하고싶어요 {wantCounts[challenge.id]}
             </button>
           </div>
         </div>
