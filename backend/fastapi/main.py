@@ -195,7 +195,7 @@ async def recommend(request: RecommendRequest):
 
     # 유사도 계산 (Cosine Similarity)
     ## 카테고리 유사도 계산
-    category_features = category.columns[1:] #user_no 제거
+    category_features = category.columns[1:len(category.columns)-1]
     category_similarity = category_cosine_similarity(category, target_user_category, category_features)
 
     ## 유저 유사도 계산
@@ -209,7 +209,7 @@ async def recommend(request: RecommendRequest):
     users["similarity"] = category_similarity * final_weights[0] + similarity_matrix * final_weights[1]
     recommended_users = users[users["id"] != TARGET].nlargest(RECOMMENDED_PERSON_NUM, "similarity")
 
-    return recommended_users[["id"]].to_dict(orient="records")
+    return recommended_users[["id", "similarity"]].to_dict(orient="records")
 # if __name__ == "__main__":
 #     import uvicorn
 #     uvicorn.run(app, host="0.0.0.0", port=8000)
