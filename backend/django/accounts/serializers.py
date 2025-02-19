@@ -166,24 +166,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return value
 
 
-# 관심 소비 카테고리 등록
-class UserChallengeCategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserChallengeCategory
-        fields = [
-            "cafe",
-            "restaurant",
-            "grocery",
-            "shopping",
-            "culture",
-            "hobby",
-            "drink",
-            "transportation",
-            "etc",
-        ]
-        read_only_fields = ["user"]
-
-
 # 회원 가입
 class UserCreateSerializer(serializers.ModelSerializer):
     challenge_categories = UserChallengeCategorySerializer(
@@ -430,3 +412,24 @@ class FollowSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["created_at"]
+
+
+class FollowWithStatusSerializer(FollowSerializer):
+    is_following = serializers.SerializerMethodField()
+
+    class Meta(FollowSerializer.Meta):
+        fields = FollowSerializer.Meta.fields + ["is_following"]
+
+    def get_is_following(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            # 사용자가 보고있는 팔로우/팔로워를 팔로우하고 있는지 확인
+            if hasattr(obj, "follower"):  # 팔로잉 목록 조회 시
+                return Follow.objects.filter(
+                    follower=request.user, following=obj.follower
+                ).exists()
+            else:  # 팔로워 목록 조회 시
+                return Follow.objects.filter(
+                    follower=request.user, following=obj.following
+                ).exists()
+        return False
