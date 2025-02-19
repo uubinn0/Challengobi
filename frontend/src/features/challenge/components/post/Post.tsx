@@ -26,56 +26,53 @@ interface Comment {
 
 export default function Post() {
   const location = useLocation();
-  const params = useParams<{ id: string; postId: string }>();
+  const { id, postId } = useParams();
   const postData = location.state?.postData;
   
-  console.log("URL Parameters:", params);  // URL 파라미터 확인
-  
+  console.log("Location state:", location.state);  // 디버깅용
+  console.log("Post data:", postData);            // 디버깅용
+  console.log("URL params:", { id, postId });     // 디버깅용
+
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
-  const [isLiked, setIsLiked] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchComments = async () => {
-      try {
-        const challengeId = params.id;  // id를 challengeId로 사용
-        const { postId } = params;
-        console.log('Fetching comments for:', { challengeId, postId });
-        
-        if (!challengeId || !postId) {
-          console.error('Missing challengeId or postId in URL params');
-          return;
-        }
+      if (!id || !postId) {
+        console.error('Missing id or postId', { id, postId });
+        setError('필요한 정보가 없습니다.');
+        return;
+      }
 
-        const data = await ChallengeAPI.getComments(Number(challengeId), Number(postId));
-        console.log('Received comments:', data);
-        
-        if (Array.isArray(data)) {
-          setComments(data);
-        } else {
-          console.error('Unexpected data format:', data);
-        }
+      try {
+        setLoading(true);
+        const data = await ChallengeAPI.getComments(Number(id), Number(postId));
+        setComments(data);
       } catch (error) {
         console.error('댓글 로딩 실패:', error);
+        setError('댓글을 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchComments();
-  }, [params]);
+  }, [id, postId]);
 
   // 디버깅용 로그
   console.log('Current comments state:', comments);
-  console.log('Current route params:', params);
+  console.log('Current route params:', { id, postId });
   console.log('Post data:', postData);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { id: challengeId, postId } = params;
-    if (!newComment.trim() || !challengeId || !postId) return;
+    if (!newComment.trim() || !id || !postId) return;
 
     try {
       const newCommentData = await ChallengeAPI.createComment(
-        Number(challengeId),
+        Number(id),
         Number(postId),
         newComment
       );
@@ -96,6 +93,33 @@ export default function Post() {
     });
   };
 
+  // 로딩 상태 표시 개선
+  if (loading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <p>로딩 중...</p>
+      </div>
+    );
+  }
+
+  // 에러 상태 표시 개선
+  if (error) {
+    return (
+      <div className={styles.errorContainer}>
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  // 데이터가 없을 때 표시 개선
+  if (!postData) {
+    return (
+      <div className={styles.errorContainer}>
+        <p>게시글을 찾을 수 없습니다.</p>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.postContainer}>
       {/* 게시글 내용 */}
@@ -110,7 +134,7 @@ export default function Post() {
             <h1 className={styles.postTitle}>{postData?.post_title}</h1>
             <div className={styles.authorInfo}>
               <span>{postData?.user_nickname}</span>
-              <span>{formatDate(postData?.post_created_at)}</span>
+              <span>{postData?.post_created_at ? formatDate(postData.post_created_at) : ''}</span>
             </div>
           </div>
         </div>
@@ -142,7 +166,7 @@ export default function Post() {
           댓글 작성
         </button>
       </form>
-      
+
       {/* 댓글 목록 */}
       <div className={styles.comments}>
         <h3>댓글 목록 ({comments.length})</h3>
@@ -169,8 +193,6 @@ export default function Post() {
           <p>아직 댓글이 없습니다.</p>
         )}
       </div>
-
-      
     </div>
   );
 }
