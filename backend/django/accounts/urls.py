@@ -9,7 +9,10 @@ urlpatterns = [
     # 유효성 검사
     path("validate/", views.ValidationView.as_view(), name="validate"),
     # 프로필 관련
-    path("me/", views.UserProfileView.as_view(), name="profile"),
+    path("me/", views.UserProfileView.as_view(), name="profile"),  # 내 프로필
+    path(
+        "users/<int:user_id>/", views.UserDetailView.as_view(), name="user-detail"
+    ),  # 타인 프로필
     # 팔로우 관련
     path("users/<int:pk>/follow/", views.FollowView.as_view(), name="follow"),
     path(

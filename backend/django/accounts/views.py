@@ -231,6 +231,23 @@ class UserProfileView(views.APIView):
             )
 
 
+class UserDetailView(views.APIView):
+    """다른 사용자의 프로필 조회"""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+            serializer = UserProfileSerializer(user, context={"request": request})
+            return Response({"message": "프로필 조회 성공", "data": serializer.data})
+        except User.DoesNotExist:
+            return Response(
+                {"error": "사용자를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
 class FollowView(views.APIView):
     permission_classes = [IsAuthenticated]
 
@@ -386,7 +403,7 @@ class UserRecommendationsView(views.APIView):
         try:
             # FastAPI 서버로 요청 보내기
             response = requests.post(
-                f"{settings.FASTAPI_URL}/recommend",
+                f"{settings.FASTAPI_URL}/api/accounts/recommendations",
                 json={"id": request.user.id},
                 timeout=10,
             )
