@@ -192,7 +192,8 @@ export const ConsumImage: React.FC = () => {
       )}
 
       <div className="total-section">
-        <p>총 {totalAmount.toLocaleString()}원을 소비했어요.<br/>남은 금액 50,000원에서 차감돼요.</p>
+        <p>총 {totalAmount.toLocaleString()}원을 소비했어요.<br/>
+           남은 금액 {balance?.toLocaleString() || 0}원에서 차감돼요.</p>
       </div>
 
       <button className="submit-button" onClick={handleSubmit}>제출</button>

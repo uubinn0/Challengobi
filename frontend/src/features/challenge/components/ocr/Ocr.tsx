@@ -12,8 +12,7 @@ const Ocr: React.FC = () => {
   const [amount, setAmount] = useState<string>('');
   const [showAmountInfo, setShowAmountInfo] = useState<boolean>(false);
   const [showSubmitButton, setShowSubmitButton] = useState<boolean>(false);
-  const totalAmount: number = 50000;
-  const navigate = useNavigate();
+  const [balance, setBalance] = useState<number | null>(null);
   const [showNoSpendModal, setShowNoSpendModal] = useState<boolean>(false);
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -116,15 +115,156 @@ const Ocr: React.FC = () => {
     }
   };
 
-  const handleSubmit = (): void => {
-    navigate('/challenge/ocr-complete');
+  const handleImageSubmit = async () => {
+    if (!selectedFiles) {
+      alert('이미지를 선택해주세요.');
+      return;
+    }
+
+    if (!challengeId) {
+      alert('챌린지 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 디버깅을 위한 로그 추가
+    console.log('Selected files:', selectedFiles);
+    console.log('Challenge ID:', challengeId);
+
+    setIsLoading(true);
+    const formData = new FormData();
+    // 'image' 대신 'files'로 변경하고, 파일 이름도 함께 전송
+    formData.append('files', selectedFiles[0], selectedFiles[0].name);
+
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        navigate('/login');
+        return;
+      }
+
+      // 요청 전 formData 내용 확인
+      console.log('FormData contents:');
+      for (const pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
+
+      const response = await axios.post(
+        `http://localhost:8000/api/challenges/${challengeId}/expenses/ocr/`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
+          },
+          // timeout 설정 추가
+          timeout: 90000, // 90초
+          withCredentials: true
+        }
+      );
+
+      if (response.data) {
+        // 디버깅을 위한 로그
+        console.log('OCR Response data:', response.data);
+        
+        // 응답 데이터가 배열이 아닌 경우 배열로 변환
+        const ocrResults = Array.isArray(response.data) ? response.data : [response.data];
+        
+        sessionStorage.setItem('currentChallengeId', challengeId);
+        sessionStorage.setItem('ocrResults', JSON.stringify(ocrResults));
+        navigate('/challenge/consum-image');
+      } else {
+        throw new Error('OCR 결과가 없습니다.');
+      }
+    } catch (error) {
+      console.error('OCR 처리 중 오류 발생:', error);
+      if (axios.isAxiosError(error)) {
+        // 에러 응답 상세 정보 출력
+        console.error('Error response:', error.response);
+        console.error('Error request:', error.request);
+        console.error('Error config:', error.config);
+        
+        if (error.response?.status === 401) {
+          alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+          localStorage.removeItem('access_token');
+          navigate('/login');
+          return;
+        }
+
+        // 타임아웃 에러 처리
+        if (error.code === 'ECONNABORTED') {
+          alert('OCR 처리 시간이 초과되었습니다. 다시 시도해주세요.');
+          return;
+        }
+        
+        const errorMessage = error.response?.data?.error || '이미지 처리 중 오류가 발생했습니다.';
+        alert(errorMessage);
+      } else {
+        alert('이미지 처리 중 오류가 발생했습니다.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  // 간편 제출 처리 함수 (금액 입력 시)
   const handleAmountSubmit = (submittedAmount: string): void => {
     setAmount(submittedAmount);
     setShowAmountInfo(true);
     setShowSubmitButton(true);
+    setShowAmountModal(false);
   };
+
+  // 최종 제출 처리 함수
+  const handleSubmit = async (): Promise<void> => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token || !challengeId) {
+        alert('로그인이 필요합니다.');
+        navigate('/login');
+        return;
+      }
+
+      setIsLoading(true);
+      const amountNumber = parseInt(amount);
+
+      // 간편 인증 API 호출
+      const response = await axios.post(
+        `http://localhost:8000/api/challenges/${challengeId}/expenses/verifications/simple/`,
+        { amount: amountNumber },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data) {
+        // 새로운 잔액으로 업데이트
+        setBalance(response.data.remaining_balance);
+        navigate('/challenge/ocr-complete');
+      }
+    } catch (error) {
+      console.error('간편 인증 처리 중 오류:', error);
+      if (axios.isAxiosError(error)) {
+        alert(error.response?.data?.error || '처리 중 오류가 발생했습니다.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // EasySubmit 컴포넌트에 currentBalance prop 전달을 위한 타입 정의
+  interface EasySubmitProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSubmit: (amount: string) => void;
+    amount: string;
+    onAmountChange: (amount: string) => void;
+    currentBalance?: number | null;
+  }
 
   return (
     <div className={styles['ocr-container']}>
@@ -171,12 +311,20 @@ const Ocr: React.FC = () => {
 
       {showAmountInfo && (
         <div className={styles['amount-info']}>
-          <p>남은 금액 {totalAmount}원에서</p>
-          <p>{amount}원이 차감돼요</p>
-          <p>남은 금액: <span style={{ color: totalAmount - parseInt(amount) < 0 ? '#FF0004' : 'inherit' }}>
-            {totalAmount - parseInt(amount)}원
-          </span>
-          </p>
+          <p>남은 금액 {balance?.toLocaleString() || 0}원에서</p>
+          <p>{parseInt(amount).toLocaleString()}원이 차감됩니다</p>
+          <p>차감 후 금액: <span style={{ 
+            color: (balance !== null ? balance - parseInt(amount) : 0) < 0 ? '#FF0004' : 'inherit' 
+          }}>
+            {(balance !== null ? balance - parseInt(amount) : 0).toLocaleString()}원
+          </span></p>
+          <button 
+            className={styles['submit-action-button']}
+            onClick={handleSubmit}
+            disabled={isLoading}
+          >
+            {isLoading ? '처리중...' : '제출하기'}
+          </button>
         </div>
       )}
 
@@ -217,6 +365,7 @@ const Ocr: React.FC = () => {
         onSubmit={handleAmountSubmit}
         amount={amount}
         onAmountChange={setAmount}
+        currentBalance={balance}
       />
     </div>
   );

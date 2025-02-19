@@ -55,9 +55,10 @@ const OngoingChallengeList: React.FC<OngoingChallengeListProps> = ({ challenges 
     }))
   }
 
-  const handleChallengeClick = (challengeId: number) => {
-    //일단 해봄 된다 
-    navigate(`/ongoing-challenge/${challengeId}`)
+  const handleChallengeClick = (challenge: Challenge) => {
+    navigate(`/ongoing-challenge/${challenge.challenge_id}`, {
+      state: { challengeData: challenge }
+    });
   }
 
   if (challenges.length === 0) {
@@ -74,30 +75,39 @@ const OngoingChallengeList: React.FC<OngoingChallengeListProps> = ({ challenges 
         <div
           key={challenge.id}
           className={styles.challengeCard}
-          onClick={() => handleChallengeClick(challenge.id)}
+          onClick={() => handleChallengeClick(challenge)}
           role="button"
           tabIndex={0}
         >
           <div className={styles.header}>
-            <h3 className={styles.title}>{challenge.title}</h3>
-            <span className={`${styles.successRate} ${challenge.successRate <= 10 ? styles.lowSuccessRate : ""}`}>
-              성공률 : {challenge.successRate}%
-            </span>
+            <div className={styles.title}>{challenge.challenge_title}</div>
+            <div className={styles.successRate}>
+              {challenge.current_participants}/{challenge.max_participants}
+            </div>
           </div>
+          
           <div className={styles.info}>
-            <p>카테고리: {challenge.category}</p>
-            <p>금액: {challenge.amount}</p>
-            <p>기간: {challenge.period}</p>
+            <p>생성자: {challenge.creator_nickname}</p>
+            <p>기간: {challenge.period_display}</p>
+            <p>예산: {challenge.budget_display}</p>
+            <p>카테고리: {challenge.category_name}</p>
+            <p>참여자: {challenge.participants_display}</p>
+            <p>시작일: {challenge.start_date}</p>
           </div>
+
           <div className={styles.progressSection}>
             <div className={styles.progressLabel}>
               <span>진행도</span>
               <span>{challenge.progress}%</span>
             </div>
             <div className={styles.progressBar}>
-              <div className={styles.progressFill} style={{ width: `${challenge.progress}%` }} />
+              <div 
+                className={styles.progressFill} 
+                style={{ width: `${(challenge.current_participants / challenge.max_participants) * 100}%` }} 
+              />
             </div>
           </div>
+
           <div className={styles.actions}>
             <button
               className={`${supportStates[challenge.id] ? styles.active : ""}`}

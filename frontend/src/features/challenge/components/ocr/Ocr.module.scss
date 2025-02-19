@@ -105,30 +105,82 @@
     padding: 20px;
     border-radius: 10px;
     text-align: center;
-    width: 360px;
+    width: 100%;
     margin-top: 0px;
+
+    p {
+        margin: 5px 0;
+        font-size: 16px;
+    }
+
+    .submit-action-button {
+        width: 90%;
+        margin: 20px auto 0;
+        padding: 15px;
+        background-color: #8B7355;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 16px;
+
+        &:hover {
+            background-color: #76614a;
+        }
+
+        &:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    }
 }
 
-.amount-info p {
-    margin: 5px 0;
-    font-size: 16px;
+.submit-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
-.submit-action-button {
-    width: 360px;
-    padding: 18px;
-    background-color: #8B7355;
-    color: white;
-    border: none;
+
+.submit-action-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.selected-files {
+    width: 100%;
+    padding: 20px;
+    background-color: #EBE8E5;
     border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 16px;
-    margin-top: 20px;
-}
+    margin-top: 0px;
+    text-align: center;
 
-.submit-action-button:hover {
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
-    transform: translateY(-2px);
+    p {
+        margin: 5px 0;
+        font-size: 14px;
+        word-break: break-all;
+    }
+
+    .submit-action-button {
+        width: 90%;
+        margin: 20px auto 0;
+        padding: 15px;
+        background-color: #8B7355;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 16px;
+
+        &:hover {
+            background-color: #76614a;
+        }
+
+        &:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    }
 }
 
 .selected-files {

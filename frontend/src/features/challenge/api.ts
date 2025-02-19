@@ -61,6 +61,14 @@ interface ChallengeCreate {
     is_private: boolean;
 }
 
+interface Comment {
+  id: number;
+  content: string;
+  author: string;
+  created_at: string;
+  user_profile_image: string;
+}
+
 const ChallengeAPI = {
   // 챌린지 관리
   async createChallenge(data: ChallengeCreate): Promise<Challenge> {
@@ -204,7 +212,13 @@ const ChallengeAPI = {
   },
 
   async leaveChallenge(challengeId: number): Promise<void> {
-    await axiosInstance.delete(`/api/challenges/${challengeId}/leave/`);
+    const token = localStorage.getItem('access_token');
+    await axiosInstance.delete(`/api/challenges/${challengeId}/leave/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
   },
 
   // 챌린지 반응
@@ -228,7 +242,7 @@ const ChallengeAPI = {
 
   async getPosts(challengeId: number): Promise<any[]> {
     const token = localStorage.getItem('access_token');
-    const response = await axiosInstance.get(`/api/challenges/${challengeId}/posts`, {
+    const response = await axiosInstance.get(`http://localhost:8000/api/posts/?challenge_id=${challengeId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -259,14 +273,34 @@ const ChallengeAPI = {
     return response.data;
   },
 
-  async getComments(challengeId: number, postId: number): Promise<any[]> {
+  // 댓글 목록 조회
+  async getComments(challengeId: number, postId: number): Promise<Comment[]> {
     const token = localStorage.getItem('access_token');
-    const response = await axiosInstance.get(`/api/challenges/${challengeId}/posts/${postId}/comments`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+    const response = await axiosInstance.get(
+      `/api/challenges/${challengeId}/posts/${postId}/comments/`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       }
-    });
+    );
+    return response.data;
+  },
+
+  // 댓글 작성
+  async createComment(challengeId: number, postId: number, content: string): Promise<Comment> {
+    const token = localStorage.getItem('access_token');
+    const response = await axiosInstance.post(
+      `/api/challenges/${challengeId}/posts/${postId}/comments/`,
+      { content },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
     return response.data;
   }
 };

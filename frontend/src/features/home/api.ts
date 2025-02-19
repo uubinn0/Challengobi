@@ -19,6 +19,7 @@ interface Challenge {
     status: string;
     created_at: Date;
     updated_at: Date;
+    participants_nicknames: string[];
 }
 
 interface ChallengeCreate {
@@ -153,6 +154,7 @@ export const HomeAPI = {
     });
   },
 
+  
   async inviteToChallenge(challengeId: number, fromUserId: number, toUserId: number): Promise<void> {
     const token = localStorage.getItem('access_token');
     await axiosInstance.post(`/api/challenges/${challengeId}/invite/`, {

@@ -25,10 +25,10 @@ def get_db_connection():
             charset="utf8mb4"
         )
         if connection.is_connected():
-            print("Connected to MariaDB")
+            print("Connected to MariaDB")  # 이 메시지가 콘솔에 출력되는지 확인
             return connection
     except Error as e:
-        print(f"Error: {e}")
+        print(f"Error: {e}")  # 에러가 있다면 여기서 확인 가능
         return None
 
 # User 테이블 데이터 가져오기

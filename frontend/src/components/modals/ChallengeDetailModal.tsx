@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './ChallengeDetailModal.module.scss';
 import { SupportFish, WantFish } from '../../components/icons/FishIcon';
 import type { Challenge } from '../../features/home/types';
+import { HomeAPI } from '../../features/home/api';
+import { accountApi } from '../../features/profile/api';
+import  ChallengeAPI from '../../features/challenge/api';
 
 interface ChallengeDetailModalProps {
   isOpen: boolean;
@@ -19,6 +22,21 @@ const ChallengeDetailModal: React.FC<ChallengeDetailModalProps> = ({ isOpen, onC
   const [isWanted, setIsWanted] = useState(false);
   const [likeCount, setLikeCount] = useState(challenge.encourage_cnt);
   const [wantCount, setWantCount] = useState(challenge.want_cnt);
+  const [isParticipant, setIsParticipant] = useState(false);
+
+  useEffect(() => {
+    const checkParticipation = async () => {
+      try {
+        const userProfile = await accountApi.getMyProfile();
+        const userNickname = userProfile.data.nickname;
+        setIsParticipant(challenge.participants_nicknames?.includes(userNickname));
+      } catch (error) {
+        console.error('사용자 정보 확인 실패:', error);
+      }
+    };
+    
+    checkParticipation();
+  }, [challenge.participants_nicknames]);
 
   if (!isOpen) return null;
 
@@ -42,9 +60,24 @@ const ChallengeDetailModal: React.FC<ChallengeDetailModalProps> = ({ isOpen, onC
     navigate('/challenge/invited-friends');
   };
 
-  const handleJoinChallenge = () => {
-    onClose();
-    navigate('/challenge');
+  const handleJoinChallenge = async () => {
+    try {
+      await HomeAPI.joinChallenge(challenge.challenge_id);
+      onClose();
+      navigate('/challenge');
+    } catch (error) {
+      console.error('챌린지 참가 실패:', error);
+    }
+  };
+
+  const handleLeaveChallenge = async () => {
+    try {
+      await ChallengeAPI.leaveChallenge(challenge.challenge_id);
+      onClose();
+      navigate('/challenge');
+    } catch (error) {
+      console.error('챌린지 취소 실패:', error);
+    }
   };
 
   return (
@@ -52,9 +85,15 @@ const ChallengeDetailModal: React.FC<ChallengeDetailModalProps> = ({ isOpen, onC
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <h2 className={styles.title}>{challenge.challenge_title}</h2>
         <div className={styles.content}>
+          <div className={styles.creatorInfo}>
+            <span>개설자</span>
+            <span> {challenge.creator_nickname}</span>
+          </div>
+          
           <p className={styles.description}>
-            {challenge.challenge_info || "외식을 줄이고 싶은 챌린저들을 모집합니다."}
+            {challenge.challenge_info || "챌린지 설명이 없습니다."}
           </p>
+
           <div className={styles.details}>
             <div className={styles.detailItem}>
               <span>카테고리</span>
@@ -65,11 +104,19 @@ const ChallengeDetailModal: React.FC<ChallengeDetailModalProps> = ({ isOpen, onC
               <span>{challenge.period_display}</span>
             </div>
             <div className={styles.detailItem}>
+              <span>시작일</span>
+              <span>{new Date(challenge.start_date).toLocaleDateString()}</span>
+            </div>
+            <div className={styles.detailItem}>
+              <span>종료일</span>
+              <span>{new Date(challenge.end_date).toLocaleDateString()}</span>
+            </div>
+            <div className={styles.detailItem}>
               <span>챌린지 금액</span>
               <span>{challenge.budget_display}</span>
             </div>
             <div className={styles.detailItem}>
-              <span>챌린지 인원</span>
+              <span>참여 인원</span>
               <span>{challenge.current_participants}/{challenge.max_participants}명</span>
             </div>
           </div>
@@ -123,12 +170,21 @@ const ChallengeDetailModal: React.FC<ChallengeDetailModalProps> = ({ isOpen, onC
           <button className={styles.cancelButton} onClick={onClose}>
             취소하기
           </button>
-          <button 
-            className={styles.joinButton}
-            onClick={handleJoinChallenge}
-          >
-            챌린지 참가하기
-          </button>
+          {isParticipant ? (
+            <button 
+              className={styles.joinButton}
+              onClick={handleLeaveChallenge}
+            >
+              챌린지 취소하기
+            </button>
+          ) : (
+            <button 
+              className={styles.joinButton}
+              onClick={handleJoinChallenge}
+            >
+              챌린지 참가하기
+            </button>
+          )}
         </div>
       </div>
     </div>
