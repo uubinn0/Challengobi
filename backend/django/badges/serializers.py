@@ -1,5 +1,5 @@
-from .models import Badge, UserBadge
 from rest_framework import serializers
+from .models import Badge, UserBadge
 
 
 class BadgeSerializer(serializers.ModelSerializer):
@@ -9,8 +9,14 @@ class BadgeSerializer(serializers.ModelSerializer):
 
 
 class UserBadgeSerializer(serializers.ModelSerializer):
-    badge_detail = BadgeSerializer(source="badge", read_only=True)
-
+    badge = BadgeSerializer(read_only=True)
+    
     class Meta:
         model = UserBadge
-        fields = ["user", "badge", "badge_detail", "is_achieved", "achieved_at"]
+        fields = [
+            'id',
+            'user',
+            'badge',
+            'acquired_at'
+        ]
+        read_only_fields = ['acquired_at']
