@@ -6,14 +6,31 @@ import NoSpend from '../../../../components/modals/NoSpend';
 import EasySubmit from '../../../../components/modals/EasySubmit';
 import axios from 'axios';
 
+// JWT 토큰에서 user_id를 추출하는 함수
+const getUserIdFromToken = (token: string): number | null => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    const payload = JSON.parse(jsonPayload);
+    return payload.user_id;
+  } catch (error) {
+    console.error('Failed to decode token:', error);
+    return null;
+  }
+};
+
 const Ocr: React.FC = () => {
+  const navigate = useNavigate();  // useNavigate 훅 사용
   const { id: challengeId } = useParams<{ id: string }>();
   const [showAmountModal, setShowAmountModal] = useState<boolean>(false);
   const [amount, setAmount] = useState<string>('');
   const [showAmountInfo, setShowAmountInfo] = useState<boolean>(false);
   const [showSubmitButton, setShowSubmitButton] = useState<boolean>(false);
-  const totalAmount: number = 50000;
-  const navigate = useNavigate();
+  const [balance, setBalance] = useState<number | null>(null);
   const [showNoSpendModal, setShowNoSpendModal] = useState<boolean>(false);
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -29,6 +46,41 @@ const Ocr: React.FC = () => {
       navigate('/challenge');
     }
   }, [challengeId, navigate]);
+
+  // 잔액 조회 함수
+  const fetchBalance = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token || !challengeId) return;
+
+      const response = await axios.get(
+        `http://localhost:8000/api/challenges/${challengeId}/participants/`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data && response.data.length > 0) {
+        const userId = getUserIdFromToken(token);
+        const myParticipation = response.data.find(
+          (participant: any) => participant.user_id === userId
+        );
+        
+        if (myParticipation) {
+          setBalance(myParticipation.balance);
+        }
+      }
+    } catch (error) {
+      console.error('잔액 조회 실패:', error);
+    }
+  };
+
+  // 컴포넌트 마운트 시 잔액 조회
+  useEffect(() => {
+    fetchBalance();
+  }, [challengeId]);
 
   const handleNoSpendClick = (): void => {
     setShowNoSpendModal(true);
@@ -138,15 +190,63 @@ const Ocr: React.FC = () => {
     }
   };
 
-  const handleSubmit = (): void => {
-    navigate('/challenge/ocr-complete');
-  };
-
+  // 간편 제출 처리 함수 (금액 입력 시)
   const handleAmountSubmit = (submittedAmount: string): void => {
     setAmount(submittedAmount);
     setShowAmountInfo(true);
     setShowSubmitButton(true);
+    setShowAmountModal(false);
   };
+
+  // 최종 제출 처리 함수
+  const handleSubmit = async (): Promise<void> => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token || !challengeId) {
+        alert('로그인이 필요합니다.');
+        navigate('/login');
+        return;
+      }
+
+      setIsLoading(true);
+      const amountNumber = parseInt(amount);
+
+      // 간편 인증 API 호출
+      const response = await axios.post(
+        `http://localhost:8000/api/challenges/${challengeId}/expenses/verifications/simple/`,
+        { amount: amountNumber },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data) {
+        // 새로운 잔액으로 업데이트
+        setBalance(response.data.remaining_balance);
+        navigate('/challenge/ocr-complete');
+      }
+    } catch (error) {
+      console.error('간편 인증 처리 중 오류:', error);
+      if (axios.isAxiosError(error)) {
+        alert(error.response?.data?.error || '처리 중 오류가 발생했습니다.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // EasySubmit 컴포넌트에 currentBalance prop 전달을 위한 타입 정의
+  interface EasySubmitProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSubmit: (amount: string) => void;
+    amount: string;
+    onAmountChange: (amount: string) => void;
+    currentBalance?: number | null;
+  }
 
   return (
     <div className={styles['ocr-container']}>
@@ -193,12 +293,13 @@ const Ocr: React.FC = () => {
 
       {showAmountInfo && (
         <div className={styles['amount-info']}>
-          <p>남은 금액 {totalAmount}원에서</p>
-          <p>{amount}원이 차감돼요</p>
-          <p>남은 금액: <span style={{ color: totalAmount - parseInt(amount) < 0 ? '#FF0004' : 'inherit' }}>
-            {totalAmount - parseInt(amount)}원
-          </span>
-          </p>
+          <p>남은 금액 {balance?.toLocaleString() || 0}원에서</p>
+          <p>{parseInt(amount).toLocaleString()}원이 차감됩니다</p>
+          <p>차감 후 금액: <span style={{ 
+            color: (balance !== null ? balance - parseInt(amount) : 0) < 0 ? '#FF0004' : 'inherit' 
+          }}>
+            {(balance !== null ? balance - parseInt(amount) : 0).toLocaleString()}원
+          </span></p>
         </div>
       )}
 
@@ -213,15 +314,6 @@ const Ocr: React.FC = () => {
             {isLoading ? '처리중...' : '제출하기'}
           </button>
         </div>
-      )}
-
-      {showSubmitButton && (
-        <button 
-          className={styles['submit-action-button']}
-          onClick={handleSubmit}
-        >
-          제출
-        </button>
       )}
 
       <button className={styles['no-spend-button']} onClick={handleNoSpendClick}>
@@ -239,6 +331,7 @@ const Ocr: React.FC = () => {
         onSubmit={handleAmountSubmit}
         amount={amount}
         onAmountChange={setAmount}
+        currentBalance={balance}
       />
     </div>
   );
