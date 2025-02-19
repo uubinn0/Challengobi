@@ -35,6 +35,7 @@ import Following from './features/profile/components/Following';
 import Follower from './features/profile/components/Follower';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './features/auth/context/AuthContext';
+import ChallengeFail from './features/challenge/components/Fail/ChallengeFail';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -73,12 +74,13 @@ const App: React.FC = () => {
                   <Route path="progress/:id" element={<Progress />} />
                   <Route path="progress/:id/write" element={<WritePost />} />
                   <Route path="progress/:id/post/:postId" element={<Post />} />
-                  <Route path="ocr" element={<Ocr />} />
+                  <Route path="ocr/:id" element={<Ocr />} />
                   <Route path="consum-image" element={<ConsumImage />} />
                   <Route path="ocr-complete" element={<OcrComplete />} />
                   <Route path="invite-friends" element={<InvitableFriendList />} />
                   <Route path="invited-friends" element={<InvitedFriendList />} />
                   <Route path="ranking" element={<Ranking />} />
+                  <Route path="fail" element={<ChallengeFail />} />
                 </Route>
 
                 <Route path="/profile/*" element={<ProfilePage />}>
@@ -93,6 +95,7 @@ const App: React.FC = () => {
                   <Route index element={<SearchUser />} />
                 </Route>
 
+                <Route path="/fail" element={<ChallengeFail />} />
 
                 <Route path="*" element={<ErrorPage />} />
               </Routes>

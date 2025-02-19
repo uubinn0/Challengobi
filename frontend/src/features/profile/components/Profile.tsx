@@ -1,13 +1,66 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './Profile.module.scss';
 import { Check } from 'lucide-react';
-import { ProfileData } from '../api';
+import { accountApi } from '../api';
+
+interface ProfileData {
+  message: string;
+  data: {
+    id: number;
+    email: string;
+    nickname: string;
+    profile_image: string | null;
+    phone: string;
+    birth_date: string;
+    sex: 'M' | 'F';
+    career: number;
+    challenge_streak: number;
+    follower_count: number;
+    following_count: number;
+    introduction: string | null;
+    is_following: boolean;
+    total_saving: number;
+    my_badge: Array<{
+      imageUrl: string;
+      name: string;
+      description: string;
+      isAchieved?: boolean;
+    }>;
+    complete_challenge: Array<{
+      title: string;
+      period: string;
+      saving: number;
+      days: string;
+    }>;
+  };
+}
+
+interface RecommendedUser {
+  id: number;
+  nickname: string;
+  profile_image: string;
+  similarity: number;
+}
 
 const Profile: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const profileData = location.state?.profileData as ProfileData;
+  const [recommendedUsers, setRecommendedUsers] = useState<RecommendedUser[]>([]);
+
+  useEffect(() => {
+    const loadRecommendations = async () => {
+      try {
+        const recommendations = await accountApi.getRecommendations();
+        setRecommendedUsers(recommendations);
+      } catch (error) {
+        console.error('추천 사용자 로드 실패:', error);
+      }
+    };
+
+    loadRecommendations();
+  }, []);
 
   if (!profileData) {
     return <div>로딩 중...</div>;
@@ -16,30 +69,21 @@ const Profile: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div className={styles.profileSection}>
-          <div className={styles.profileImage}>
-            <img src={profileData.profile_image || '/default-profile.jpg'} alt="프로필 이미지" />
-          </div>
-          <div className={styles.challengeInfo}>
-            <h1>{profileData.nickname}</h1>
-          </div>
-        </div>
-        <div className={styles.stats}>
-          <div className={styles.stat}>
-            <span className={styles.label}>참여 챌린지</span>
-            <span className={styles.number}>{profileData.challenge_cnt || 0}</span>
-          </div>
-          <div className={styles.stat}>
-            <span className={styles.label}>팔로잉</span>
-            <span className={styles.number}>{profileData.follow || 0}</span>
-          </div>
-          <div className={styles.stat}>
-            <span className={styles.label}>팔로워</span>
-            <span className={styles.number}>{profileData.follower || 0}</span>
+        <div className={styles.profileInfo}>
+          <div className={styles.profileHeader}>
+            <div className={styles.profileImage}>
+              <img src={profileData.data.profile_image || '/default-profile.jpg'} alt="프로필 이미지" />
+            </div>
+            <div className={styles.profileDetails}>
+              <h2>{profileData.data.nickname}</h2>
+              {profileData.data.introduction && (
+                <p className={styles.introduction}>"{profileData.data.introduction}"</p>
+              )}
+            </div>
           </div>
         </div>
         <div className={styles.challengeAmount}>
-          <span>물고기통장 {(profileData.total_saving || 0).toLocaleString()}원</span>
+          <span className={styles.savingAmount}>굴비통장 {profileData.data.total_saving.toLocaleString()}원</span>
           <div className={styles.buttons}>
             <button 
               className={styles.button} 
