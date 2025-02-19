@@ -4,11 +4,18 @@ from django.db import models
 
 
 class Badge(models.Model):
+    TYPE_CHOICES = [
+        (0, "point"),
+        (1, "streak"),
+        (2, "hidden"),  # 추후 히든 뱃지 추가 시 사용
+    ]
+
     name = models.CharField(max_length=255)
-    description = models.CharField(max_length=255, null=True)
-    required_date = models.PositiveSmallIntegerField()
-    image_url = models.CharField(max_length=255)
-    required_money = models.PositiveIntegerField()
+    description = models.CharField(max_length=255, default="")
+    badge_type = models.PositiveSmallIntegerField(choices=TYPE_CHOICES, default=0)
+    required_date = models.PositiveSmallIntegerField(null=True)
+    required_money = models.PositiveIntegerField(null=True)
+    image_url = models.CharField(max_length=255, null=True)
 
     class Meta:
         db_table = "Badge"
@@ -17,7 +24,6 @@ class Badge(models.Model):
 class UserBadge(models.Model):
     user = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
     badge = models.ForeignKey(Badge, on_delete=models.CASCADE)
-    is_achieved = models.BooleanField(default=False)
     achieved_at = models.DateField()
 
     class Meta:
