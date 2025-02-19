@@ -10,6 +10,7 @@ from .serializers import (
     UserLoginSerializer,
     FollowSerializer,
     UserChallengeCategorySerializer,
+    FollowWithStatusSerializer,
 )
 from .utils import upload_image_to_firebase, get_firebase_bucket
 from rest_framework import status, generics, views
@@ -94,7 +95,10 @@ class UserRegistrationView(generics.CreateAPIView):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class UserLoginView(views.APIView):
+    """로그인"""
+
     permission_classes = [AllowAny]
+    authentication_classes = []  # 인증 클래스 비활성화
 
     def post(self, request):
         serializer = UserLoginSerializer(data=request.data)
@@ -105,42 +109,6 @@ class UserLoginView(views.APIView):
             password=serializer.validated_data["password"],
         )
 
-        refresh = RefreshToken.for_user(user)
-        return Response(
-            {
-                "message": "로그인 성공",
-                "tokens": {
-                    "refresh": str(refresh),
-                    "access": str(refresh.access_token),
-                },
-                "user": UserProfileSerializer(user, context={"request": request}).data,
-            },
-            status=status.HTTP_201_CREATED,
-        )
-
-    def perform_create(self, serializer):
-        return serializer.save()
-
-
-@method_decorator(csrf_exempt, name="dispatch")
-class UserLoginView(views.APIView):
-    """로그인"""
-
-    permission_classes = [AllowAny]
-    authentication_classes = []  # 인증 클래스 비활성화
-
-    def post(self, request):
-        email = request.data.get("email")
-        password = request.data.get("password")
-
-        if not email or not password:
-            return Response(
-                {"error": "이메일과 비밀번호를 모두 입력해주세요."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        user = authenticate(email=email, password=password)
-
         if user:
             refresh = RefreshToken.for_user(user)
             return Response(
@@ -150,7 +118,9 @@ class UserLoginView(views.APIView):
                         "refresh": str(refresh),
                         "access": str(refresh.access_token),
                     },
-                    "user": {"email": user.email, "nickname": user.nickname},
+                    "user": UserProfileSerializer(
+                        user, context={"request": request}
+                    ).data,
                 },
                 status=status.HTTP_200_OK,
             )
@@ -240,7 +210,17 @@ class UserDetailView(views.APIView):
         try:
             user = User.objects.get(id=pk)
             serializer = UserProfileSerializer(user, context={"request": request})
-            return Response({"message": "프로필 조회 성공", "data": serializer.data})
+            data = serializer.data
+
+            # 직접 is_following 필드 설정
+            if request.user.is_authenticated:
+                data["is_following"] = Follow.objects.filter(
+                    follower=request.user, following=user
+                ).exists()
+            else:
+                data["is_following"] = False
+
+            return Response({"message": "프로필 조회 성공", "data": data})
         except User.DoesNotExist:
             return Response(
                 {"error": "사용자를 찾을 수 없습니다."},
