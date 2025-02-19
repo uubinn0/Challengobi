@@ -85,11 +85,15 @@ const App: React.FC = () => {
 
                 <Route path="/profile/*" element={<ProfilePage />}>
                   <Route index element={<Profile />} />
+                  <Route path=":userId" element={<Profile />} />
+                  <Route path=":userId/following" element={<Following />} />
+                  <Route path=":userId/follower" element={<Follower />} />
                   <Route path="edit" element={<ProfileEdit />} />
                   <Route path="challenge-complete" element={<ChallengeComplete />} />
-                  <Route path="following" element={<Following />} />
-                  <Route path="follower" element={<Follower />} />
                 </Route>
+
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/profile/:userId" element={<Profile />} />
 
                 <Route path="/follow/*" element={<FollowPage />}>
                   <Route index element={<SearchUser />} />

@@ -29,7 +29,6 @@ const ProfileEdit: React.FC = () => {
       introduction: null,
       profile_image: null,
       total_saving: 0,
-      categories: [],  // 문자열 배열로 초기화
       challenge_categories: {
         cafe: false,
         restaurant: false,
@@ -40,7 +39,9 @@ const ProfileEdit: React.FC = () => {
         drink: false,
         transportation: false,
         etc: false
-      }
+      },
+      my_badge: [],
+      complete_challenge: []
     }
   });
 
@@ -61,7 +62,7 @@ const ProfileEdit: React.FC = () => {
         setUserData(response);
         
         // 서버에서 받은 카테고리 문자열을 쉼표로 분리
-        setSelectedCategories(response.data.categories || []);  // 배열 그대로 사용
+        setSelectedCategories(response.data.challenge_categories || []);  // 배열 그대로 사용
         
         setTempNickname(response.data.nickname);
         setBirthDate(response.data.birth_date ? new Date(response.data.birth_date) : null);

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import styles from './Profile.module.scss';
 import { Check } from 'lucide-react';
 import { accountApi } from '../api';
+import axios from 'axios';
 
 interface ProfileData {
   message: string;
@@ -33,6 +34,12 @@ interface ProfileData {
       saving: number;
       days: string;
     }>;
+    ongoing_challenges?: Array<{
+      title: string;
+      period: string;
+      saving: number;
+      days: string;
+    }>;
   };
 }
 
@@ -47,23 +54,43 @@ const Profile: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const profileData = location.state?.profileData as ProfileData;
-  const [recommendedUsers, setRecommendedUsers] = useState<RecommendedUser[]>([]);
+  const { userId } = useParams();
+  const [isMyProfile, setIsMyProfile] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   useEffect(() => {
-    const loadRecommendations = async () => {
-      try {
-        const recommendations = await accountApi.getRecommendations();
-        setRecommendedUsers(recommendations);
-      } catch (error) {
-        console.error('추천 사용자 로드 실패:', error);
+    const checkProfile = async () => {
+      const myId = localStorage.getItem('userId');
+      setIsMyProfile(!userId || myId === userId);
+
+      if (userId && myId !== userId) {
+        try {
+          const status = await accountApi.getFollowStatus(Number(userId));
+          setIsFollowing(status);
+        } catch (error) {
+          console.error('팔로우 상태 확인 실패:', error);
+        }
       }
     };
 
-    loadRecommendations();
-  }, []);
+    checkProfile();
+  }, [userId]);
+
+  const handleFollowClick = async () => {
+    try {
+      if (isFollowing) {
+        await accountApi.unfollowUser(Number(userId));
+      } else {
+        await accountApi.followUser(Number(userId));
+      }
+      setIsFollowing(!isFollowing);
+    } catch (error) {
+      console.error('팔로우 처리 실패:', error);
+    }
+  };
 
   if (!profileData) {
-    return <div>로딩 중...</div>;
+    return <div>Loading...</div>;
   }
 
   return (
@@ -79,29 +106,45 @@ const Profile: React.FC = () => {
               {profileData.data.introduction && (
                 <p className={styles.introduction}>"{profileData.data.introduction}"</p>
               )}
+              <div className={styles.stats}>
+                <span onClick={() => navigate(`/profile/${profileData.data.id}/following`)}>
+                  팔로잉 {profileData.data.following_count}
+                </span>
+                <span onClick={() => navigate(`/profile/${profileData.data.id}/follower`)}>
+                  팔로워 {profileData.data.follower_count}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className={styles.challengeAmount}>
+            <span className={styles.savingAmount}>굴비통장 {profileData.data.total_saving.toLocaleString()}원</span>
+            <div className={styles.buttons}>
+              {isMyProfile ? (
+                <button 
+                  className={styles.button} 
+                  onClick={() => navigate('/profile/edit', {
+                    state: { profileData }
+                  })}
+                >
+                  프로필 편집하기
+                </button>
+              ) : (
+                <button 
+                  className={`${styles.button} ${isFollowing ? styles.following : ''}`} 
+                  onClick={handleFollowClick}
+                >
+                  {isFollowing ? '팔로잉' : '팔로우'}
+                </button>
+              )}
             </div>
           </div>
         </div>
-        <div className={styles.challengeAmount}>
-          <span className={styles.savingAmount}>굴비통장 {profileData.data.total_saving.toLocaleString()}원</span>
-          <div className={styles.buttons}>
-            <button 
-              className={styles.button} 
-              onClick={() => navigate('/profile/edit', {
-                state: { profileData }
-              })}
-            >
-              프로필 편집하기
-            </button>
-          </div>
-        </div>
       </div>
-
       <div className={styles.content}>
         <div className={styles.section}>
           <h3>획득한 뱃지</h3>
           <div className={styles.badgeList}>
-            {(profileData.my_badge || []).map((badge, index) => (
+            {(profileData.data.my_badge || []).map((badge, index) => (
               <div key={index} className={styles.badge}>
                 <img 
                   src={badge.imageUrl} 
@@ -112,24 +155,17 @@ const Profile: React.FC = () => {
             ))}
           </div>
         </div>
-
         <div className={styles.section}>
           <h3>완료한 챌린지</h3>
           <div className={styles.achievementList}>
-            {(profileData.complete_challenge || []).map((challenge, index) => (
+            {(profileData.data.complete_challenge || []).map((challenge, index) => (
               <div 
                 key={index} 
-                className={styles.achievementItem}
-                onClick={() => navigate('/profile/challenge-complete', {
-                  state: { challenge }
-                })}
-                style={{ cursor: 'pointer' }}
+                className={styles.achievement}
+                onClick={() => navigate(`/profile/challenge-complete`)}
               >
-                <div className={styles.achievementInfo}>
-                  <span className={styles.achievementTitle}>{challenge.title}</span>
-                  <span className={styles.achievementDays}>{challenge.days}일</span>
-                </div>
-                <Check className={styles.checkIcon} size={24} color="#4BB7FF" />
+                <Check className={styles.checkIcon} />
+                <span>{challenge.title}</span>
               </div>
             ))}
           </div>

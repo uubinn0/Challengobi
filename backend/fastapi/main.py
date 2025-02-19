@@ -15,6 +15,7 @@ from mysql.connector import Error
 from database import get_users, get_categorys
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
+from fastapi.middleware.cors import CORSMiddleware
 
 
 load_dotenv()
@@ -34,6 +35,15 @@ class OCRResponse(BaseModel):
 
 
 app = FastAPI()
+
+# CORS 미들웨어 설정
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # 프론트엔드 주소
+    allow_credentials=True,
+    allow_methods=["*"],  # 모든 HTTP 메서드 허용
+    allow_headers=["*"],  # 모든 헤더 허용
+)
 
 # PaddleOCR 초기화 (한번만 로드하여 재사용)
 ocr = PaddleOCR(lang='korean')  # 한국어 설정

@@ -6,12 +6,6 @@ import { accountApi } from '../../profile/api';
 
 interface User {
   id: number;
-  name: string;
-  image: string;
-}
-
-interface RecommendedUser {
-  id: number;
   nickname: string;
   profile_image: string;
   similarity: number;
@@ -19,7 +13,7 @@ interface RecommendedUser {
 
 const SearchUser: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [recommendedUsers, setRecommendedUsers] = useState<RecommendedUser[]>([]);
+  const [recommendedUsers, setRecommendedUsers] = useState<User[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,6 +28,23 @@ const SearchUser: React.FC = () => {
 
     loadRecommendations();
   }, []);
+
+  // 사용자 프로필로 이동하는 함수
+  const handleUserClick = async (userId: number) => {
+    try {
+      // 해당 사용자의 프로필 정보를 가져옴
+      const userProfile = await accountApi.getUserProfile(userId);
+      // 프로필 페이지로 이동하면서 프로필 데이터와 이전 탭 정보를 전달
+      navigate(`/profile/${userId}`, { 
+        state: { 
+          profileData: userProfile,
+          previousTab: 'search'  // 검색 탭에서 왔다는 정보 추가
+        } 
+      });
+    } catch (error) {
+      console.error('사용자 프로필 로드 실패:', error);
+    }
+  };
 
   return (
     <div className={styles.searchContainer}>
@@ -52,18 +63,19 @@ const SearchUser: React.FC = () => {
         <h3>나와 비슷한 사용자</h3>
         <div className={styles.userGrid}>
           {recommendedUsers.map(user => (
-            <div key={user.id} className={styles.userItem}>
-              <div 
-                className={styles.userImage}
-                onClick={() => navigate('/profile')}
-                style={{ cursor: 'pointer' }}
-              >
-                <img src={user.profile_image || '/default-profile.jpg'} alt={user.nickname} />
+            <div 
+              key={user.id} 
+              className={styles.userItem}
+              onClick={() => handleUserClick(user.id)}
+              style={{ cursor: 'pointer' }}
+            >
+              <div className={styles.userImage}>
+                <img 
+                  src={user.profile_image || '/default-profile.jpg'} 
+                  alt={user.nickname} 
+                />
               </div>
               <p className={styles.userName}>{user.nickname}</p>
-              <span className={styles.similarity}>
-                유사도: {Math.round(user.similarity * 100)}%
-              </span>
             </div>
           ))}
         </div>
