@@ -6,7 +6,10 @@ const OcrComplete = () => {
   const navigate = useNavigate();
 
   const handleHomeClick = () => {
-    navigate('/challenge/progress/1');
+    navigate('/challenge');
+    
+    sessionStorage.removeItem('ocrResults');
+    sessionStorage.removeItem('currentChallengeId');
   };
 
   return (

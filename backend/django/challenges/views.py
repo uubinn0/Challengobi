@@ -657,7 +657,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
 
                 # 모든 참가자가 실패했다면 챌린지도 종료
                 if all_failed:
-                    challenge.status = 3  # FINISHED 상태 코드
+                    challenge.status = 2  # FINISHED 상태 코드
                     challenge.save()
 
             return Response(
@@ -755,7 +755,7 @@ class SimpleExpenseViewSet(viewsets.ViewSet):
 
                 # 모든 참가자가 실패했다면 챌린지도 종료
                 if all_failed:
-                    challenge.status = 3  # FINISHED
+                    challenge.status = 2  # FINISHED
                     challenge.save()
 
             return Response(
