@@ -5,8 +5,8 @@ from django.db import models
 
 class Badge(models.Model):
     TYPE_CHOICES = [
-        (0, "point"),
-        (1, "streak"),
+        (0, "point"),  # 절약 포인트
+        (1, "streak"),  # 챌린지 인증 성공 날짜 수
         (2, "hidden"),  # 추후 히든 뱃지 추가 시 사용
     ]
 
