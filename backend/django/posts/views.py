@@ -5,7 +5,7 @@ from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Post, Comment
-from .serializers import PostListSerializer, PostDetailSerializer, CommentSerializer
+from .serializers import PostListSerializer, PostDetailSerializer, CommentSerializer, PostCreateSerializer
 from .permissions import IsParticipant, IsOwnerOrReadOnly
 
 
@@ -31,7 +31,9 @@ class PostViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_serializer_class(self):
-        if self.action == "list":
+        if self.action == 'create':
+            return PostCreateSerializer
+        elif self.action == 'list':
             return PostListSerializer
         return PostDetailSerializer
 
