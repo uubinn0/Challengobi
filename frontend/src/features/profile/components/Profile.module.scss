@@ -180,4 +180,78 @@
 
 .checkIcon {
   min-width: 24px;
+}
+
+.introduction {
+  font-style: italic;
+  color: #666;
+  margin: 8px 0;
+  font-size: 1.1em;
+  text-align: center;
+  width: 100%;
+}
+
+.profileDetails {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  
+  h2 {
+    margin-bottom: 8px;
+  }
+}
+
+.savingAmount {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 1.5rem 0;
+  text-align: center;
+  color: #333;
+}
+
+.recommendedUsers {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 1rem 0;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.recommendedUser {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 120px;
+  cursor: pointer;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    background-color: #f5f5f5;
+  }
+}
+
+.userImage {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 0.5rem;
+}
+
+.userNickname {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.similarity {
+  font-size: 0.9rem;
+  color: #666;
 } 

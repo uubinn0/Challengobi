@@ -3,30 +3,32 @@ import styles from './ConfirmModal.module.scss';
 
 interface ConfirmModalProps {
   isOpen: boolean;
-  message: string;
+  onClose: () => void;
   onConfirm: () => void;
-  onCancel: () => void;
+  title: string;
+  message: string;
+  children?: React.ReactNode;
 }
 
-const ConfirmModal: React.FC<ConfirmModalProps> = ({ 
-  isOpen, 
-  message, 
-  onConfirm, 
-  onCancel 
+const ConfirmModal: React.FC<ConfirmModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  children
 }) => {
   if (!isOpen) return null;
 
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
-        <p className={styles.message}>{message}</p>
+        <h2>{title}</h2>
+        <p>{message}</p>
+        {children}
         <div className={styles.buttons}>
-          <button className={styles.cancelButton} onClick={onCancel}>
-            취소
-          </button>
-          <button className={styles.confirmButton} onClick={onConfirm}>
-            확인
-          </button>
+          <button onClick={onClose}>취소</button>
+          <button onClick={onConfirm}>확인</button>
         </div>
       </div>
     </div>
