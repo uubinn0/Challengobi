@@ -282,7 +282,7 @@ export const HomeAPI = {
     comment_content: string;
   }): Promise<any> {
     const token = localStorage.getItem('access_token');
-    const response = await axiosInstance.post(`/api/challenges/${challengeId}/posts/${postId}/comments`, data, {
+    const response = await axiosInstance.post(`/api/challenges/${challengeId}/posts/${postId}/commentsz`, data, {
       headers: {
         'Authorization': `Bearer ${token}`
       }

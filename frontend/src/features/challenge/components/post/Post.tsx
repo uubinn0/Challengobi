@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { Heart, MessageSquare } from "lucide-react";
-import   ChallengeAPI  from "../../api";
+import ChallengeAPI from "../../api";
 import styles from "./Post.module.scss";
   
 interface PostData {
@@ -26,8 +26,10 @@ interface Comment {
 
 export default function Post() {
   const location = useLocation();
-  const { challengeId, postId } = useParams();
-  const postData = location.state?.postData as PostData;
+  const params = useParams<{ id: string; postId: string }>();
+  const postData = location.state?.postData;
+  
+  console.log("URL Parameters:", params);  // URL 파라미터 확인
   
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -35,20 +37,40 @@ export default function Post() {
 
   useEffect(() => {
     const fetchComments = async () => {
-      if (challengeId && postId) {
-        try {
-          const data = await ChallengeAPI.getComments(Number(challengeId), Number(postId));
-          setComments(data);
-        } catch (error) {
-          console.error('댓글 로딩 실패:', error);
+      try {
+        const challengeId = params.id;  // id를 challengeId로 사용
+        const { postId } = params;
+        console.log('Fetching comments for:', { challengeId, postId });
+        
+        if (!challengeId || !postId) {
+          console.error('Missing challengeId or postId in URL params');
+          return;
         }
+
+        const data = await ChallengeAPI.getComments(Number(challengeId), Number(postId));
+        console.log('Received comments:', data);
+        
+        if (Array.isArray(data)) {
+          setComments(data);
+        } else {
+          console.error('Unexpected data format:', data);
+        }
+      } catch (error) {
+        console.error('댓글 로딩 실패:', error);
       }
     };
+
     fetchComments();
-  }, [challengeId, postId]);
+  }, [params]);
+
+  // 디버깅용 로그
+  console.log('Current comments state:', comments);
+  console.log('Current route params:', params);
+  console.log('Post data:', postData);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const { id: challengeId, postId } = params;
     if (!newComment.trim() || !challengeId || !postId) return;
 
     try {
@@ -76,60 +98,35 @@ export default function Post() {
 
   return (
     <div className={styles.postContainer}>
-      {/* 메인 포스트 카드 */}
+      {/* 게시글 내용 */}
       <div className={styles.postCard}>
         <div className={styles.postHeader}>
           <img 
-            src={postData.user_profile_image} 
+            src={postData?.user_profile_image} 
             alt="프로필" 
             className={styles.avatar}
           />
           <div className={styles.postInfo}>
-            <h1 className={styles.postTitle}>{postData.post_title}</h1>
+            <h1 className={styles.postTitle}>{postData?.post_title}</h1>
             <div className={styles.authorInfo}>
-              <span>{postData.user_nickname}</span>
-              <span>{formatDate(postData.post_created_at)}</span>
+              <span>{postData?.user_nickname}</span>
+              <span>{formatDate(postData?.post_created_at)}</span>
             </div>
           </div>
         </div>
         
-        <p className={styles.postContent}>{postData.post_content}</p>
+        <p className={styles.postContent}>{postData?.post_content}</p>
         
         <div className={styles.postActions}>
-          <button 
-            className={`${styles.actionButton} ${isLiked ? styles.liked : ''}`}
-            onClick={() => setIsLiked(!isLiked)}
-          >
+          <button className={styles.actionButton}>
             <Heart size={16} />
-            <span>좋아요 {postData.like_count}</span>
+            <span>좋아요 {postData?.like_count}</span>
           </button>
           <button className={styles.actionButton}>
             <MessageSquare size={16} />
-            <span>댓글 {postData.comment_count}</span>
+            <span>댓글 {comments.length}</span>
           </button>
         </div>
-      </div>
-
-      {/* 댓글 목록 */}
-      <div className={styles.comments}>
-        {comments.map(comment => (
-          <div key={comment.comment_id} className={styles.comment}>
-            <div className={styles.commentHeader}>
-              <img 
-                src={comment.user_profile_image} 
-                alt="" 
-                className={styles.avatar}
-              />
-              <div className={styles.commentInfo}>
-                <span className={styles.commentAuthor}>{comment.user_nickname}</span>
-                <span className={styles.commentDate}>
-                  {formatDate(comment.created_at)}
-                </span>
-              </div>
-            </div>
-            <p className={styles.commentContent}>{comment.content}</p>
-          </div>
-        ))}
       </div>
 
       {/* 댓글 입력 */}
@@ -145,6 +142,35 @@ export default function Post() {
           댓글 작성
         </button>
       </form>
+      
+      {/* 댓글 목록 */}
+      <div className={styles.comments}>
+        <h3>댓글 목록 ({comments.length})</h3>
+        {comments.length > 0 ? (
+          comments.map(comment => (
+            <div key={comment.comment_id} className={styles.comment}>
+              <div className={styles.commentHeader}>
+                <img 
+                  src={comment.user_profile_image} 
+                  alt={comment.user_nickname} 
+                  className={styles.avatar}
+                />
+                <div className={styles.commentInfo}>
+                  <span className={styles.commentAuthor}>{comment.user_nickname}</span>
+                  <span className={styles.commentDate}>
+                    {new Date(comment.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+              <p className={styles.commentContent}>{comment.content}</p>
+            </div>
+          ))
+        ) : (
+          <p>아직 댓글이 없습니다.</p>
+        )}
+      </div>
+
+      
     </div>
   );
 }
