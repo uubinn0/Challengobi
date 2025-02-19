@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './ConsumImage.css';
 
 interface ConsumItem {
@@ -11,15 +12,108 @@ interface ConsumItem {
   checked: boolean;
 }
 
+interface OcrResultItem {
+  store: string;
+  time: string;
+  amount: string;
+}
+
+// JWT 토큰에서 user_id를 추출하는 함수
+const getUserIdFromToken = (token: string): number | null => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    const payload = JSON.parse(jsonPayload);
+    return payload.user_id;
+  } catch (error) {
+    console.error('Failed to decode token:', error);
+    return null;
+  }
+};
+
 export const ConsumImage: React.FC = () => {
   const navigate = useNavigate();
-  const [items, setItems] = useState<ConsumItem[]>([
-    { id: 1, place: 'GS25 한밭대점', time: '08:24', amount: 2400, initialAmount: 2400, checked: true },
-    { id: 2, place: '아빠손칼국수', time: '12:22', amount: 31000, initialAmount: 31000, checked: false },
-    { id: 3, place: '스타벅스 유성점', time: '12:51', amount: 6700, initialAmount: 6700, checked: false },
-    { id: 4, place: '이마트 월평점', time: '19:24', amount: 32500, initialAmount: 32500, checked: true },
-    { id: 5, place: '이이스크림 할인점', time: '20:48', amount: 2400, initialAmount: 2400, checked: false },
-  ]);
+  const [items, setItems] = useState<ConsumItem[]>([]);
+  const [balance, setBalance] = useState<number | null>(null);
+  const challengeId = sessionStorage.getItem('currentChallengeId');
+
+  // 잔액 조회 함수
+  const fetchBalance = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token || !challengeId) return;
+
+      const response = await axios.get(
+        `http://localhost:8000/api/challenges/${challengeId}/participants/`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data && response.data.length > 0) {
+        const userId = getUserIdFromToken(token);
+        const myParticipation = response.data.find(
+          (participant: any) => participant.user_id === userId
+        );
+        
+        if (myParticipation) {
+          setBalance(myParticipation.balance);
+        }
+      }
+    } catch (error) {
+      console.error('잔액 조회 실패:', error);
+    }
+  };
+
+  useEffect(() => {
+    // 컴포넌트 마운트 시 잔액 조회
+    fetchBalance();
+
+    // 세션 스토리지에서 OCR 결과 가져오기
+    const ocrResults = sessionStorage.getItem('ocrResults');
+    if (ocrResults) {
+      try {
+        const parsedResults = JSON.parse(ocrResults);
+        console.log('Original OCR results:', parsedResults);
+
+        // 결과 데이터 구조 처리
+        let resultsArray = [];
+        if (parsedResults[0]?.results) {
+          // results 배열에서 데이터 추출
+          resultsArray = parsedResults[0].results.map((item: any) => ({
+            store: item.store,
+            amount: item.expense,
+            time: '' // 시간 정보가 없는 경우 빈 문자열
+          }));
+        }
+
+        console.log('Formatted results:', resultsArray);
+
+        // OCR 결과를 ConsumItem 형식으로 변환
+        const formattedItems = resultsArray.map((item: OcrResultItem, index: number) => ({
+          id: index + 1,
+          place: item.store || '알 수 없는 가맹점',
+          time: item.time || '',
+          amount: parseInt(String(item.amount)) || 0,
+          initialAmount: parseInt(String(item.amount)) || 0,
+          checked: false
+        }));
+
+        console.log('Final formatted items:', formattedItems);
+        setItems(formattedItems);
+      } catch (error) {
+        console.error('OCR 결과 파싱 오류:', error);
+        // 오류 발생 시 빈 배열로 초기화
+        setItems([]);
+      }
+    }
+  }, []);
 
   const [editingItem, setEditingItem] = useState<{
     id: number;
@@ -71,8 +165,59 @@ export const ConsumImage: React.FC = () => {
     .filter(item => item.checked)
     .reduce((sum, item) => sum + item.amount, 0);
 
-  const handleSubmit = () => {
-    navigate('/challenge/ocr-complete');
+  const handleSubmit = async () => {
+    const selectedItems = items.filter(item => item.checked);
+    const challengeId = sessionStorage.getItem('currentChallengeId');
+
+    if (!challengeId) {
+      alert('챌린지 정보를 찾을 수 없습니다.');
+      navigate('/challenge');
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        navigate('/login');
+        return;
+      }
+
+      await axios.post(
+        `http://localhost:8000/api/challenges/${challengeId}/expenses/verifications/`,
+        {
+          selected: selectedItems.map(item => ({
+            store: item.place,
+            amount: item.amount,
+            payment_date: new Date().toISOString().split('T')[0]
+          }))
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          withCredentials: true
+        }
+      );
+      
+      navigate('/challenge/ocr-complete');
+    } catch (error) {
+      console.error('데이터 저장 중 오류 발생:', error);
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+          localStorage.removeItem('access_token');
+          navigate('/login');
+          return;
+        }
+        // 에러 메시지 상세 표시
+        const errorMessage = error.response?.data?.error || '데이터 저장 중 오류가 발생했습니다.';
+        alert(errorMessage);
+      } else {
+        alert('데이터 저장 중 오류가 발생했습니다.');
+      }
+    }
   };
 
   return (
@@ -129,7 +274,8 @@ export const ConsumImage: React.FC = () => {
       )}
 
       <div className="total-section">
-        <p>총 {totalAmount.toLocaleString()}원을 소비했어요.<br/>남은 금액 50,000원에서 차감돼요.</p>
+        <p>총 {totalAmount.toLocaleString()}원을 소비했어요.<br/>
+           남은 금액 {balance?.toLocaleString() || 0}원에서 차감돼요.</p>
       </div>
 
       <button className="submit-button" onClick={handleSubmit}>제출</button>

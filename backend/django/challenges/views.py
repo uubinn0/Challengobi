@@ -41,6 +41,7 @@ class ChallengeViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ["title", "description"]
 
+
     def update_challenge_status(self):
         today = timezone.now().date()
 
@@ -521,55 +522,36 @@ class ExpenseViewSet(viewsets.ModelViewSet):
     # OCR 처리를 위한 기존 액션 수정
     @action(detail=False, methods=["post"])
     def ocr(self, request, challenge_id=None):
-        challenge = get_object_or_404(Challenge, id=challenge_id)
-
-        if challenge.status != 1:  # IN_PROGRESS
-            return Response(
-                {"error": "진행 중인 챌린지만 OCR을 사용할 수 있습니다"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # 실패한 참가자 검증 추가
-        participant = get_object_or_404(
-            ChallengeParticipant, challenge=challenge, user=request.user
-        )
-        if participant.is_failed:
-            return Response(
-                {"error": "이미 실패한 챌린지는 OCR을 사용할 수 없습니다"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         try:
-            # 세션에서 임시 파일 경로 가져오기
-            temp_files = request.session.get(f"temp_files_{challenge_id}", [])
-            if not temp_files:
+            challenge = get_object_or_404(Challenge, id=challenge_id)
+
+            if challenge.status != 1:  # IN_PROGRESS
                 return Response(
-                    {
-                        "error": "업로드된 이미지가 없습니다. 먼저 이미지를 업로드해주세요."
-                    },
+                    {"error": "진행 중인 챌린지만 OCR을 사용할 수 있습니다"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # FastAPI로 전송할 파일 준비
-            files = []
-            for temp_path in temp_files:
-                if os.path.exists(temp_path):
-                    files.append(("files", open(temp_path, "rb")))
+            participant = get_object_or_404(
+                ChallengeParticipant, challenge=challenge, user=request.user
+            )
+            if participant.is_failed:
+                return Response(
+                    {"error": "이미 실패한 챌린지는 OCR을 사용할 수 없습니다"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 업로드된 파일들을 직접 FastAPI로 전송
+            files = [
+                ("files", (file.name, file, file.content_type))
+                for file in request.FILES.getlist("files")
+            ]
 
             # FastAPI 호출
             response = requests.post(
-                "http://fastapi-app:8001/extract_text/", files=files, timeout=90
+                "http://fastapi-app:8001/extract_text/",
+                files=files,
+                timeout=90
             )
-
-            # 임시 파일 삭제
-            for file in files:
-                file[1].close()
-            for temp_path in temp_files:
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
-
-            # 세션에서 임시 파일 정보 삭제
-            del request.session[f"temp_files_{challenge_id}"]
 
             if response.status_code != 200:
                 return Response(
@@ -580,19 +562,10 @@ class ExpenseViewSet(viewsets.ModelViewSet):
             return Response(response.json())
 
         except Exception as e:
-            # 에러 발생 시에도 임시 파일 정리
-            try:
-                for file in files:
-                    file[1].close()
-                for temp_path in temp_files:
-                    if os.path.exists(temp_path):
-                        os.remove(temp_path)
-                del request.session[f"temp_files_{challenge_id}"]
-            except:
-                pass
-
+            logger.error(f"OCR processing error: {str(e)}", exc_info=True)
             return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     # OCR 데이터 저장
@@ -684,7 +657,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
 
                 # 모든 참가자가 실패했다면 챌린지도 종료
                 if all_failed:
-                    challenge.status = 3  # FINISHED 상태 코드
+                    challenge.status = 2  # FINISHED 상태 코드
                     challenge.save()
 
             return Response(
@@ -782,7 +755,7 @@ class SimpleExpenseViewSet(viewsets.ViewSet):
 
                 # 모든 참가자가 실패했다면 챌린지도 종료
                 if all_failed:
-                    challenge.status = 3  # FINISHED
+                    challenge.status = 2  # FINISHED
                     challenge.save()
 
             return Response(

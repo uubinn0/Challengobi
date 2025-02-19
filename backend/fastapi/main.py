@@ -164,8 +164,8 @@ def category_cosine_similarity(user_category, target_category, features):
 
     return similarity_matrix
 
-@app.post("/recommend")
-async def recommend(request: RecommendRequest): # 비동기식
+@app.post("/api/accounts/recommendations")  # URL 경로 수정
+async def recommend(request: RecommendRequest):
     """
     추천의 기본이 되는 사용자 아이디를 받으면 해당 사용자와 유사한 순서대로 사용자 아이디 반환
     """

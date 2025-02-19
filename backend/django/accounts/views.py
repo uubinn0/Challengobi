@@ -1,15 +1,3 @@
-from django.contrib.auth import authenticate, logout
-from rest_framework import status, generics, views
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.decorators import action
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate, logout
-from rest_framework import status, generics, views
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import User, Follow, UserChallengeCategory
 from .serializers import (
     UserCreateSerializer,
@@ -23,11 +11,19 @@ from .serializers import (
     FollowSerializer,
     UserChallengeCategorySerializer,
 )
+from .utils import upload_image_to_firebase, get_firebase_bucket
+from rest_framework import status, generics, views
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.conf import settings
+from django.contrib.auth import authenticate, logout
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from django.conf import settings
-import requests
+import requests, os, uuid
+import firebase_admin
+from firebase_admin import credentials, storage
 
 
 class EmailCheckView(views.APIView):
@@ -60,10 +56,27 @@ class UserRegistrationView(generics.CreateAPIView):
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
+        # 먼저 이미지 처리
+        profile_image_url = None
+        profile_image = request.FILES.get("profile_image")
+
+        # 이미지가 있을 경우 Firebase에 업로드
+        if profile_image:
+            try:
+                profile_image_url = upload_image_to_firebase(profile_image)
+                # 이미지 URL을 request.data에 추가
+                request.data._mutable = True
+                request.data["profile_image"] = profile_image_url
+                request.data._mutable = False
+            except Exception as e:
+                return Response(
+                    {"error": f"이미지 업로드 중 오류가 발생했습니다: {str(e)}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-
         refresh = RefreshToken.for_user(user)
 
         return Response(
@@ -182,6 +195,40 @@ class UserProfileView(views.APIView):
             {"message": "회원 탈퇴가 완료되었습니다."},
             status=status.HTTP_204_NO_CONTENT,
         )
+
+    @action(detail=False, methods=["POST"])
+    def update_profile_image(self, request):
+        try:
+            user = request.user
+            image_file = request.FILES.get("profile_image")
+
+            if not image_file:
+                return Response(
+                    {"error": "이미지 파일이 필요합니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Firebase에 이미지 업로드
+            image_url = upload_image_to_firebase(image_file, user.id)
+
+            # DB에 이미지 URL 업데이트
+            user.profile_image = image_url
+            user.save()
+
+            return Response(
+                {
+                    "message": "이미지가 성공적으로 업로드되었습니다",
+                    "profile_image": image_url,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except ValueError as ve:
+            return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class FollowView(views.APIView):
