@@ -34,7 +34,10 @@ const Progress: FC = () => {
   const { id } = useParams<{ id: string }>();
   const challengeData = location.state?.challengeData as Challenge;
 
-  const isFromHome = location.pathname.includes("/ongoing-challenge/")
+  const isFromHome = !location.pathname.startsWith("/ongoing-challenge");
+
+  console.log("Current pathname:", location.pathname);
+  console.log("isFromHome:", isFromHome);
 
   useEffect(() => {
     if (!challengeData && isFromHome) {
@@ -194,7 +197,7 @@ const Progress: FC = () => {
 
         console.log("챌린지 ID:", challengeData.challenge_id);
         const postsData = await ChallengeAPI.getPosts(challengeData.challenge_id);
-        console.log("받아온 게시글 데이터:", postsData);
+        console.log("API Response Data:", postsData);  // API 응답 데이터 확인
         setPosts(postsData);
         setLoading(false);
       } catch (err) {
@@ -208,22 +211,20 @@ const Progress: FC = () => {
   }, [challengeData]);
 
   const handlePostClick = (post: any) => {
-    console.log("Clicked post data:", post);
-    console.log("Challenge data:", challengeData);
+    console.log("Original post data:", post);  // 디버깅용
     
-    navigate(`/challenge/${challengeData.challenge_id}/post/${post.post_id}`, {
+    navigate(`/challenge/progress/${id}/post/${post.post_id}`, {
       state: { 
         postData: {
           post_id: post.post_id,
           post_title: post.post_title,
           post_content: post.post_content,
-          post_created_at: post.post_created_at,
+          post_created_at: post.post_created_at,  // created_at을 post_created_at으로 매핑
           user_profile_image: post.user_profile_image,
           user_nickname: post.user_nickname,
           like_count: post.like_count || 0,
           comment_count: post.comment_count || 0
-        },
-        challengeId: challengeData.challenge_id
+        }
       }
     });
   };
@@ -288,107 +289,110 @@ const Progress: FC = () => {
         </div>
       </div>
 
-      {!isFromHome && (
-        <>
-          <div className={styles.progressCard}>
-            <div className={styles.progressTextContainer}>
-              <div className={styles.fishIconContainer}>
-                <img 
-                  src={profileJaringobi}
-                  alt="자린고비 프로필" 
-                  className={styles.ocrFishIcon}
-                />
-              </div>
-              <p className={styles.progressText}>
-                {challenge.creator_nickname}님 챌린지 성공까지
-                <br />
-                {challenge.period}일 남았어요.
-              </p>
-            </div>
-            <p className={styles.amountText}>
-              현재까지
-              <br />
-              {/* 잔액이 있을 때만 표시, 없으면 로딩 표시 */}
-              {balance !== null ? (
-                <span className={balance < 0 ? styles.negative : ''}>
-                  {balance.toLocaleString()}원
-                </span>
-              ) : (
-                '잔액 조회 중...'
-              )} 남았어요
-            </p>
-            <button onClick={handleVerifyClick} className={styles.verifyButton}>
+      {isFromHome && (
+        <div className={styles.progressCard}>
+          <div className={styles.progressTextContainer}>
+            <div className={styles.fishIconContainer}>
               <img 
-                src={ocrbuttonfish} 
-                alt="물고기 아이콘" 
+                src={profileJaringobi}
+                alt="자린고비 프로필" 
                 className={styles.ocrFishIcon}
               />
-              고비 인증하기
-            </button>
+            </div>
+            <p className={styles.progressText}>
+              {challenge.creator_nickname}님 챌린지 성공까지
+              <br />
+              {challenge.period}일 남았어요.
+            </p>
           </div>
-
-          <div className={styles.commentsSection}>
-            <h2 className={styles.sectionTitle}>게시글</h2>
-            {loading ? (
-              <div>게시글을 불러오는 중...</div>
-            ) : error ? (
-              <div className={styles.error}>{error}</div>
-            ) : posts.length === 0 ? (
-              <div className={styles.noComments}>아직 게시글이 없습니다.</div>
+          <p className={styles.amountText}>
+            현재까지
+            <br />
+            {/* 잔액이 있을 때만 표시, 없으면 로딩 표시 */}
+            {balance !== null ? (
+              <span className={balance < 0 ? styles.negative : ''}>
+                {balance.toLocaleString()}원
+              </span>
             ) : (
-              <div className={styles.commentsList}>
-                {posts.map((post) => (
-                  <div 
-                    key={post.post_id}
-                    className={styles.commentItem}
-                    onClick={() => handlePostClick(post)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <div className={styles.commentHeader}>
-                      <img 
-                      
-                        src={/*post.user_profile_image ||*/ profileJaringobi}
-                        alt="프로필 이미지" 
-                        className={styles.avatar}
-                      />
-                      <div className={styles.commentInfo}>
-                        <h3 className={styles.title}>{post.post_title}</h3>
-                        <p className={styles.authorName}>
-                          {formatDate(post.post_created_at)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className={styles.commentActions}>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleLike(post.post_id);
-                        }}
-                        className={`${styles.actionButton} ${likedPosts.includes(post.post_id) ? styles.liked : ""}`}
-                      >
-                        <Heart size={16} />
-                        <span>좋아요 {post.like_count}</span>
-                      </button>
-                      <button 
-                        className={styles.actionButton}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MessageSquare size={16} />
-                        <span>댓글 {post.comment_count}</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+              '잔액 조회 중...'
+            )} 남았어요
+          </p>
+          <button onClick={handleVerifyClick} className={styles.verifyButton}>
+            <img 
+              src={ocrbuttonfish} 
+              alt="물고기 아이콘" 
+              className={styles.ocrFishIcon}
+            />
+            고비 인증하기
+          </button>
+        </div>
+      )}
 
-          <button className={styles.writeButton} onClick={handleWriteClick}>
+      <div className={styles.commentsSection}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>게시글</h2>
+          <button 
+            className={styles.writeButton} 
+            onClick={handleWriteClick}
+          >
             <Pencil size={20} />
             글쓰기
           </button>
-        </>
-      )}
+        </div>
+
+        {loading ? (
+          <div>게시글을 불러오는 중...</div>
+        ) : error ? (
+          <div className={styles.error}>{error}</div>
+        ) : posts.length === 0 ? (
+          <div className={styles.noComments}>아직 게시글이 없습니다.</div>
+        ) : (
+          <div className={styles.commentsList}>
+            {posts.map((post) => (
+              <div 
+                key={post.post_id}
+                className={styles.commentItem}
+                onClick={() => handlePostClick(post)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className={styles.commentHeader}>
+                  <img 
+                  
+                    src={/*post.user_profile_image ||*/ profileJaringobi}
+                    alt="프로필 이미지" 
+                    className={styles.avatar}
+                  />
+                  <div className={styles.commentInfo}>
+                    <h3 className={styles.title}>{post.post_title}</h3>
+                    <p className={styles.authorName}>
+                      {formatDate(post.post_created_at)}
+                    </p>
+                  </div>
+                </div>
+                <div className={styles.commentActions}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLike(post.post_id);
+                    }}
+                    className={`${styles.actionButton} ${likedPosts.includes(post.post_id) ? styles.liked : ""}`}
+                  >
+                    <Heart size={16} />
+                    <span>좋아요 {post.like_count}</span>
+                  </button>
+                  <button 
+                    className={styles.actionButton}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MessageSquare size={16} />
+                    <span>댓글 {post.comment_count}</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
