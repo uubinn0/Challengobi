@@ -27,6 +27,7 @@ const Progress: FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [likedPosts, setLikedPosts] = useState<number[]>([]);
   const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(null);
+  const [balance, setBalance] = useState<number | null>(null);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -72,6 +73,98 @@ const Progress: FC = () => {
 
     fetchChallengeData();
   }, [id, challengeData, navigate]);
+
+  // JWT 토큰에서 user_id를 추출하는 함수
+  const getUserIdFromToken = (token: string): number | null => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+
+      const payload = JSON.parse(jsonPayload);
+      return payload.user_id;
+    } catch (error) {
+      console.error('Failed to decode token:', error);
+      return null;
+    }
+  };
+
+  // 챌린지 잔액 정보를 가져오는 함수
+  const fetchChallengeBalance = async (challengeId: string) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        console.error('No token found');
+        return;
+      }
+
+      // 토큰에서 user_id 추출
+      const userId = getUserIdFromToken(token);
+      
+      // 디버깅을 위한 로그
+      console.log('Token:', token);
+      console.log('Extracted User ID:', userId);
+
+      if (!userId) {
+        console.error('Could not extract user ID from token');
+        return;
+      }
+
+      const response = await axios.get(
+        `http://localhost:8000/api/challenges/${challengeId}/participants/`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      // 디버깅을 위한 로그
+      console.log('Participants response:', response.data);
+
+      if (response.data && response.data.length > 0) {
+        // 백엔드 응답 구조에 맞게 수정
+        const myParticipation = response.data.find(
+          (participant: { user_id: number; balance: number }) => 
+            participant.user_id === userId
+        );
+        
+        console.log('My user ID:', userId);
+        console.log('Found my participation:', myParticipation);
+        
+        if (myParticipation && typeof myParticipation.balance === 'number') {
+          setBalance(myParticipation.balance);
+          console.log('Setting balance to:', myParticipation.balance);
+        } else {
+          console.log('현재 사용자의 참가 정보를 찾을 수 없습니다.');
+          console.log('Available participants:', response.data);
+        }
+      }
+    } catch (error) {
+      console.error('잔액 조회 실패:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Error details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          headers: error.response?.headers
+        });
+      }
+    }
+  };
+
+  // 컴포넌트가 마운트될 때와 challengeId가 변경될 때마다 잔액 조회
+  useEffect(() => {
+    if (id) {
+      fetchChallengeBalance(id);
+    }
+  }, [id]);
+
+  // 잔액이 변경될 때마다 실행되는 useEffect
+  useEffect(() => {
+    console.log('Current balance:', balance);
+  }, [balance]);
 
   const formatDate = (dateString: string) => {
     try {
@@ -198,7 +291,14 @@ const Progress: FC = () => {
             <p className={styles.amountText}>
               현재까지
               <br />
-              {challenge.budget_display} 남았어요
+              {/* 잔액이 있을 때만 표시, 없으면 로딩 표시 */}
+              {balance !== null ? (
+                <span className={balance < 0 ? styles.negative : ''}>
+                  {balance.toLocaleString()}원
+                </span>
+              ) : (
+                '잔액 조회 중...'
+              )} 남았어요
             </p>
             <button onClick={handleVerifyClick} className={styles.verifyButton}>
               <img 

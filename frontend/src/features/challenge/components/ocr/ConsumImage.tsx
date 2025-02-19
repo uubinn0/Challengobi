@@ -132,7 +132,7 @@ export const ConsumImage: React.FC = () => {
       }
 
       await axios.post(
-        `http://localhost:8000/api/challenges/${challengeId}/expenses/ocr_save/`,
+        `http://localhost:8000/api/challenges/${challengeId}/expenses/verifications/`,
         {
           selected: selectedItems.map(item => ({
             store: item.place,
@@ -142,7 +142,8 @@ export const ConsumImage: React.FC = () => {
         },
         {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           },
           withCredentials: true
         }
@@ -151,13 +152,19 @@ export const ConsumImage: React.FC = () => {
       navigate('/challenge/ocr-complete');
     } catch (error) {
       console.error('데이터 저장 중 오류 발생:', error);
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        alert('인증이 만료되었습니다. 다시 로그인해주세요.');
-        localStorage.removeItem('access_token');
-        navigate('/login');
-        return;
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+          localStorage.removeItem('access_token');
+          navigate('/login');
+          return;
+        }
+        // 에러 메시지 상세 표시
+        const errorMessage = error.response?.data?.error || '데이터 저장 중 오류가 발생했습니다.';
+        alert(errorMessage);
+      } else {
+        alert('데이터 저장 중 오류가 발생했습니다.');
       }
-      alert('데이터 저장 중 오류가 발생했습니다.');
     }
   };
 
