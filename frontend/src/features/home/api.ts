@@ -153,6 +153,7 @@ export const HomeAPI = {
     });
   },
 
+  
   async inviteToChallenge(challengeId: number, fromUserId: number, toUserId: number): Promise<void> {
     const token = localStorage.getItem('access_token');
     await axiosInstance.post(`/api/challenges/${challengeId}/invite/`, {
