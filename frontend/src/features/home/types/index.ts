@@ -16,6 +16,7 @@ export interface Challenge {
   encourage_cnt: number;
   want_cnt: number;
   challenge_info?: string;
+  participants_nicknames: string[];
 }
 
 export interface OngoingChallenge {

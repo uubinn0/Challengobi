@@ -212,7 +212,13 @@ const ChallengeAPI = {
   },
 
   async leaveChallenge(challengeId: number): Promise<void> {
-    await axiosInstance.delete(`/api/challenges/${challengeId}/leave/`);
+    const token = localStorage.getItem('access_token');
+    await axiosInstance.delete(`/api/challenges/${challengeId}/leave/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
   },
 
   // 챌린지 반응

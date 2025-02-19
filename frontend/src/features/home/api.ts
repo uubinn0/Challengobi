@@ -19,6 +19,7 @@ interface Challenge {
     status: string;
     created_at: Date;
     updated_at: Date;
+    participants_nicknames: string[];
 }
 
 interface ChallengeCreate {
