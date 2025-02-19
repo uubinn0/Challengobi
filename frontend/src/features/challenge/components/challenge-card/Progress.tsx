@@ -19,6 +19,7 @@ interface Post {
   post_updated_at: string;
   like_count: number;
   comment_count: number;
+  user_profile_image: string | null;
 }
 
 const Progress: FC = () => {
@@ -330,15 +331,19 @@ const Progress: FC = () => {
                 style={{ cursor: 'pointer' }}
               >
                 <div className={styles.commentHeader}>
+                  <img 
+                    src={post.user_profile_image || profileJaringobi}
+                    alt="프로필 이미지" 
+                    className={styles.avatar}
+                  />
                   <div className={styles.commentInfo}>
                     <h3 className={styles.title}>{post.post_title}</h3>
-                    <p className={styles.commentText}>{post.post_content}</p>
-                    <p className={styles.authorName}>{/*작성자 이름*/}
+                    <p className={styles.authorName}>
                       {formatDate(post.post_created_at)}
                     </p>
                   </div>
                 </div>
-                <div className={styles.commentActions} onClick={(e) => e.stopPropagation()}>
+                <div className={styles.commentActions}>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
