@@ -13,14 +13,17 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# .env 파일 설정
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
-
-FASTAPI_URL = os.getenv("FASTAPI_URL", "http://fastapi-app:8001")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-^_l)cbv!^9zhdhapot6o_o5(c+zqcbn9p58oa1fhlc#th)s8^)"
@@ -61,6 +64,21 @@ DATABASES = {
 # MongoDB 환경 설정 (FastAPI에서 MongoDB를 사용하는 경우)
 # MONGO_HOST = os.environ.get("MONGO_HOST", "mongodb")
 # MONGO_PORT = os.environ.get("MONGO_PORT", "27017")
+
+# Firebase 설정
+FIREBASE_CONFIG = {
+    "apiKey": env("VITE_FIREBASE_API_KEY"),
+    "authDomain": env("VITE_FIREBASE_AUTH_DOMAIN"),
+    "projectId": env("VITE_FIREBASE_PROJECT_ID"),
+    "storageBucket": env("VITE_FIREBASE_STORAGE_BUCKET"),
+    "messagingSenderId": env("VITE_FIREBASE_MESSAGING_SENDER_ID"),
+    "appId": env("VITE_FIREBASE_APP_ID"),
+    "measurementId": env("VITE_FIREBASE_MEASUREMENT_ID"),
+}
+
+# Firebase Storage 버킷 설정
+FIREBASE_STORAGE_BUCKET = env("VITE_FIREBASE_STORAGE_BUCKET")
+
 # Application definition
 
 INSTALLED_APPS = [
