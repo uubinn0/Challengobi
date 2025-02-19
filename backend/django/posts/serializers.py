@@ -20,13 +20,13 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class PostListSerializer(serializers.ModelSerializer):
-    post_id = serializers.IntegerField(source="id")
-    user_id = serializers.IntegerField(source="user.id")
+    post_id = serializers.IntegerField(source="id", read_only=True)
+    user_id = serializers.IntegerField(source="user.id", read_only=True)
     user_nickname = serializers.CharField(source="user.nickname", read_only=True)
     challenge_id = serializers.IntegerField(source="challenge.id")
     post_title = serializers.CharField(source="title")
     post_content = serializers.CharField(source="content")
-    post_created_at = serializers.DateTimeField(source="created_at")
+    post_created_at = serializers.DateTimeField(source="created_at", read_only=True)
     like_count = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
@@ -58,6 +58,14 @@ class PostListSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.postlike_set.filter(user=request.user).exists()
         return False
+
+class PostCreateSerializer(serializers.ModelSerializer):
+    post_title = serializers.CharField(source="title")
+    post_content = serializers.CharField(source="content", required=False, allow_null=True)
+
+    class Meta:
+        model = Post
+        fields = ['post_title', 'post_content', 'image_url']
 
 
 class PostDetailSerializer(PostListSerializer):
