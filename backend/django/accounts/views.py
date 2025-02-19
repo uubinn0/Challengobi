@@ -236,9 +236,9 @@ class UserDetailView(views.APIView):
 
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, user_id):
+    def get(self, request, pk):
         try:
-            user = User.objects.get(id=user_id)
+            user = User.objects.get(id=pk)
             serializer = UserProfileSerializer(user, context={"request": request})
             return Response({"message": "프로필 조회 성공", "data": serializer.data})
         except User.DoesNotExist:
