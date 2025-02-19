@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './ChallengeDetailModal.module.scss';
 import { SupportFish, WantFish } from '../../components/icons/FishIcon';
 import type { Challenge } from '../../features/home/types';
+import { HomeAPI } from '../../features/home/api';
 
 interface ChallengeDetailModalProps {
   isOpen: boolean;
@@ -42,9 +43,15 @@ const ChallengeDetailModal: React.FC<ChallengeDetailModalProps> = ({ isOpen, onC
     navigate('/challenge/invited-friends');
   };
 
-  const handleJoinChallenge = () => {
-    onClose();
-    navigate('/challenge');
+  const handleJoinChallenge = async () => {
+    try {
+      await HomeAPI.joinChallenge(challenge.challenge_id);
+      onClose();
+      navigate('/challenge');
+    } catch (error) {
+      console.error('챌린지 참가 실패:', error);
+      // 에러 처리 (예: 알림 표시)
+    }
   };
 
   return (

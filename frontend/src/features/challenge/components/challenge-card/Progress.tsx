@@ -19,7 +19,6 @@ interface Post {
   post_updated_at: string;
   like_count: number;
   comment_count: number;
-  user_profile_image: string | null;
 }
 
 const Progress: FC = () => {
@@ -33,7 +32,7 @@ const Progress: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
-  const challengeData = location.state?.challengeData;
+  const challengeData = location.state?.challengeData as Challenge;
 
   const isFromHome = location.pathname.includes("/ongoing-challenge/")
 
@@ -208,8 +207,25 @@ const Progress: FC = () => {
     fetchPosts();
   }, [challengeData]);
 
-  const handlePostClick = (postId: number) => {
-    navigate(`${location.pathname}/post/${postId}`);
+  const handlePostClick = (post: any) => {
+    console.log("Clicked post data:", post);
+    console.log("Challenge data:", challengeData);
+    
+    navigate(`/challenge/progress/${challengeData.challenge_id}/post/${post.post_id}`, {
+      state: { 
+        postData: {
+          post_id: post.post_id,
+          post_title: post.post_title,
+          post_content: post.post_content,
+          post_created_at: post.post_created_at,
+          user_profile_image: post.user_profile_image,
+          user_nickname: post.user_nickname,
+          like_count: post.like_count || 0,
+          comment_count: post.comment_count || 0
+        },
+        challengeData 
+      }
+    });
   };
 
   const handleLike = (postId: number) => {
@@ -327,12 +343,13 @@ const Progress: FC = () => {
               <div 
                 key={post.post_id}
                 className={styles.commentItem}
-                onClick={() => handlePostClick(post.post_id)}
+                onClick={() => handlePostClick(post)}
                 style={{ cursor: 'pointer' }}
               >
                 <div className={styles.commentHeader}>
                   <img 
-                    src={post.user_profile_image || profileJaringobi}
+                  
+                    src={/*post.user_profile_image ||*/ profileJaringobi}
                     alt="프로필 이미지" 
                     className={styles.avatar}
                   />

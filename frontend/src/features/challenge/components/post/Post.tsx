@@ -1,82 +1,150 @@
 // Post.tsx
-import { useState } from "react"
-import { Heart } from "lucide-react"
-import "./Post.css"
+import { useState, useEffect } from "react";
+import { useLocation, useParams } from "react-router-dom";
+import { Heart, MessageSquare } from "lucide-react";
+import   ChallengeAPI  from "../../api";
+import styles from "./Post.module.scss";
+  
+interface PostData {
+  post_id: number;
+  post_title: string;
+  post_content: string;
+  post_created_at: string;
+  user_profile_image: string;
+  user_nickname: string;
+  like_count: number;
+  comment_count: number;
+}
 
 interface Comment {
- id: number
- content: string
- author: string
- date: string
- avatar: string
+  comment_id: number;
+  content: string;
+  user_nickname: string;
+  user_profile_image: string;
+  created_at: string;
 }
 
 export default function Post() {
- const [newComment, setNewComment] = useState("")
- const [comments] = useState<Comment[]>([
-   {
-     id: 1,
-     content: "진정하세요",
-     author: "수박 개발자",
-     date: "2025년 1월 3일 14:50",
-     avatar: "/placeholder.svg"
-   }
- ])
+  const location = useLocation();
+  const { challengeId, postId } = useParams();
+  const postData = location.state?.postData as PostData;
+  
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [isLiked, setIsLiked] = useState(false);
 
- const handleSubmit = (e: React.FormEvent) => {
-   e.preventDefault()
-   if (newComment.trim() === "") return
-   setNewComment("")
- }
+  useEffect(() => {
+    const fetchComments = async () => {
+      if (challengeId && postId) {
+        try {
+          const data = await ChallengeAPI.getComments(Number(challengeId), Number(postId));
+          setComments(data);
+        } catch (error) {
+          console.error('댓글 로딩 실패:', error);
+        }
+      }
+    };
+    fetchComments();
+  }, [challengeId, postId]);
 
- return (
-   <div className="post-container">
-     {/* 메인 포스트 카드 */}
-     <div className="post-card">
-       <h1 className="post-title">죽을것 같아요</h1>
-       <div className="post-info">
-         <span>애호박</span>
-         <span>작성일자: 2025년 1월 3일</span>
-       </div>
-       <p className="post-content">
-         담배를끊기우고싶어요 28일동안 2만원은 4갑만 피워야는거 아닌가? 이러다 사람 죽겠습니다 라떼가 내가 횡설수설합니다 아 담배 아
-       </p>
-       <div className="post-actions">
-         <button className="like-button">
-           <Heart size={16} />
-           <span>댓글 1</span>
-         </button>
-       </div>
-     </div>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || !challengeId || !postId) return;
 
-     {/* 댓글 목록 */}
-     <div className="comments">
-       {comments.map(comment => (
-         <div key={comment.id} className="comment">
-           <div className="comment-header">
-             <img src={comment.avatar} alt="" className="avatar"/>
-             <div className="comment-info">
-               <span className="comment-author">{comment.author}</span>
-               <span className="comment-date">{comment.date}</span>
-             </div>
-           </div>
-           <p className="comment-content">{comment.content}</p>
-         </div>
-       ))}
-     </div>
+    try {
+      const newCommentData = await ChallengeAPI.createComment(
+        Number(challengeId),
+        Number(postId),
+        newComment
+      );
+      setComments(prev => [...prev, newCommentData]);
+      setNewComment("");
+    } catch (error) {
+      console.error('댓글 작성 실패:', error);
+    }
+  };
 
-     {/* 댓글 입력 */}
-     <div className="comment-input-wrap">
-       <form onSubmit={handleSubmit} className="comment-form">
-         <input
-           type="text"
-           placeholder="댓글 입력창"
-           value={newComment}
-           onChange={(e) => setNewComment(e.target.value)}
-         />
-         <button type="submit">전송</button>
-       </form>
-     </div>
-   </div>
- )
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  return (
+    <div className={styles.postContainer}>
+      {/* 메인 포스트 카드 */}
+      <div className={styles.postCard}>
+        <div className={styles.postHeader}>
+          <img 
+            src={postData.user_profile_image} 
+            alt="프로필" 
+            className={styles.avatar}
+          />
+          <div className={styles.postInfo}>
+            <h1 className={styles.postTitle}>{postData.post_title}</h1>
+            <div className={styles.authorInfo}>
+              <span>{postData.user_nickname}</span>
+              <span>{formatDate(postData.post_created_at)}</span>
+            </div>
+          </div>
+        </div>
+        
+        <p className={styles.postContent}>{postData.post_content}</p>
+        
+        <div className={styles.postActions}>
+          <button 
+            className={`${styles.actionButton} ${isLiked ? styles.liked : ''}`}
+            onClick={() => setIsLiked(!isLiked)}
+          >
+            <Heart size={16} />
+            <span>좋아요 {postData.like_count}</span>
+          </button>
+          <button className={styles.actionButton}>
+            <MessageSquare size={16} />
+            <span>댓글 {postData.comment_count}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 댓글 목록 */}
+      <div className={styles.comments}>
+        {comments.map(comment => (
+          <div key={comment.comment_id} className={styles.comment}>
+            <div className={styles.commentHeader}>
+              <img 
+                src={comment.user_profile_image} 
+                alt="" 
+                className={styles.avatar}
+              />
+              <div className={styles.commentInfo}>
+                <span className={styles.commentAuthor}>{comment.user_nickname}</span>
+                <span className={styles.commentDate}>
+                  {formatDate(comment.created_at)}
+                </span>
+              </div>
+            </div>
+            <p className={styles.commentContent}>{comment.content}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* 댓글 입력 */}
+      <form onSubmit={handleSubmit} className={styles.commentForm}>
+        <input
+          type="text"
+          placeholder="댓글을 입력하세요"
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          className={styles.commentInput}
+        />
+        <button type="submit" className={styles.submitButton}>
+          댓글 작성
+        </button>
+      </form>
+    </div>
+  );
 }
