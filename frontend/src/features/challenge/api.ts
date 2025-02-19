@@ -69,6 +69,12 @@ interface Comment {
   user_profile_image: string;
 }
 
+interface CreatePostRequest {
+  post_title: string;
+  post_content: string;
+  post_image?: string;
+}
+
 const ChallengeAPI = {
   // 챌린지 관리
   async createChallenge(data: ChallengeCreate): Promise<Challenge> {
@@ -212,7 +218,13 @@ const ChallengeAPI = {
   },
 
   async leaveChallenge(challengeId: number): Promise<void> {
-    await axiosInstance.delete(`/api/challenges/${challengeId}/leave/`);
+    const token = localStorage.getItem('access_token');
+    await axiosInstance.delete(`/api/challenges/${challengeId}/leave/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
   },
 
   // 챌린지 반응
@@ -296,7 +308,22 @@ const ChallengeAPI = {
       }
     );
     return response.data;
-  }
+  },
+
+  async createPost(challengeId: number, postData: CreatePostRequest): Promise<any> {
+    const token = localStorage.getItem('access_token');
+    const response = await axiosInstance.post(
+      `/api/challenges/${challengeId}/posts/`,
+      postData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    return response.data;
+  },
 };
 
 export default ChallengeAPI;

@@ -20,6 +20,20 @@ const Footer: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { previousTab } = location.state || {};
+
+  // 현재 활성화된 탭 결정
+  const getActiveTab = () => {
+    if (previousTab) return previousTab;
+    
+    if (location.pathname === '/') return 'home';
+    if (location.pathname.startsWith('/follow')) return 'search';
+    if (location.pathname.startsWith('/challenge')) return 'challenge';
+    if (location.pathname.startsWith('/profile')) return 'profile';
+    return '';
+  };
+
+  const activeTab = getActiveTab();
 
   // 토큰 체크 함수
   const checkAuth = (): boolean => {
@@ -71,25 +85,25 @@ const Footer: React.FC = () => {
         <nav className={styles.nav}>
           <Link 
             to="/" 
-            className={`${styles.navItem} ${location.pathname === '/' ? styles.active : ''}`}
+            className={`${styles.navItem} ${activeTab === 'home' ? styles.active : ''}`}
             onClick={(e) => {
               e.preventDefault();
               handleNavigation('/');
             }}
           >
-            {location.pathname === '/' ? <HomeIconFill /> : <HomeIcon />}
+            {activeTab === 'home' ? <HomeIconFill /> : <HomeIcon />}
             <span>홈</span>
           </Link>
           
           <Link 
             to="/follow" 
-            className={`${styles.navItem} ${location.pathname.startsWith('/follow') ? styles.active : ''}`}
+            className={`${styles.navItem} ${activeTab === 'search' ? styles.active : ''}`}
             onClick={(e) => {
               e.preventDefault();
               handleNavigation('/follow');
             }}
           >
-            {location.pathname.startsWith('/follow') ? <SearchIconFill /> : <SearchIcon />}
+            {activeTab === 'search' ? <SearchIconFill /> : <SearchIcon />}
             <span>검색</span>
           </Link>
 
@@ -103,22 +117,22 @@ const Footer: React.FC = () => {
 
           <Link 
             to="/challenge" 
-            className={`${styles.navItem} ${location.pathname.startsWith('/challenge') ? styles.active : ''}`}
+            className={`${styles.navItem} ${activeTab === 'challenge' ? styles.active : ''}`}
             onClick={(e) => {
               e.preventDefault();
               handleNavigation('/challenge');
             }}
           >
-            {location.pathname.startsWith('/challenge') ? <ChallengeIconFill /> : <ChallengeIcon />}
+            {activeTab === 'challenge' ? <ChallengeIconFill /> : <ChallengeIcon />}
             <span>챌린지</span>
           </Link>
 
           <Link 
             to="/profile" 
-            className={`${styles.navItem} ${location.pathname.startsWith('/profile') ? styles.active : ''}`}
+            className={`${styles.navItem} ${activeTab === 'profile' ? styles.active : ''}`}
             onClick={handleProfileClick}
           >
-            {location.pathname.startsWith('/profile') ? <ProfileIconFill /> : <ProfileIcon />}
+            {activeTab === 'profile' ? <ProfileIconFill /> : <ProfileIcon />}
             <span>프로필</span>
           </Link>
         </nav>

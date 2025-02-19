@@ -46,10 +46,27 @@
 }
 
 .stats {
+  margin-top: 1rem;
   display: flex;
-  justify-content: center;
   gap: 2rem;
-  margin-bottom: 1.5rem;
+
+  .followStats {
+    display: flex;
+    gap: 1rem;
+
+    span {
+      cursor: pointer;
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .challengeStats {
+    span {
+      color: #666;
+    }
+  }
 }
 
 .stat {
@@ -102,6 +119,11 @@
 
   &:hover {
     background-color: #D5D5D5;
+  }
+
+  &.following {
+    background-color: #8A6E59;
+    color: white;
   }
 }
 

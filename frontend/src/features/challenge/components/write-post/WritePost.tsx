@@ -1,16 +1,41 @@
 // WritePost.tsx
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import styles from './WritePost.module.scss'
+import ChallengeAPI from '../../api'
 
 export default function WritePost() {
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const navigate = useNavigate()
+  const location = useLocation()
+  const { id } = useParams()
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    navigate(-1)
+    
+    try {
+      const challengeId = location.state?.challengeId || Number(id)
+      
+      if (!challengeId) {
+        console.error('Challenge ID not found')
+        return
+      }
+
+      const postData = {
+        post_title: title,
+        post_content: content
+      }
+
+      console.log('Creating post:', { challengeId, postData })
+      
+      await ChallengeAPI.createPost(challengeId, postData)
+      console.log('Post created successfully')
+      
+      navigate(-1)
+    } catch (error) {
+      console.error('Failed to create post:', error)
+    }
   }
 
   const handleCancel = () => {

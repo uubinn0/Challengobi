@@ -11,7 +11,7 @@ urlpatterns = [
     # 프로필 관련
     path("me/", views.UserProfileView.as_view(), name="profile"),  # 내 프로필
     path(
-        "users/<int:pk>/", views.UserDetailView.as_view(), name="user-detail"
+        "users/<int:user_id>/", views.UserDetailView.as_view(), name="user-detail"
     ),  # 타인 프로필
     # 팔로우 관련
     path("users/<int:pk>/follow/", views.FollowView.as_view(), name="follow"),
