@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import searchIcon from '../../../assets/SearchUser-search.png';  // 이미지 import
+import searchIcon from '../../../assets/SearchUser-search.png';
 import styles from './SearchUser.module.scss';
+import { accountApi } from '../../profile/api';
 
 interface User {
   id: number;
@@ -9,25 +10,30 @@ interface User {
   image: string;
 }
 
+interface RecommendedUser {
+  id: number;
+  nickname: string;
+  profile_image: string;
+  similarity: number;
+}
+
 const SearchUser: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [recommendedUsers, setRecommendedUsers] = useState<RecommendedUser[]>([]);
   const navigate = useNavigate();
-  
-  // 더미 데이터
-  const dummyUsers: User[] = [
-    { id: 1, name: '애호박 개발자', image: '/src/assets/userProfile.png' },
-    { id: 2, name: '그지왕', image: '/src/assets/userProfile.png' },
-    { id: 3, name: '투명 드래곤', image: '/src/assets/userProfile.png' },
-    { id: 4, name: '보라색 참세', image: '/src/assets/userProfile.png' },
-    { id: 5, name: '골드 카드', image: '/src/assets/userProfile.png' },
-    { id: 6, name: '내가 이 구역 방장', image: '/src/assets/userProfile.png' },
-  ];
 
-  const filteredUsers = searchTerm
-    ? dummyUsers.filter(user => 
-        user.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : dummyUsers;
+  useEffect(() => {
+    const loadRecommendations = async () => {
+      try {
+        const recommendations = await accountApi.getRecommendations();
+        setRecommendedUsers(recommendations);
+      } catch (error) {
+        console.error('추천 사용자 로드 실패:', error);
+      }
+    };
+
+    loadRecommendations();
+  }, []);
 
   return (
     <div className={styles.searchContainer}>
@@ -43,18 +49,21 @@ const SearchUser: React.FC = () => {
       </div>
 
       <div className={styles.recommendedSection}>
-        <h3>추천 팔로우 목록</h3>
+        <h3>나와 비슷한 사용자</h3>
         <div className={styles.userGrid}>
-          {filteredUsers.map(user => (
+          {recommendedUsers.map(user => (
             <div key={user.id} className={styles.userItem}>
               <div 
                 className={styles.userImage}
                 onClick={() => navigate('/profile')}
                 style={{ cursor: 'pointer' }}
               >
-                <img src={user.image} alt={user.name} />
+                <img src={user.profile_image || '/default-profile.jpg'} alt={user.nickname} />
               </div>
-              <p className={styles.userName}>{user.name}</p>
+              <p className={styles.userName}>{user.nickname}</p>
+              <span className={styles.similarity}>
+                유사도: {Math.round(user.similarity * 100)}%
+              </span>
             </div>
           ))}
         </div>
