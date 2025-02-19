@@ -386,7 +386,7 @@ class UserRecommendationsView(views.APIView):
         try:
             # FastAPI 서버로 요청 보내기
             response = requests.post(
-                f"{settings.FASTAPI_URL}/recommend",
+                f"{settings.FASTAPI_URL}/api/accounts/recommendations",
                 json={"id": request.user.id},
                 timeout=10,
             )
