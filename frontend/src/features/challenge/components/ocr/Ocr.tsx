@@ -300,6 +300,13 @@ const Ocr: React.FC = () => {
           }}>
             {(balance !== null ? balance - parseInt(amount) : 0).toLocaleString()}원
           </span></p>
+          <button 
+            className={styles['submit-action-button']}
+            onClick={handleSubmit}
+            disabled={isLoading}
+          >
+            {isLoading ? '처리중...' : '제출하기'}
+          </button>
         </div>
       )}
 

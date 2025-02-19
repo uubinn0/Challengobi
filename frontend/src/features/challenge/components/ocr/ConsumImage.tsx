@@ -18,11 +18,63 @@ interface OcrResultItem {
   amount: string;
 }
 
+// JWT 토큰에서 user_id를 추출하는 함수
+const getUserIdFromToken = (token: string): number | null => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    const payload = JSON.parse(jsonPayload);
+    return payload.user_id;
+  } catch (error) {
+    console.error('Failed to decode token:', error);
+    return null;
+  }
+};
+
 export const ConsumImage: React.FC = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState<ConsumItem[]>([]);
+  const [balance, setBalance] = useState<number | null>(null);
+  const challengeId = sessionStorage.getItem('currentChallengeId');
+
+  // 잔액 조회 함수
+  const fetchBalance = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token || !challengeId) return;
+
+      const response = await axios.get(
+        `http://localhost:8000/api/challenges/${challengeId}/participants/`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data && response.data.length > 0) {
+        const userId = getUserIdFromToken(token);
+        const myParticipation = response.data.find(
+          (participant: any) => participant.user_id === userId
+        );
+        
+        if (myParticipation) {
+          setBalance(myParticipation.balance);
+        }
+      }
+    } catch (error) {
+      console.error('잔액 조회 실패:', error);
+    }
+  };
 
   useEffect(() => {
+    // 컴포넌트 마운트 시 잔액 조회
+    fetchBalance();
+
     // 세션 스토리지에서 OCR 결과 가져오기
     const ocrResults = sessionStorage.getItem('ocrResults');
     if (ocrResults) {
@@ -222,7 +274,8 @@ export const ConsumImage: React.FC = () => {
       )}
 
       <div className="total-section">
-        <p>총 {totalAmount.toLocaleString()}원을 소비했어요.<br/>남은 금액 50,000원에서 차감돼요.</p>
+        <p>총 {totalAmount.toLocaleString()}원을 소비했어요.<br/>
+           남은 금액 {balance?.toLocaleString() || 0}원에서 차감돼요.</p>
       </div>
 
       <button className="submit-button" onClick={handleSubmit}>제출</button>
