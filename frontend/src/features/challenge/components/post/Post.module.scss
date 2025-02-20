@@ -153,4 +153,29 @@
   &:hover {
     background-color: darken(#8A6E59, 5%);
   }
+}
+
+.commentEditForm {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  width: 100%;
+}
+
+.commentInput {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  
+  &:focus {
+    outline: none;
+    border-color: #8A6E59;
+  }
+
+  &::placeholder {
+    color: #999;
+  }
 } 
