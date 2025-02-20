@@ -30,7 +30,7 @@ const ChallengeCompleteModal: React.FC<ChallengeCompleteModalProps> = ({ isOpen,
         <div className={styles.info}>
           <p>챌린지 내용</p>
           <p>기간:</p>
-          <p>소비금액:</p>
+          <p>절약금액:</p>
         </div>
 
         <div className={styles.buttons}>
