@@ -157,7 +157,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_is_following(self, obj):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
-            return Follow.objects.filter(follower=request.user, following=obj).exists()
+            if request.user == obj:  # 자기 자신의 프로필인 경우
+                return None
+            return Follow.objects.filter(
+                follower=request.user,
+                following=obj
+            ).exists()
         return False
 
     def validate_nickname(self, value):

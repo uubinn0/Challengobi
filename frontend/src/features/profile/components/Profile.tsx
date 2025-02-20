@@ -4,6 +4,8 @@ import styles from './Profile.module.scss';
 import { Check } from 'lucide-react';
 import { accountApi } from '../api';
 import axios from 'axios';
+import FollowModal from './FollowModal';
+import { User } from '../types';  // User 타입 임포트
 
 interface ProfileData {
   message: string;
@@ -51,18 +53,40 @@ interface RecommendedUser {
 }
 
 const Profile: React.FC = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const profileData = location.state?.profileData as ProfileData;
   const { userId } = useParams();
+  const navigate = useNavigate();
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [isMyProfile, setIsMyProfile] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const [followers, setFollowers] = useState<User[]>([]);
+  const [following, setFollowing] = useState<User[]>([]);
+  const myId = localStorage.getItem('userId');
 
   useEffect(() => {
-    const checkProfile = async () => {
-      const myId = localStorage.getItem('userId');
-      setIsMyProfile(!userId || myId === userId);
+    const loadProfile = async () => {
+      try {
+        let response;
+        if (userId) {
+          response = await accountApi.getUserProfile(Number(userId));
+          setIsMyProfile(myId === userId);
+        } else {
+          response = await accountApi.getMyProfile();
+          setIsMyProfile(true);
+        }
+        setProfileData(response);
+      } catch (error) {
+        console.error('프로필 로드 실패:', error);
+      }
+    };
 
+    loadProfile();
+  }, [userId, myId]);
+
+  // 팔로우 상태 체크
+  useEffect(() => {
+    const checkFollowStatus = async () => {
       if (userId && myId !== userId) {
         try {
           const status = await accountApi.getFollowStatus(Number(userId));
@@ -73,19 +97,65 @@ const Profile: React.FC = () => {
       }
     };
 
-    checkProfile();
-  }, [userId]);
+    checkFollowStatus();
+  }, [userId, myId]);
 
   const handleFollowClick = async () => {
     try {
       if (isFollowing) {
+        // 이미 팔로우 중이면 언팔로우
         await accountApi.unfollowUser(Number(userId));
+        setIsFollowing(false);  // 팔로우 상태 업데이트
+        // 팔로워 수 업데이트 (현재 값에서 1 감소)
+        if (profileData) {
+          setProfileData({
+            ...profileData,
+            data: {
+              ...profileData.data,
+              follower_count: profileData.data.follower_count - 1
+            }
+          });
+        }
       } else {
+        // 팔로우 중이 아니면 팔로우
         await accountApi.followUser(Number(userId));
+        setIsFollowing(true);  // 팔로우 상태 업데이트
+        // 팔로워 수 업데이트 (현재 값에서 1 증가)
+        if (profileData) {
+          setProfileData({
+            ...profileData,
+            data: {
+              ...profileData.data,
+              follower_count: profileData.data.follower_count + 1
+            }
+          });
+        }
       }
-      setIsFollowing(!isFollowing);
     } catch (error) {
       console.error('팔로우 처리 실패:', error);
+    }
+  };
+
+  // 팔로워/팔로잉 목록 로드
+  const loadFollowLists = async () => {
+    try {
+      if (userId) {
+        const [followerList, followingList] = await Promise.all([
+          accountApi.getFollowers(Number(userId)),
+          accountApi.getFollowing(Number(userId))
+        ]);
+
+        // 팔로잉 목록은 이미 팔로우 중이므로 is_following을 true로 설정
+        const followingWithStatus = followingList.map(user => ({
+          ...user,
+          is_following: true
+        }));
+
+        setFollowers(followerList);
+        setFollowing(followingWithStatus);
+      }
+    } catch (error) {
+      console.error('팔로우 목록 로드 실패:', error);
     }
   };
 
@@ -99,7 +169,14 @@ const Profile: React.FC = () => {
         <div className={styles.profileInfo}>
           <div className={styles.profileHeader}>
             <div className={styles.profileImage}>
-              <img src={profileData.data.profile_image || '/default-profile.jpg'} alt="프로필 이미지" />
+              {profileData.data.profile_image ? (
+                <img 
+                  src={profileData.data.profile_image} 
+                  alt="프로필 이미지"
+                />
+              ) : (
+                <div className={styles.imageContainer} />
+              )}
             </div>
             <div className={styles.profileDetails}>
               <h2>{profileData.data.nickname}</h2>
@@ -108,10 +185,10 @@ const Profile: React.FC = () => {
               )}
               <div className={styles.stats}>
                 <span onClick={() => navigate(`/profile/${profileData.data.id}/following`)}>
-                  팔로잉 {profileData.data.following_count}
+                  팔로잉 목록 {profileData.data.following_count}
                 </span>
-                <span onClick={() => navigate(`/profile/${profileData.data.id}/follower`)}>
-                  팔로워 {profileData.data.follower_count}
+                <span onClick={() => navigate(`/profile/${profileData.data.id}/followers`)}>
+                  팔로워 목록 {profileData.data.follower_count}
                 </span>
               </div>
             </div>
@@ -171,6 +248,21 @@ const Profile: React.FC = () => {
           </div>
         </div>
       </div>
+      {/* 모달 추가 */}
+      {showFollowersModal && (
+        <FollowModal
+          title="팔로워"
+          users={followers}
+          onClose={() => setShowFollowersModal(false)}
+        />
+      )}
+      {showFollowingModal && (
+        <FollowModal
+          title="팔로잉"
+          users={following}
+          onClose={() => setShowFollowingModal(false)}
+        />
+      )}
     </div>
   );
 };

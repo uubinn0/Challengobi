@@ -32,12 +32,16 @@ const SearchUser: React.FC = () => {
   // 사용자 프로필로 이동하는 함수
   const handleUserClick = async (userId: number) => {
     try {
-      // 해당 사용자의 프로필 정보를 가져옴
+      // 1. 해당 사용자의 프로필 정보를 가져옴
       const userProfile = await accountApi.getUserProfile(userId);
-      // 프로필 페이지로 이동하면서 프로필 데이터와 이전 탭 정보를 전달
+      // 2. 팔로우 상태도 함께 확인
+      const followStatus = await accountApi.getFollowStatus(userId);
+      
+      // 프로필 페이지로 이동하면서 프로필 데이터와 팔로우 상태를 전달
       navigate(`/profile/${userId}`, { 
         state: { 
           profileData: userProfile,
+          isFollowing: followStatus,  // 팔로우 상태 전달
           previousTab: 'search'  // 검색 탭에서 왔다는 정보 추가
         } 
       });

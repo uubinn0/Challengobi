@@ -217,45 +217,35 @@ export const accountApi = {
         }
     },
 
-    // 팔로워 목록 조회
-    getFollowers: async (userId: number): Promise<FollowUser[]> => {
+    // 팔로워 목록 가져오기
+    getFollowers: async (userId: number): Promise<any[]> => {
         try {
             const token = localStorage.getItem('access_token');
-            const response = await axiosInstance.get(`/api/accounts/users/${userId}/followers`, {
+            const response = await axiosInstance.get(`/api/accounts/users/${userId}/followers/`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
-            // 받아온 데이터에서 필요한 정보만 매핑
-            return response.data.map((user: any) => ({
-                id: user.id,
-                nickname: user.nickname,
-                profile_image: user.profile_image || '/default-profile.jpg'
-            }));
+            return response.data;
         } catch (error) {
             console.error('팔로워 목록 조회 실패:', error);
-            throw new Error('팔로워 목록을 불러오는데 실패했습니다.');
+            return [];
         }
     },
 
-    // 팔로잉 목록 조회
-    getFollowing: async (userId: number): Promise<FollowUser[]> => {
+    // 팔로잉 목록 가져오기
+    getFollowing: async (userId: number): Promise<any[]> => {
         try {
             const token = localStorage.getItem('access_token');
-            const response = await axiosInstance.get(`/api/accounts/users/${userId}/following`, {
+            const response = await axiosInstance.get(`/api/accounts/users/${userId}/following/`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
-            // 받아온 데이터에서 필요한 정보만 매핑
-            return response.data.map((user: any) => ({
-                id: user.id,
-                nickname: user.nickname,
-                profile_image: user.profile_image || '/default-profile.jpg'
-            }));
+            return response.data;
         } catch (error) {
             console.error('팔로잉 목록 조회 실패:', error);
-            throw new Error('팔로잉 목록을 불러오는데 실패했습니다.');
+            return [];
         }
     },
 
@@ -263,12 +253,12 @@ export const accountApi = {
     followUser: async (userId: number): Promise<void> => {
         try {
             const token = localStorage.getItem('access_token');
-            await axiosInstance.post(`/api/accounts/users/${userId}/follow/`, {
-                user_id: Number(localStorage.getItem('userId')),
-                following_id: userId
+            await axiosInstance.post(`/api/accounts/users/${userId}/follow/`, {  // 끝에 슬래시(/) 추가
+                user_id: Number(localStorage.getItem('userId'))  // following_id 제거
             }, {
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             });
         } catch (error) {
@@ -297,14 +287,15 @@ export const accountApi = {
         try {
             const token = localStorage.getItem('access_token');
             const myId = localStorage.getItem('userId');
+            // 현재 프로필 사용자의 팔로워 목록을 확인
             const response = await axiosInstance.get(`/api/accounts/users/${userId}/followers/`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
-            // 팔로워 목록에서 현재 사용자가 팔로워인지 확인
+            // 팔로워 목록에서 내가 있는지 확인
             return response.data.some((follow: any) => 
-                follow.follower === Number(myId) && follow.following === userId
+                follow.follower === Number(myId)
             );
         } catch (error) {
             console.error('팔로우 상태 확인 실패:', error);

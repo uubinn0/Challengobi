@@ -36,6 +36,9 @@ import Follower from './features/profile/components/Follower';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './features/auth/context/AuthContext';
 import ChallengeFail from './features/challenge/components/Fail/ChallengeFail';
+import FollowerList from './features/profile/components/FollowerList';
+import FollowingList from './features/profile/components/FollowingList';
+import FollowList from './features/profile/components/FollowList';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -94,6 +97,8 @@ const App: React.FC = () => {
 
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/:userId" element={<Profile />} />
+                <Route path="/profile/:userId/followers" element={<FollowList type="followers" />} />
+                <Route path="/profile/:userId/following" element={<FollowList type="following" />} />
 
                 <Route path="/follow/*" element={<FollowPage />}>
                   <Route index element={<SearchUser />} />
