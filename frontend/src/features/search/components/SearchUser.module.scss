@@ -1,62 +1,25 @@
-.searchContainer {
-    padding: 20px;
-    max-width: 600px;
+.container {
+    padding: 40px;
+    max-width: 1200px;
     margin: 0 auto;
-}
-
-.searchBox {
-    display: flex;
-    align-items: center;
-    margin-bottom: 30px;
-    margin-top: 30px;
-    background-color: #EBE8E5;
-    border-radius: 8px;
-    padding: 8px 12px;
-    gap: 8px;
-
-    input {
-        flex: 1;
-        border: none;
-        background: transparent;
-        font-size: 14px;
-        color: #333;
-        padding: 0;
-
-        &::placeholder {
-            color: #999;
-        }
-
-        &:focus {
-            outline: none;
-        }
-    }
-}
-
-.searchButton {
-    background: none;
-    border: none;
-    padding: 0;
-    color: #666;
-    font-size: 14px;
-    cursor: pointer;
-
-    &:hover {
-        color: #333;
-    }
 }
 
 .recommendedSection {
     h3 {
-        margin-bottom: 20px;
+        margin-top: 40px;
+        margin-bottom: 40px;
+        margin-left: 20px;
         color: #333;
-        font-size: 16px;
+        font-size: 28px;
+        font-weight: bold;
+        text-align: left;
     }
 }
 
 .userGrid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px 10px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 40px 30px;
 }
 
 .userItem {
@@ -64,14 +27,21 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
+    padding: 20px;
+    transition: transform 0.2s;
+
+    &:hover {
+        transform: translateY(-5px);
+    }
 }
 
 .userImage {
-    width: 80px;
-    height: 80px;
+    width: 160px;
+    height: 160px;
     border-radius: 50%;
     overflow: hidden;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 
     img {
         width: 100%;
@@ -81,26 +51,49 @@
 }
 
 .userName {
-    font-size: 14px;
+    font-size: 26px;
     color: #333;
     margin: 0;
+    font-weight: 500;
 }
 
 /* 반응형 디자인 */
-@media (max-width: 399px) {
+@media (max-width: 1200px) {
+    .userGrid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
     .userGrid {
         grid-template-columns: repeat(2, 1fr);
     }
     
     .userImage {
-        width: 60px;
-        height: 60px;
+        width: 120px;
+        height: 120px;
+    }
+    
+    .userName {
+        font-size: 22px;
     }
 }
 
-.searchIcon {
-    width: 16px;
-    height: 16px;
-    margin-right: 8px;
-    opacity: 0.6;
+@media (max-width: 480px) {
+    .container {
+        padding: 20px;
+    }
+
+    .userGrid {
+        gap: 20px;
+    }
+
+    .userImage {
+        width: 100px;
+        height: 100px;
+    }
+
+    .userName {
+        font-size: 20px;
+    }
 }

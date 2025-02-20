@@ -7,7 +7,7 @@ import NotificationList from '../../notification/NotificationList';
 import { Notification } from '../../../types/notification';
 import ChallengeDetailModal from '../../modals/ChallengeDetailModal';
 import { useAuth } from '../../../features/auth/context/AuthContext';
-import profileTest from '@/assets/profile-test.jpg';
+import { DEFAULT_PROFILE_IMAGE } from '../../../constants';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -130,10 +130,10 @@ const Header: React.FC = () => {
     setShowNotifications(false);
   };
 
-  // 임시 사용자 데이터
+  // 임시 사용자 데이터를 DEFAULT_PROFILE_IMAGE를 사용하도록 수정
   const user = {
     nickname: '물고기',
-    profileImage: profileTest
+    profileImage: DEFAULT_PROFILE_IMAGE
   };
 
   // 로그아웃 처리

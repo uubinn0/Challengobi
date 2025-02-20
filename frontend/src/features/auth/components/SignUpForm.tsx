@@ -8,12 +8,16 @@ import type { UserProfile } from '../types/user';
 import { initialUserProfile } from '../types/user';
 import { existingNicknames } from '../data/dummyNicknames';
 import styles from './SignUpForm.module.scss';
+import profileTest from '@/assets/profile-test.jpg';
+
+export const DEFAULT_PROFILE_IMAGE = '/assets/images/default-profile.png';
 
 const SignUpForm: React.FC = () => {
   const navigate = useNavigate();
   const [showKeywordPopup, setShowKeywordPopup] = useState<boolean>(false);
   const [formData, setFormData] = useState<UserProfile>({
-    ...initialUserProfile
+    ...initialUserProfile,
+    profileImage: profileTest
   });
   
   const [showVerification, setShowVerification] = useState<boolean>(false);
@@ -369,13 +373,11 @@ const SignUpForm: React.FC = () => {
           <div className={styles.formGroup}>
             <label>프로필 이미지</label>
             <div className={styles.profileImageUpload}>
-              {formData.profileImage && (
-                <img 
-                  src={formData.profileImage} 
-                  alt="프로필 미리보기" 
-                  className={styles.profilePreview} 
-                />
-              )}
+              <img 
+                src={formData.profileImage || DEFAULT_PROFILE_IMAGE} 
+                alt={formData.nickname}
+                className={styles.profileImage}
+              />
               <input
                 type="file"
                 accept="image/*"
