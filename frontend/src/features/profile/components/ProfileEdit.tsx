@@ -7,6 +7,7 @@ import { accountApi, ProfileUpdateData, ProfileData } from '../api';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { ko } from 'date-fns/locale';
+import { DEFAULT_PROFILE_IMAGE } from '../../../constants';
 
 const ProfileEdit: React.FC = () => {
   const navigate = useNavigate();
@@ -278,7 +279,14 @@ const ProfileEdit: React.FC = () => {
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.profileImage}>
-          <img src={userData.data.profile_image || '/default-profile.jpg'} alt="프로필 이미지" />
+          <img 
+            src={userData.data.profile_image || DEFAULT_PROFILE_IMAGE} 
+            alt="프로필 이미지"
+            className={styles.profileImage}
+            onError={(e) => {
+              e.currentTarget.src = DEFAULT_PROFILE_IMAGE;
+            }}
+          />
         </div>
         <input
           type="file"
