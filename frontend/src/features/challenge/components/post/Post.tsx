@@ -1,20 +1,10 @@
 // Post.tsx
 import { useState, useEffect } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Heart, MessageSquare } from "lucide-react";
 import ChallengeAPI from "../../api";
 import styles from "./Post.module.scss";
   
-interface PostData {
-  post_id: number;
-  post_title: string;
-  post_content: string;
-  post_created_at: string;
-  user_profile_image: string;
-  user_nickname: string;
-  like_count: number;
-  comment_count: number;
-}
 
 interface Comment {
   comment_id: number;
@@ -26,8 +16,10 @@ interface Comment {
 
 export default function Post() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { id, postId } = useParams();
   const postData = location.state?.postData;
+  const isFromHome = location.pathname.startsWith("/challenge/progress/");
   
   console.log("Location state:", location.state);  // 디버깅용
   console.log("Post data:", postData);            // 디버깅용
@@ -37,6 +29,13 @@ export default function Post() {
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const userNickname = localStorage.getItem('nickname');  // 로컬 스토리지에서 nickname 가져오기
+  const isMyPost = postData?.user_nickname === userNickname;  // nickname 비교로 변경
+
+  console.log("Local Storage Nickname:", userNickname);
+  console.log("Post Author Nickname:", postData?.user_nickname);
+  console.log("Is My Post?:", isMyPost);
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -93,6 +92,31 @@ export default function Post() {
     });
   };
 
+  // 수정 핸들러 추가
+  const handleEdit = () => {
+    navigate(`/challenge/progress/${id}/post/${postId}/update`, {
+      state: { 
+        postData: {
+          post_id: postData.post_id,
+          post_title: postData.post_title,
+          post_content: postData.post_content,
+          user_nickname: postData.user_nickname
+        }
+      }
+    });
+  };
+
+  // 삭제 핸들러 추가
+  const handleDelete = async () => {
+    if (!window.confirm('게시글을 삭제하시겠습니까?')) return;
+    try {
+      await ChallengeAPI.deletePost(Number(id), Number(postId));
+      navigate(-1);
+    } catch (error) {
+      console.error('게시글 삭제 실패:', error);
+    }
+  };
+
   // 로딩 상태 표시 개선
   if (loading) {
     return (
@@ -144,28 +168,46 @@ export default function Post() {
         <div className={styles.postActions}>
           <button className={styles.actionButton}>
             <Heart size={16} />
-            <span>좋아요 {postData?.like_count}</span>
+            <span>좋아요 {postData?.like_count || 0}</span>
           </button>
           <button className={styles.actionButton}>
             <MessageSquare size={16} />
             <span>댓글 {comments.length}</span>
           </button>
+          {isMyPost && (
+            <>
+              <button 
+                className={`${styles.actionButton} ${styles.editButton}`}
+                onClick={handleEdit}
+              >
+                수정
+              </button>
+              <button 
+                className={`${styles.actionButton} ${styles.deleteButton}`}
+                onClick={handleDelete}
+              >
+                삭제
+              </button>
+            </>
+          )}
         </div>
       </div>
 
       {/* 댓글 입력 */}
-      <form onSubmit={handleSubmit} className={styles.commentForm}>
-        <input
-          type="text"
-          placeholder="댓글을 입력하세요"
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          className={styles.commentInput}
-        />
-        <button type="submit" className={styles.submitButton}>
-          댓글 작성
-        </button>
-      </form>
+      {isFromHome && (
+        <form onSubmit={handleSubmit} className={styles.commentForm}>
+          <input
+            type="text"
+            placeholder="댓글을 입력하세요"
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            className={styles.commentInput}
+          />
+          <button type="submit" className={styles.submitButton}>
+            댓글 작성
+          </button>
+        </form>
+      )}
 
       {/* 댓글 목록 */}
       <div className={styles.comments}>

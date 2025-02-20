@@ -211,9 +211,9 @@ const Progress: FC = () => {
   }, [challengeData]);
 
   const handlePostClick = (post: any) => {
-    console.log("Original post data:", post);  // 디버깅용
+    console.log("Original post data:", post);
     
-    navigate(`/challenge/progress/${id}/post/${post.post_id}`, {
+    navigate(`${location.pathname}/post/${post.post_id}`, {
       state: { 
         postData: {
           post_id: post.post_id,
@@ -222,8 +222,8 @@ const Progress: FC = () => {
           post_created_at: post.post_created_at,  // created_at을 post_created_at으로 매핑
           user_profile_image: post.user_profile_image,
           user_nickname: post.user_nickname,
-          like_count: post.like_count || 0,
-          comment_count: post.comment_count || 0
+          like_count: post.like_count,
+          comment_count: post.comment_count
         }
       }
     });
@@ -331,13 +331,15 @@ const Progress: FC = () => {
       <div className={styles.commentsSection}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>게시글</h2>
-          <button 
-            className={styles.writeButton} 
-            onClick={handleWriteClick}
-          >
-            <Pencil size={20} />
-            글쓰기
-          </button>
+          {isFromHome && (  // 글쓰기 버튼도 같은 조건 적용
+            <button 
+              className={styles.writeButton} 
+              onClick={handleWriteClick}
+            >
+              <Pencil size={20} />
+              글쓰기
+            </button>
+          )}
         </div>
 
         {loading ? (

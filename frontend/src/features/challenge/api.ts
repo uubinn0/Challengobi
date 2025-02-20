@@ -259,12 +259,15 @@ const ChallengeAPI = {
 
   async getPostDetail(challengeId: number, postId: number): Promise<any> {
     const token = localStorage.getItem('access_token');
-    const response = await axiosInstance.get(`/api/challenges/${challengeId}/posts/${postId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+    const response = await axiosInstance.get(
+      `/api/challenges/${challengeId}/posts/${postId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       }
-    });
+    );
     return response.data;
   },
 
@@ -324,6 +327,40 @@ const ChallengeAPI = {
     );
     return response.data;
   },
+
+  // updatePost 메서드 추가
+  async updatePost(challengeId: number, postId: number, data: {
+    board_title: string;
+    board_content: string;
+    board_image?: string;
+  }): Promise<any> {
+    const token = localStorage.getItem('access_token');
+    const response = await axiosInstance.put(
+      `/api/challenges/${challengeId}/posts/${postId}`,
+      data,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    return response.data;
+  },
+
+  // deletePost 메서드 추가
+  async deletePost(challengeId: number, postId: number): Promise<void> {
+    const token = localStorage.getItem('access_token');
+    await axiosInstance.delete(
+      `/api/challenges/${challengeId}/posts/${postId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+  }
 };
 
 export default ChallengeAPI;
