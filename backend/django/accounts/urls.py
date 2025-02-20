@@ -11,7 +11,7 @@ urlpatterns = [
     # 프로필 관련
     path("me/", views.UserProfileView.as_view(), name="profile"),  # 내 프로필
     path(
-        "users/<int:user_id>/", views.UserDetailView.as_view(), name="user-detail"
+        "users/<int:pk>/", views.UserDetailView.as_view(), name="user-detail"
     ),  # 타인 프로필
     # 팔로우 관련
     path("users/<int:pk>/follow/", views.FollowView.as_view(), name="follow"),
@@ -32,5 +32,11 @@ urlpatterns = [
         "recommendations/",
         views.UserRecommendationsView.as_view(),
         name="user-recommendations",
+    ),
+    # 팔로우 상태 확인을 위한 새로운 URL 추가
+    path(
+        "users/<int:pk>/follow-status/",
+        views.FollowStatusView.as_view(),
+        name="follow-status"
     ),
 ]

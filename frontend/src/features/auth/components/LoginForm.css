@@ -100,3 +100,10 @@
     outline: none;
   }
   
+  .error-message {
+    color: #ff0000;
+    font-size: 16px;  /* 기본 16px에서 2px 줄임 */
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  

@@ -1,11 +1,15 @@
 from django.shortcuts import render
-
-# Create your views here.
-from rest_framework import viewsets, permissions
+from django.utils import timezone
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Post, Comment
-from .serializers import PostListSerializer, PostDetailSerializer, CommentSerializer, PostCreateSerializer
+from .serializers import (
+    PostListSerializer,
+    PostDetailSerializer,
+    CommentSerializer,
+    PostCreateSerializer,
+)
 from .permissions import IsParticipant, IsOwnerOrReadOnly
 
 
@@ -31,30 +35,103 @@ class PostViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action == "create":
             return PostCreateSerializer
-        elif self.action == 'list':
+        elif self.action == "update" or self.action == "partial_update":
+            return PostCreateSerializer
+        elif self.action == "list":
             return PostListSerializer
         return PostDetailSerializer
 
-    @action(detail=False, methods=["get"])
-    def my_posts(self, request):
-        """내가 작성한 게시글 목록을 조회합니다."""
-        queryset = Post.objects.filter(user=request.user, is_active=True).order_by(
-            "-created_at"
-        )
+    def update(self, request, *args, **kwargs):
+        """게시글을 수정합니다."""
+        post = self.get_object()
 
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = PostListSerializer(
-                page, many=True, context={"request": request}
+        # 자신의 게시글만 수정할 수 있도록 확인
+        if post.user != request.user:
+            return Response(
+                {"detail": "You do not have permission to update this post."},
+                status=status.HTTP_403_FORBIDDEN,
             )
-            return self.get_paginated_response(serializer.data)
 
-        serializer = PostListSerializer(
-            queryset, many=True, context={"request": request}
-        )
-        return Response(serializer.data)
+        # 부분 업데이트인지 전체 업데이트인지 확인
+        partial = kwargs.pop("partial", False)
+        serializer = self.get_serializer(post, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        # 수정 시간 업데이트
+        post = serializer.save(modified_at=timezone.now())
+
+        return Response(PostDetailSerializer(post, context={"request": request}).data)
+
+    def partial_update(self, request, *args, **kwargs):
+        """게시글을 부분 수정합니다."""
+        kwargs["partial"] = True
+        return self.update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """게시글을 소프트 삭제합니다."""
+        post = self.get_object()
+
+        # 자신의 게시글만 삭제할 수 있도록 확인
+        if post.user != request.user:
+            return Response(
+                {"detail": "You do not have permission to delete this post."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # 소프트 삭제 처리
+        post.is_active = False
+        post.deleted_at = timezone.now()
+        post.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=["get", "delete"])
+    def my_posts(self, request):
+        """내가 작성한 게시글 목록을 조회하거나, 특정 게시글을 삭제합니다."""
+        if request.method == "GET":
+            queryset = Post.objects.filter(user=request.user, is_active=True).order_by(
+                "-created_at"
+            )
+
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = PostListSerializer(
+                    page, many=True, context={"request": request}
+                )
+                return self.get_paginated_response(serializer.data)
+
+            serializer = PostListSerializer(
+                queryset, many=True, context={"request": request}
+            )
+            return Response(serializer.data)
+
+        elif request.method == "DELETE":
+            # 삭제할 게시글 ID 확인
+            post_id = request.query_params.get("post_id")
+            if not post_id:
+                return Response(
+                    {"detail": "post_id parameter is required"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            try:
+                post = Post.objects.get(id=post_id, user=request.user, is_active=True)
+            except Post.DoesNotExist:
+                return Response(
+                    {
+                        "detail": "Post not found or you don't have permission to delete it."
+                    },
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            # 소프트 삭제 처리
+            post.is_active = False
+            post.deleted_at = timezone.now()
+            post.save()
+
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["get"], url_path="users/(?P<user_id>[^/.]+)")
     def user_posts(self, request, user_id=None):
@@ -102,3 +179,47 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         post_id = self.kwargs.get("post_id")
         serializer.save(user=self.request.user, post_id=post_id, is_active=True)
+
+    def update(self, request, *args, **kwargs):
+        """댓글을 수정합니다."""
+        comment = self.get_object()
+
+        # 자신의 댓글만 수정할 수 있도록 확인 (IsOwnerOrReadOnly에서도 처리되지만 명시적으로 추가)
+        if comment.user != request.user:
+            return Response(
+                {"detail": "You do not have permission to update this comment."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # 부분 업데이트인지 전체 업데이트인지 확인
+        partial = kwargs.pop("partial", False)
+        serializer = self.get_serializer(comment, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        # 수정 시간 업데이트
+        comment = serializer.save(modified_at=timezone.now())
+
+        return Response(serializer.data)
+
+    def partial_update(self, request, *args, **kwargs):
+        """댓글을 부분 수정합니다."""
+        kwargs["partial"] = True
+        return self.update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """댓글을 소프트 삭제합니다."""
+        comment = self.get_object()
+
+        # 자신의 댓글만 삭제할 수 있도록 확인 (IsOwnerOrReadOnly에서도 처리되지만 명시적으로 추가)
+        if comment.user != request.user:
+            return Response(
+                {"detail": "You do not have permission to delete this comment."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # 소프트 삭제 처리
+        comment.is_active = False
+        comment.deleted_at = timezone.now()
+        comment.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

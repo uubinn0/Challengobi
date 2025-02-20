@@ -40,6 +40,25 @@ const LoginForm: React.FC = () => {
         localStorage.setItem('access_token', response.tokens.access);
         localStorage.setItem('refresh_token', response.tokens.refresh);
         
+        // 사용자 정보 저장
+        localStorage.setItem('user_id', String(response.user.id));
+        localStorage.setItem('nickname', response.user.nickname);
+        localStorage.setItem('email', response.user.email);
+        localStorage.setItem('profile_image', response.user.profile_image || '/icons/default-profile.png');
+        
+        // localStorage 저장 확인을 위한 로그
+        console.log('Stored User Info:', {
+          access_token: localStorage.getItem('access_token'),
+          refresh_token: localStorage.getItem('refresh_token'),
+          user_id: localStorage.getItem('user_id'),
+          nickname: localStorage.getItem('nickname'),
+          email: localStorage.getItem('email'),
+          profile_image: localStorage.getItem('profile_image')
+        });
+
+        // API 응답 데이터 확인
+        console.log('API Response:', response);
+        
         // 사용자 정보로 로그인 처리
         login({
           id: String(response.user.id),

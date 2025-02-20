@@ -589,6 +589,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+
         try:
             data = request.data
             expenses_data = data.get("selected", [])  # JSON 배열로 지출 데이터 받기
@@ -611,42 +612,61 @@ class ExpenseViewSet(viewsets.ModelViewSet):
             # 총 지출 금액 계산
             total_amount = sum(int(expense["amount"]) for expense in expenses_data)
 
-            # 잔액 확인 : 예산이 부족하면 에러를 발생하는데 우리는 에러보다는 챌린지 실패 상태로 변경하는 로직
-            # if participant.balance < total_amount:
-            #     return Response(
-            #         {"error": "예산이 부족합니다"},
-            #         status=status.HTTP_400_BAD_REQUEST
-            #     )
-
-            # 잔액 업데이트
-            participant.balance -= total_amount
-            participant.save()
-
-            # 지출 데이터 저장 및 잔액 업데이트 로직
-            created_expenses = []
-            for expense_data in expenses_data:
-                expense = Expense.objects.create(
-                    challenge=challenge,
-                    user=request.user,
-                    store=expense_data["store"],
-                    amount=int(expense_data["amount"]),
-                    payment_date=expense_data.get("payment_date"),
-                )
-                created_expenses.append(expense.id)
-
             # 오늘 날짜에 ocr_count가 증가했는지 확인
             today = timezone.now().date()
             last_ocr_date = getattr(participant, "last_ocr_date", None)
 
-            # 날짜가 다르면 ocr_count 증가 및 날짜 업데이트
-            if last_ocr_date != today:
-                participant.ocr_count += 1
-                participant.last_ocr_date = today
+            if total_amount <= participant.balance:
+                # 인증 성공 처리
+                if last_ocr_date != today:
+                    participant.ocr_count += 1
+                    participant.last_ocr_date = today
+                    # User의 challenge_streak를 ocr_count와 동일하게 업데이트
+                    request.user.challenge_streak += 1
+                    request.user.save()
+
+                # 잔액 업데이트 및 지출 데이터 저장
+                participant.balance -= total_amount
                 participant.save()
 
-            # 잔액이 0 이하가 되면 챌린지 실패 처리
-            if participant.balance <= 0:
-                participant.is_failed = 1  # FAILED 상태 코드
+                created_expenses = []
+                for expense_data in expenses_data:
+                    expense = Expense.objects.create(
+                        challenge=challenge,
+                        user=request.user,
+                        store=expense_data["store"],
+                        amount=int(expense_data["amount"]),
+                        payment_date=expense_data.get("payment_date"),
+                    )
+                    created_expenses.append(expense.id)
+
+                # 뱃지 체크 API 호출
+                try:
+                    badge_response = requests.post(
+                        "http://django-app:8000/api/badges/check_badges/",
+                        headers={
+                            'Authorization': request.headers.get('Authorization')
+                        }
+                    )
+                    badge_result = badge_response.json() if badge_response.status_code == 200 else None
+                except Exception as e:
+                    badge_result = None
+
+                return Response(
+                    {
+                        "message": "지출 내역이 저장되었습니다",
+                        "expense_ids": created_expenses,
+                        "total_amount": total_amount,
+                        "remaining_balance": participant.balance,
+                        "ocr_count": participant.ocr_count,
+                        "challenge_streak": request.user.challenge_streak,
+                        "badge_result": badge_result
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
+            else:
+                # 챌린지 실패 처리
+                participant.is_failed = 1
                 participant.save()
 
                 # 챌린지의 모든 참가자가 실패했는지 확인
@@ -660,20 +680,20 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                     challenge.status = 2  # FINISHED 상태 코드
                     challenge.save()
 
-            return Response(
-                {
-                    "message": "지출 내역이 저장되었습니다",
-                    "expense_ids": created_expenses,
-                    "total_amount": total_amount,
-                    "remaining_balance": participant.balance,
-                    "ocr_count": participant.ocr_count,
-                },
-                status=status.HTTP_201_CREATED,
-            )
+                return Response(
+                    {
+                        "message": "사용 금액이 잔액을 초과하여 챌린지에 실패했습니다",
+                        "total_amount": total_amount,
+                        "remaining_balance": participant.balance - total_amount,
+                        "challenge_status": "FAILED" if all_failed else "IN_PROGRESS"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         except Exception as e:
             return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
@@ -728,6 +748,15 @@ class SimpleExpenseViewSet(viewsets.ViewSet):
                     {"error": "잔액이 부족합니다"}, status=status.HTTP_400_BAD_REQUEST
                 )
 
+            # 오늘 첫 인증이면 ocr_count 증가
+            if not today_expense:
+                participant.ocr_count += 1
+                participant.last_ocr_date = today
+                # User의 challenge_streak 증가
+                request.user.challenge_streak += 1
+                request.user.save()
+                participant.save()
+
             # 지출 내역 저장
             expense = serializer.save()
 
@@ -735,10 +764,17 @@ class SimpleExpenseViewSet(viewsets.ViewSet):
             participant.balance -= amount
             participant.save()
 
-            # 오늘 첫 인증이면 ocr_count 증가
-            if not today_expense:
-                participant.ocr_count += 1
-                participant.save()
+            # 뱃지 체크 API 호출
+            try:
+                badge_response = requests.post(
+                    "http://django-app:8000/api/badges/check_badges/",
+                    headers={
+                        'Authorization': request.headers.get('Authorization')
+                    }
+                )
+                badge_result = badge_response.json() if badge_response.status_code == 200 else None
+            except Exception as e:
+                badge_result = None
 
             # 잔액이 0 이하거나 예산을 초과한 경우 챌린지 실패 처리
             challenge_budget = challenge.budget
@@ -765,6 +801,7 @@ class SimpleExpenseViewSet(viewsets.ViewSet):
                     "amount": amount,
                     "remaining_balance": participant.balance,
                     "ocr_count": participant.ocr_count,
+                    "badge_result": badge_result
                 },
                 status=status.HTTP_201_CREATED,
             )

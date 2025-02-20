@@ -6,19 +6,12 @@ from .models import UserChallengeCategory, Follow
 
 User = get_user_model()
 
-User = get_user_model()
-
 
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "email", "nickname", "is_superuser", "is_active"]
         read_only_fields = fields
-
-
-# 이메일 중복 검사
-class EmailCheckSerializer(serializers.Serializer):
-    email = serializers.EmailField()
 
 
 # 이메일 중복 검사
@@ -59,68 +52,6 @@ class UserChallengeCategorySerializer(serializers.ModelSerializer):
         read_only_fields = ["user"]
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
-    challenge_categories = UserChallengeCategorySerializer(
-        source="challenge_category", required=True
-    )
-
-    class Meta:
-        model = User
-        fields = [
-            "id",
-            "username",
-            "email",
-            "password",
-            "nickname",
-            "sex",
-            "birth_date",
-            "career",
-            "introduction",
-            "profile_image",
-            "challenge_categories",
-        ]
-        extra_kwargs = {
-            "password": {"write_only": True, "required": True},
-            "username": {"required": True},
-            "email": {"required": True},
-            "nickname": {"required": True},
-            "sex": {"required": True},
-            "birth_date": {"required": True},
-            "career": {"required": True},
-            "introduction": {"required": False},
-            "profile_image": {"required": False},
-        }
-
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("이미 사용 중인 이메일입니다.")
-        return value
-
-    def validate_nickname(self, value):
-        if User.objects.filter(nickname=value).exists():
-            raise serializers.ValidationError("이미 존재하는 닉네임입니다.")
-        return value
-
-    def validate_career(self, value):
-        valid_careers = dict(User.CAREER_CHOICES)
-        if value not in valid_careers:
-            raise serializers.ValidationError("올바른 직업을 선택해주세요.")
-        return value
-
-    @transaction.atomic
-    def create(self, validated_data):
-        challenge_categories_data = validated_data.pop("challenge_categories")
-        password = validated_data.pop("password")
-
-        # 먼저 User 인스턴스 생성
-        user = User.objects.create_user(password=password, **validated_data)
-
-        # 그 다음 UserChallengeCategory 생성
-        UserChallengeCategory.objects.create(user=user, **challenge_categories_data)
-
-        return user
-
-
 class UserProfileSerializer(serializers.ModelSerializer):
     challenge_categories = UserChallengeCategorySerializer(
         source="challenge_category", required=False
@@ -145,6 +76,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "follower_count",
             "following_count",
             "is_following",
+            "challenge_categories",  # UserChallengeCategorySerializer를 통해 가져옴
         ]
         read_only_fields = ["email", "challenge_streak"]
 
@@ -157,6 +89,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_is_following(self, obj):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
+            if request.user == obj:  # 자기 자신의 프로필인 경우
+                return None
             return Follow.objects.filter(follower=request.user, following=obj).exists()
         return False
 
@@ -164,24 +98,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if User.objects.filter(nickname=value).exists():
             raise serializers.ValidationError("이미 존재하는 닉네임입니다.")
         return value
-
-
-# 관심 소비 카테고리 등록
-class UserChallengeCategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserChallengeCategory
-        fields = [
-            "cafe",
-            "restaurant",
-            "grocery",
-            "shopping",
-            "culture",
-            "hobby",
-            "drink",
-            "transportation",
-            "etc",
-        ]
-        read_only_fields = ["user"]
 
 
 # 회원 가입
@@ -289,66 +205,6 @@ class UserDeleteSerializer(serializers.Serializer):
         user.delete()
 
 
-# 임시 -> 팔로우 관련 필드 추가해야함
-class UserProfileSerializer(serializers.ModelSerializer):
-    challenge_categories = UserChallengeCategorySerializer(
-        source="challenge_category", required=False
-    )
-
-    class Meta:
-        model = User
-        fields = (
-            "id",
-            "username",
-            "email",
-            "nickname",
-            "sex",
-            "birth_date",
-            "career",
-            "introduction",
-            "profile_image",
-            "total_saving",  # total_saving 필드 추가
-            "challenge_categories",  # UserChallengeCategorySerializer를 통해 가져옴
-        )
-
-
-# class UserProfileSerializer(serializers.ModelSerializer):
-# follower_count = serializers.SerializerMethodField()
-# following_count = serializers.SerializerMethodField()
-# is_following = serializers.SerializerMethodField()
-
-# class Meta:
-#     model = User
-#     fields = [
-#         "id",
-#         "email",
-#         "nickname",
-#         "sex",
-#         "birth_date",
-#         "career",
-#         "total_saving",
-#         "introduction",
-#         "profile_image",
-#         "challenge_streak",
-#         "follower_count",
-#         "following_count",
-#         "is_following",
-#     ]
-#     read_only_fields = ["email", "challenge_streak"]
-
-# def get_follower_count(self, obj):
-#     return obj.followers.count()
-
-# def get_following_count(self, obj):
-#     return obj.following.count()
-
-# def get_is_following(self, obj):
-#     request = self.context.get("request")
-#     if request and request.user.is_authenticated:
-#         return Follow.objects.filter(follower=request.user, following=obj).exists()
-#     return False
-
-
 # 프로필 사진 변경
 class ProfileImageUpdateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -365,47 +221,6 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
     def validate_nickname(self, value):
         user = self.context["request"].user
         # 현재 사용자의 닉네임이 아닌 다른 닉네임이 이미 존재하는 경우에만 에러
-        if User.objects.exclude(id=user.id).filter(nickname=value).exists():
-            raise serializers.ValidationError("이미 존재하는 닉네임입니다.")
-        return value
-
-
-class UserLoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
-
-    def validate(self, data):
-        user = authenticate(email=data["email"], password=data["password"])
-        if not user:
-            raise serializers.ValidationError(
-                "이메일 또는 비밀번호가 올바르지 않습니다."
-            )
-        return data
-
-
-class UserDeleteSerializer(serializers.Serializer):
-    password = serializers.CharField(write_only=True)
-
-    def validate_password(self, value):
-        user = self.context["request"].user
-        if not user.check_password(value):
-            raise serializers.ValidationError("비밀번호가 올바르지 않습니다.")
-        return value
-
-
-class ProfileImageUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["profile_image"]
-
-
-class UserProfileUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["nickname", "introduction", "birth_date", "career"]
-
-    def validate_nickname(self, value):
-        user = self.context["request"].user
         if User.objects.exclude(id=user.id).filter(nickname=value).exists():
             raise serializers.ValidationError("이미 존재하는 닉네임입니다.")
         return value
@@ -430,3 +245,24 @@ class FollowSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["created_at"]
+
+
+class FollowWithStatusSerializer(FollowSerializer):
+    is_following = serializers.SerializerMethodField()
+
+    class Meta(FollowSerializer.Meta):
+        fields = FollowSerializer.Meta.fields + ["is_following"]
+
+    def get_is_following(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            # 사용자가 보고있는 팔로우/팔로워를 팔로우하고 있는지 확인
+            if hasattr(obj, "follower"):  # 팔로잉 목록 조회 시
+                return Follow.objects.filter(
+                    follower=request.user, following=obj.follower
+                ).exists()
+            else:  # 팔로워 목록 조회 시
+                return Follow.objects.filter(
+                    follower=request.user, following=obj.following
+                ).exists()
+        return False
