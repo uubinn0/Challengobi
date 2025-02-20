@@ -383,6 +383,7 @@ class UserDeleteSerializer(serializers.Serializer):
         return value
 
 
+# 
 class ProfileImageUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -395,7 +396,7 @@ class ProfileImageUpdateSerializer(serializers.ModelSerializer):
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["nickname", "introduction", "birth_date", "career"]
+        fields = ["nickname", "introduction", "birth_date", "career", "profile_image"]
 
     def validate_nickname(self, value):
         user = self.context["request"].user
