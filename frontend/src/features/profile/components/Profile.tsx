@@ -113,9 +113,9 @@ const dummyBadges = [
 const dummyCompletedChallenge = [
   {
     title: "외식비 줄이기 챌린지",
-    period: "2024.01.01 - 2024.01.31",
-    saving: 50000,
-    days: "31"
+    period: "2024.01.01 - 2024.01.28",
+    saving: 16700,
+    days: "28"
   }
 ];
 
