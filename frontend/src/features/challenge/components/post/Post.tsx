@@ -88,6 +88,7 @@ export default function Post() {
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: 'long',
@@ -236,13 +237,13 @@ export default function Post() {
           <img 
             src={DEFAULT_PROFILE_IMAGE}
             alt="프로필 이미지" 
-            className={styles.avatar}
+            className={styles.avatar} 
           />
           <div className={styles.postInfo}>
             <h1 className={styles.postTitle}>{postData?.post_title}</h1>
             <div className={styles.authorInfo}>
-              <span className={styles.authorName}>{postData?.user_nickname}</span>
-              <span className={styles.postDate}>{formatDate(postData?.created_at)}</span>
+              <span className={styles.authorName}>{postData?.user_nickname}</span><br/>
+              <span className={styles.postDate}>{formatDate(postData?.post_created_at)}</span>
             </div>
           </div>
         </div>
@@ -307,11 +308,11 @@ export default function Post() {
               <div className={styles.commentHeader}>
                 <img 
                   src={DEFAULT_PROFILE_IMAGE}
-                  alt="프로필 이미지" 
+                  alt="프로필 이미지"
                   className={styles.avatar}
                 />
                 <div className={styles.commentInfo}>
-                  <span className={styles.commentAuthor}>{comment.user_nickname}</span>
+                  <span className={styles.commentAuthor}>{comment.user_nickname}</span><br/>
                   <span className={styles.commentDate}>
                     {formatDate(comment.created_at)}
                   </span>
