@@ -14,6 +14,11 @@ urlpatterns = [
             {"get": "retrieve", "put": "update", "delete": "destroy"}
         ),
     ),
+    # 완료한 챌린지 세부조회
+    path(
+        "<int:pk>/completed_detail/",
+        views.ChallengeViewSet.as_view({"get": "completed_detail"}),
+    ),
     # 내 챌린지 조회
     path(
         "my-challenges/",
