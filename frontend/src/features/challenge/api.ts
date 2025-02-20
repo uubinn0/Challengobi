@@ -330,13 +330,13 @@ const ChallengeAPI = {
 
   // updatePost 메서드 추가
   async updatePost(challengeId: number, postId: number, data: {
-    board_title: string;
-    board_content: string;
-    board_image?: string;
+    post_title: string;
+    post_content: string;
+    image_url?: string;
   }): Promise<any> {
     const token = localStorage.getItem('access_token');
     const response = await axiosInstance.put(
-      `/api/challenges/${challengeId}/posts/${postId}`,
+      `/api/challenges/${challengeId}/posts/${postId}/`,
       data,
       {
         headers: {
@@ -352,7 +352,7 @@ const ChallengeAPI = {
   async deletePost(challengeId: number, postId: number): Promise<void> {
     const token = localStorage.getItem('access_token');
     await axiosInstance.delete(
-      `/api/challenges/${challengeId}/posts/${postId}`,
+      `/api/challenges/${challengeId}/posts/${postId}/`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -360,7 +360,71 @@ const ChallengeAPI = {
         }
       }
     );
-  }
+  },
+
+  // 댓글 수정
+  async updateComment(
+    challengeId: number,
+    postId: number,
+    commentId: number,
+    data: {
+      comment_id: number;
+      user_id: number;
+      comment_content: string;
+    }
+  ): Promise<any> {
+    const token = localStorage.getItem('access_token');
+    
+    const requestData = {
+      id: commentId,
+      user_id: data.user_id,
+      content: data.comment_content  // comment_content -> content로 다시 변경
+    };
+
+    console.log('Update Comment Request:', {
+      url: `/api/challenges/${challengeId}/posts/${postId}/comments/${commentId}/`,
+      data: requestData,
+      token: token
+    });
+    
+    try {
+      const response = await axiosInstance.put(
+        `/api/challenges/${challengeId}/posts/${postId}/comments/${commentId}/`,
+        requestData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Update Comment Error:', error.response?.data);
+      throw error;
+    }
+  },
+
+  // 댓글 삭제
+  async deleteComment(
+    challengeId: number,
+    postId: number,
+    commentId: number
+  ): Promise<void> {
+    const token = localStorage.getItem('access_token');
+    await axiosInstance.delete(
+      `/api/challenges/${challengeId}/posts/${postId}/comments/${commentId}/`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        data: {
+          comment_id: commentId
+        }
+      }
+    );
+  },
 };
 
 export default ChallengeAPI;

@@ -31,19 +31,32 @@ export default function UpdatePost() {
       }
 
       const updateData = {
-        board_title: title,
-        board_content: content,
-        board_image: postData?.board_image  // 기존 이미지가 있다면 유지
+        post_id: Number(postId),
+        post_title: title,
+        post_content: content,
+        image_url: postData?.board_image || null
       };
 
-      console.log('Updating post with data:', updateData);
+      console.log('Challenge ID:', id);
+      console.log('Post ID:', postId);
+      console.log('Update Data:', updateData);
       
       await ChallengeAPI.updatePost(Number(id), Number(postId), updateData);
       console.log('Post updated successfully');
       
-      navigate(-1);  // 수정 완료 후 이전 페이지로 이동
-    } catch (error) {
-      console.error('Failed to update post:', error);
+      // 정확한 URL 경로로 이동
+      navigate(`/challenge/progress/${id}/post/${postId}`, {
+        state: {
+          postData: {
+            ...postData,
+            post_title: title,
+            post_content: content,
+            updated_at: new Date().toISOString()
+          }
+        }
+      });
+    } catch (error: any) {
+      console.error('Error response:', error.response?.data);
       alert('게시글 수정에 실패했습니다.');
     }
   };
@@ -89,7 +102,7 @@ export default function UpdatePost() {
           <button type="button" className={styles.cancelButton} onClick={handleCancel}>
             취소
           </button>
-          <button type="submit" className={styles.submitButton}>
+          <button type="submit" className={styles.submitButton} onClick={handleSubmit}>
             수정
           </button>
         </div>
