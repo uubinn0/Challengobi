@@ -157,13 +157,13 @@ class ChallengeListSerializer(serializers.ModelSerializer):
     def get_category_name(self, obj):
         # UserChallengeCategory 모델의 필드 순서대로 매핑
         category_mapping = {
-            1: "카페",
-            2: "식당",
+            1: "카페/디저트",
+            2: "외식",
             3: "장보기",
             4: "쇼핑",
             5: "문화생활",
-            6: "취미",
-            7: "음주/흡연",
+            6: "취미/여가",
+            7: "술/담배",
             8: "교통",
             9: "기타",
         }
@@ -221,13 +221,13 @@ class ChallengeDetailSerializer(serializers.ModelSerializer):
 
     def get_category_name(self, obj):
         category_mapping = {
-            1: "카페",
-            2: "식당",
+            1: "카페/디저트",
+            2: "외식",
             3: "장보기",
             4: "쇼핑",
             5: "문화생활",
-            6: "취미",
-            7: "음주/흡연",
+            6: "취미/여가",
+            7: "술/담배",
             8: "교통",
             9: "기타",
         }
