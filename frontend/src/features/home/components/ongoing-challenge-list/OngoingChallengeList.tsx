@@ -33,6 +33,15 @@ const OngoingChallengeList: React.FC<OngoingChallengeListProps> = ({ challenges 
     ),
   )
 
+  const calculateProgress = (challenge: Challenge) => {
+    const startDate = new Date(challenge.start_date);
+    const currentDate = new Date();
+    const totalDays = challenge.period;
+    const elapsedDays = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const progress = Math.min(Math.max((elapsedDays / totalDays) * 100, 0), 100);
+    return Math.round(progress);
+  };
+
   const handleSupport = (e: React.MouseEvent, challengeId: number) => {
     e.stopPropagation()
     setSupportStates((prev) => ({
@@ -93,19 +102,18 @@ const OngoingChallengeList: React.FC<OngoingChallengeListProps> = ({ challenges 
             <p>기간: {challenge.period_display}</p>
             <p>예산: {challenge.budget_display}</p>
             <p>카테고리: {challenge.category_name}</p>
-            <p>참여자: {challenge.participants_display}</p>
             <p>시작일: {challenge.start_date}</p>
           </div>
 
           <div className={styles.progressSection}>
             <div className={styles.progressLabel}>
               <span>진행도</span>
-              <span>{challenge.current_participants}/{challenge.max_participants}</span>
+              <span>{calculateProgress(challenge)}%</span>
             </div>
             <div className={styles.progressBar}>
               <div 
                 className={styles.progressFill} 
-                style={{ width: `${(challenge.current_participants / challenge.max_participants) * 100}%` }} 
+                style={{ width: `${calculateProgress(challenge)}%` }} 
               />
             </div>
           </div>

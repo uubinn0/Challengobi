@@ -123,6 +123,7 @@ class ChallengeListSerializer(serializers.ModelSerializer):
     encourage_cnt = serializers.SerializerMethodField()
     want_cnt = serializers.SerializerMethodField()
     participants_nicknames = serializers.SerializerMethodField()
+    progress_percentage = serializers.SerializerMethodField()
 
     class Meta:
         model = Challenge
@@ -145,6 +146,7 @@ class ChallengeListSerializer(serializers.ModelSerializer):
             "encourage_cnt",
             "want_cnt",
             "participants_nicknames",
+            "progress_percentage",
         ]
 
     def get_period_display(self, obj):
@@ -188,6 +190,34 @@ class ChallengeListSerializer(serializers.ModelSerializer):
                 "user__nickname", flat=True
             )
         )
+
+    def get_progress_percentage(self, obj):
+        """
+        챌린지의 진행도를 백분율(0-100)로 계산합니다.
+        - 모집 중인 챌린지: 항상 0%
+        - 진행 중인 챌린지: (오늘 날짜 - 시작 날짜) / (종료 날짜 - 시작 날짜) * 100
+        - 완료된 챌린지: 항상 100%
+        """
+        today = timezone.now().date()
+
+        # 모집 중인 경우 (아직 시작하지 않음)
+        if obj.status == 0 or today < obj.start_date:
+            return 0
+
+        # 완료된 경우
+        if obj.status == 2 or today >= obj.end_date:
+            return 100
+
+        # 진행 중인 경우: 백분율 계산
+        total_days = (obj.end_date - obj.start_date).days
+        if total_days <= 0:  # 예외 처리
+            return 100
+
+        days_passed = (today - obj.start_date).days
+        progress = min(100, max(0, (days_passed / total_days) * 100))
+
+        # 소수점 한 자리까지 반올림
+        return round(progress, 1)
 
 
 class ChallengeDetailSerializer(serializers.ModelSerializer):

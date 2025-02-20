@@ -64,7 +64,7 @@ interface RecommendedUser {
   similarity: number;
 }
 
-// 더미 뱃지 데이터 수정 - 모든 뱃지 포함
+// 더미 뱃지 데이터 수정 - 고비인증 일수 뱃지 모두 활성화
 const dummyBadges = [
   {
     imageUrl: badgePoint1,
@@ -86,6 +86,7 @@ const dummyBadges = [
     imageUrl: badgePoint5,
     isAchieved: false
   },
+  // 고비인증 일수 뱃지 모두 활성화
   {
     imageUrl: badgeStreak1,
     isAchieved: true
@@ -96,15 +97,15 @@ const dummyBadges = [
   },
   {
     imageUrl: badgeStreak3,
-    isAchieved: false
+    isAchieved: true
   },
   {
     imageUrl: badgeStreak4,
-    isAchieved: false
+    isAchieved: true
   },
   {
     imageUrl: badgeStreak5,
-    isAchieved: false
+    isAchieved: true
   }
 ];
 
@@ -345,7 +346,14 @@ const Profile: React.FC = () => {
               <div 
                 key={index} 
                 className={styles.achievement}
-                onClick={() => navigate(`/profile/challenge-complete`)}
+                onClick={() => navigate('/profile/challenge-complete', {
+                  state: {
+                    title: challenge.title,
+                    period: challenge.period,
+                    amount: `${challenge.saving.toLocaleString()}원`,
+                    days: Number(challenge.days)
+                  }
+                })}
               >
                 <Check className={styles.checkIcon} />
                 <span>{challenge.title}</span>

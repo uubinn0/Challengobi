@@ -41,7 +41,6 @@ class ChallengeViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ["title", "description"]
 
-
     def update_challenge_status(self):
         today = timezone.now().date()
 
@@ -354,6 +353,110 @@ class ChallengeViewSet(viewsets.ModelViewSet):
 
         return Response({"total_count": len(history_data), "histories": history_data})
 
+    @action(detail=True, methods=["get"])
+    def completed_detail(self, request, pk=None):
+        """
+        완료된 챌린지의 세부 정보를 제공합니다.
+        참가자 통계, 성공/실패 여부, 예산 사용 내역 등을 포함합니다.
+        """
+        challenge = self.get_object()
+
+        # 챌린지가 완료되었는지 확인
+        if challenge.status != 2:  # COMPLETED
+            return Response(
+                {"error": "완료된 챌린지가 아닙니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 사용자가 이 챌린지의 참가자인지 확인
+        try:
+            participant = ChallengeParticipant.objects.get(
+                challenge=challenge, user=request.user
+            )
+        except ChallengeParticipant.DoesNotExist:
+            return Response(
+                {"error": "해당 챌린지에 참여하지 않았습니다"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # 기본 챌린지 정보
+        challenge_data = ChallengeDetailSerializer(
+            challenge, context={"request": request}
+        ).data
+
+        # 참가자 정보와 통계
+        all_participants = ChallengeParticipant.objects.filter(
+            challenge=challenge
+        ).select_related("user")
+
+        # 성공/실패 통계
+        success_count = all_participants.filter(is_failed=False).count()
+        fail_count = all_participants.filter(is_failed=True).count()
+
+        # 사용자의 지출 내역
+        user_expenses = Expense.objects.filter(
+            challenge=challenge, user=request.user
+        ).order_by("payment_date")
+
+        # 일자별 지출 요약
+        daily_expenses = {}
+        for expense in user_expenses:
+            date_str = expense.payment_date.strftime("%Y-%m-%d")
+            if date_str not in daily_expenses:
+                daily_expenses[date_str] = {"total": 0, "count": 0}
+            daily_expenses[date_str]["total"] += expense.amount
+            daily_expenses[date_str]["count"] += 1
+
+        # 카테고리별 지출 요약
+        category_expenses = {}
+        for expense in user_expenses:
+            if expense.store not in category_expenses:
+                category_expenses[expense.store] = 0
+            category_expenses[expense.store] += expense.amount
+
+        # 사용자의 최종 예산 사용률
+        budget_usage_percentage = 0
+        if participant.initial_budget > 0:
+            used_amount = participant.initial_budget - participant.balance
+            budget_usage_percentage = round(
+                (used_amount / participant.initial_budget) * 100, 1
+            )
+
+        # 응답 데이터 구성
+        result = {
+            "challenge": challenge_data,
+            "participant": {
+                "initial_budget": participant.initial_budget,
+                "final_balance": participant.balance,
+                "saved_amount": participant.initial_budget - participant.balance,
+                "success": not participant.is_failed,
+                "ocr_count": participant.ocr_count,
+                "budget_usage_percentage": budget_usage_percentage,
+            },
+            "statistics": {
+                "total_participants": all_participants.count(),
+                "success_count": success_count,
+                "fail_count": fail_count,
+                "success_rate": (
+                    round(success_count / all_participants.count() * 100, 1)
+                    if all_participants.count() > 0
+                    else 0
+                ),
+            },
+            "expenses": {
+                "total_count": user_expenses.count(),
+                "total_amount": user_expenses.aggregate(total=models.Sum("amount"))[
+                    "total"
+                ]
+                or 0,
+                "daily_summary": daily_expenses,
+                "category_summary": category_expenses,
+            },
+            "progress_percentage": 100,  # 완료된 챌린지이므로 항상 100%
+        }
+
+        return Response(result)
+
     # 참여자 목록 조회
     @action(detail=True, methods=["get"])
     def participants(self, request, pk=None):
@@ -548,9 +651,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
 
             # FastAPI 호출
             response = requests.post(
-                "http://fastapi-app:8001/extract_text/",
-                files=files,
-                timeout=90
+                "http://fastapi-app:8001/extract_text/", files=files, timeout=90
             )
 
             if response.status_code != 200:
@@ -564,8 +665,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         except Exception as e:
             logger.error(f"OCR processing error: {str(e)}", exc_info=True)
             return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     # OCR 데이터 저장
@@ -588,7 +688,6 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                 {"error": "이미 실패한 챌린지는 OCR 데이터를 저장할 수 없습니다"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
 
         try:
             data = request.data
@@ -644,11 +743,13 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                 try:
                     badge_response = requests.post(
                         "http://django-app:8000/api/badges/check_badges/",
-                        headers={
-                            'Authorization': request.headers.get('Authorization')
-                        }
+                        headers={"Authorization": request.headers.get("Authorization")},
                     )
-                    badge_result = badge_response.json() if badge_response.status_code == 200 else None
+                    badge_result = (
+                        badge_response.json()
+                        if badge_response.status_code == 200
+                        else None
+                    )
                 except Exception as e:
                     badge_result = None
 
@@ -660,7 +761,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                         "remaining_balance": participant.balance,
                         "ocr_count": participant.ocr_count,
                         "challenge_streak": request.user.challenge_streak,
-                        "badge_result": badge_result
+                        "badge_result": badge_result,
                     },
                     status=status.HTTP_201_CREATED,
                 )
@@ -685,15 +786,14 @@ class ExpenseViewSet(viewsets.ModelViewSet):
                         "message": "사용 금액이 잔액을 초과하여 챌린지에 실패했습니다",
                         "total_amount": total_amount,
                         "remaining_balance": participant.balance - total_amount,
-                        "challenge_status": "FAILED" if all_failed else "IN_PROGRESS"
+                        "challenge_status": "FAILED" if all_failed else "IN_PROGRESS",
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
         except Exception as e:
             return Response(
-                {"error": str(e)}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
@@ -768,11 +868,11 @@ class SimpleExpenseViewSet(viewsets.ViewSet):
             try:
                 badge_response = requests.post(
                     "http://django-app:8000/api/badges/check_badges/",
-                    headers={
-                        'Authorization': request.headers.get('Authorization')
-                    }
+                    headers={"Authorization": request.headers.get("Authorization")},
                 )
-                badge_result = badge_response.json() if badge_response.status_code == 200 else None
+                badge_result = (
+                    badge_response.json() if badge_response.status_code == 200 else None
+                )
             except Exception as e:
                 badge_result = None
 
@@ -801,7 +901,7 @@ class SimpleExpenseViewSet(viewsets.ViewSet):
                     "amount": amount,
                     "remaining_balance": participant.balance,
                     "ocr_count": participant.ocr_count,
-                    "badge_result": badge_result
+                    "badge_result": badge_result,
                 },
                 status=status.HTTP_201_CREATED,
             )

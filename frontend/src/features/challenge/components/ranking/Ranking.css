@@ -1,46 +1,43 @@
 .ranking-container {
-  padding: 20px;
-  padding-top: 76px;
+  padding: 1rem;
   background-color: #f5f5f2;
   min-height: 100vh;
 }
 
 .ranking-tabs {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
 }
 
 .tab {
-  flex: 1;
-  padding: 10px;
+  padding: 0.8rem 1.5rem;
   border: none;
   background: none;
-  font-size: 16px;
-  color: #666;
+  font-size: 1rem;
   cursor: pointer;
+  color: #666;
 }
 
 .tab.active {
-  color: #000;
+  color: #333;
   font-weight: bold;
-  border-bottom: 2px solid #000;
+  border-bottom: 2px solid #8A6E59;
 }
 
 .ranking-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  border-top: 1px solid #DED9D4; /* 이거 지우면 1위 위에 줄 없어짐 */
+  gap: 1rem;
 }
 
 .ranking-item {
   display: flex;
-  gap: 20px;
   align-items: center;
-  padding: 20px 0;
-  border-bottom: 1px solid #DED9D4;
-  position: relative;
+  padding: 1rem;
+  border: 1px solid #eee;
+  border-radius: 8px;
 }
 
 .ranking-item:last-child {
