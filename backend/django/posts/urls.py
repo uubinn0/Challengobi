@@ -9,7 +9,12 @@ urlpatterns = [
     path(
         "<int:pk>/",
         views.PostViewSet.as_view(
-            {"get": "retrieve", "put": "update", "delete": "destroy"}
+            {
+                "get": "retrieve",
+                "put": "update",
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
         ),
         name="post-detail",
     ),
@@ -25,10 +30,16 @@ urlpatterns = [
     ),
     path(
         "<int:post_id>/comments/<int:pk>/",
-        views.CommentViewSet.as_view({"put": "update", "delete": "destroy"}),
+        views.CommentViewSet.as_view(
+            {"put": "update", "patch": "partial_update", "delete": "destroy"}
+        ),
         name="comment-detail",
     ),
-    path("me/", views.PostViewSet.as_view({"get": "my_posts"}), name="my-posts"),
+    path(
+        "me/",
+        views.PostViewSet.as_view({"get": "my_posts", "delete": "my_posts"}),
+        name="my-posts",
+    ),
     path(
         "users/<int:user_id>/",
         views.PostViewSet.as_view({"get": "user_posts"}),
