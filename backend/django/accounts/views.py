@@ -249,53 +249,43 @@ class UserDetailView(views.APIView):
 
 
 class FollowView(views.APIView):
-    permission_classes = [IsAuthenticated]
-
     def post(self, request, pk):
+        # 팔로우 로직
         try:
-            target_user = User.objects.get(pk=pk)
+            user_to_follow = User.objects.get(id=pk)
+            Follow.objects.create(
+                follower=request.user,  # 현재 로그인한 사용자
+                following=user_to_follow  # 팔로우하려는 사용자
+            )
+            return Response({"message": "팔로우 성공"}, status=status.HTTP_201_CREATED)
         except User.DoesNotExist:
             return Response(
-                {"error": "사용자를 찾을 수 없습니다."},
-                status=status.HTTP_404_NOT_FOUND,
+                {"error": "사용자를 찾을 수 없습니다."}, 
+                status=status.HTTP_404_NOT_FOUND
             )
-
-        if target_user == request.user:
-            return Response(
-                {"error": "자기 자신을 팔로우할 수 없습니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        follow, created = Follow.objects.get_or_create(
-            follower=request.user, following=target_user
-        )
-
-        if created:
-            return Response({"message": f"{target_user.nickname}님을 팔로우했습니다."})
-        return Response(
-            {"message": "이미 팔로우하고 있습니다."}, status=status.HTTP_400_BAD_REQUEST
-        )
 
     def delete(self, request, pk):
+        # 언팔로우 로직
         try:
-            target_user = User.objects.get(pk=pk)
+            user_to_unfollow = User.objects.get(id=pk)
+            follow = Follow.objects.filter(
+                follower=request.user,
+                following=user_to_unfollow
+            ).first()
+            
+            if follow:
+                follow.delete()
+                return Response({"message": "언팔로우 성공"}, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    {"error": "팔로우 관계가 없습니다."}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
         except User.DoesNotExist:
             return Response(
-                {"error": "사용자를 찾을 수 없습니다."},
-                status=status.HTTP_404_NOT_FOUND,
+                {"error": "사용자를 찾을 수 없습니다."}, 
+                status=status.HTTP_404_NOT_FOUND
             )
-
-        follow = Follow.objects.filter(
-            follower=request.user, following=target_user
-        ).first()
-        if follow:
-            follow.delete()
-            return Response(
-                {"message": f"{target_user.nickname}님을 언팔로우했습니다."}
-            )
-        return Response(
-            {"message": "팔로우하고 있지 않습니다."}, status=status.HTTP_400_BAD_REQUEST
-        )
 
 
 class UserFollowersView(generics.ListAPIView):
@@ -442,3 +432,16 @@ class UserRecommendationsView(views.APIView):
                 {"error": "추천 사용자 조회 중 오류가 발생했습니다."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class FollowStatusView(views.APIView):
+    def get(self, request, pk):
+        follower = request.user.id  # 현재 로그인한 사용자
+        following = pk  # 확인하려는 사용자
+        
+        is_following = Follow.objects.filter(
+            follower_id=follower,
+            following_id=following
+        ).exists()
+        
+        return Response({"is_following": is_following})

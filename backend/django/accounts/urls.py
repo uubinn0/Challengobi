@@ -33,4 +33,10 @@ urlpatterns = [
         views.UserRecommendationsView.as_view(),
         name="user-recommendations",
     ),
+    # 팔로우 상태 확인을 위한 새로운 URL 추가
+    path(
+        "users/<int:pk>/follow-status/",
+        views.FollowStatusView.as_view(),
+        name="follow-status"
+    ),
 ]
