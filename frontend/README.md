@@ -1,74 +1,50 @@
-# 웹 디자인 Frontend
+# React + TypeScript + Vite
 
-## 소개
-웹 디자인 프로젝트의 Frontend 코드
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## 기술스택 및 라이브러리
+Currently, two official plugins are available:
 
-| Project | Version | Description |
-| ------- | ------- | ----------- |
-| Vue.js | 3.5.13 | JavaScript Framework |
-| Pinia | 2.3.0 | State Management Library |
-| Vue-router | 4.5.0 | Vue Router |
-| Vite | 6.0.5 | Build Tool |
-| Sass | 1.71.0 | CSS Preprocessor |
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## 개발 환경 구성
+## Expanding the ESLint configuration
 
-1. 프로젝트 다운로드
-    ```bash
-    git clone <repo URL> <folder-name>
-    ```
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
 
-2. frontend 폴더로 이동
-    ```bash
-    cd frontend
-    ```
+- Configure the top-level `parserOptions` property like this:
 
-3. 패키지 설치
-    ```bash
-    npm install
-    ```
-
-4. 프로젝트 실행
-    ```bash
-    npm run dev
-    ```
-
-## 디렉토리 구조
-
-```
-.
-└─src
-    ├─api         /* API 관련 파일 */
-    ├─assets      /* image, css, js 등의 리소스 */
-    ├─components  /* 컴포넌트 단위의 Vue 파일 */
-    ├─router      /* Vue Router 설정 */
-    ├─stores      /* Pinia 스토어 */
-    └─views       /* 페이지 단위의 Vue 파일 */
+```js
+export default tseslint.config({
+  languageOptions: {
+    // other options...
+    parserOptions: {
+      project: ['./tsconfig.node.json', './tsconfig.app.json'],
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+})
 ```
 
-## 주요 명령어
+- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
+- Optionally add `...tseslint.configs.stylisticTypeChecked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
 
-```bash
-# 개발 서버 실행
-npm run dev
+```js
+// eslint.config.js
+import react from 'eslint-plugin-react'
 
-# 프로덕션용 빌드
-npm run build
-
-# 프로덕션 빌드 미리보기
-npm run preview
-
-# 린트 실행 및 수정
-npm run lint
-
-# 코드 포맷팅
-npm run format
+export default tseslint.config({
+  // Set the react version
+  settings: { react: { version: '18.3' } },
+  plugins: {
+    // Add the react plugin
+    react,
+  },
+  rules: {
+    // other rules...
+    // Enable its recommended rules
+    ...react.configs.recommended.rules,
+    ...react.configs['jsx-runtime'].rules,
+  },
+})
 ```
-
-## 추가 설정 파일
-
-- `vite.config.js`: Vite 설정
-- `eslint.config.js`: ESLint 설정
-- `jsconfig.json`: JavaScript 설정

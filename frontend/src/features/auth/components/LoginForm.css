@@ -1,0 +1,109 @@
+.login-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    display: block;
+    position: relative;
+    margin-top: 50px;
+  }
+  
+  .login-title {
+    text-align: center;
+    margin-bottom: 3rem;
+    color: #333;
+  }
+  
+  .input-group {
+    margin-bottom: 1rem;
+  }
+  
+  .input-group input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    display: block;
+    box-sizing: border-box;
+  }
+  
+  .forgot-password {
+    display: block;
+    text-align: right;
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    cursor: pointer;
+  }
+  
+  .kakao-login {
+    margin: 1rem 0;
+    text-align: center;
+  }
+  
+  .kakao-login img {
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+  }
+  
+  .login-button, .signup-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    gap: 8px;
+    padding: 14px;
+    background-color: #8A6E59 !important;
+    border: none;
+    color: #ffffff;
+    font-size: 16px;
+    cursor: pointer;
+    margin-bottom: 12px;
+  }
+  
+  .login-button:hover, .signup-button:hover {
+    background-color: #7d6350 !important;
+  }
+  
+  .login-button:active, .signup-button:active{
+    transform: scale(0.98);
+  }
+  
+  .password-input-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  
+  .password-input-wrapper input {
+    width: 100%;
+    padding-right: 40px;  /* 눈 모양 버튼을 위한 공간 */
+  }
+  
+  .password-toggle-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    color: #BDBDBD;
+  }
+  
+  .password-toggle-btn:focus {
+    outline: none;
+  }
+  
+  .error-message {
+    color: #ff0000;
+    font-size: 16px;  /* 기본 16px에서 2px 줄임 */
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
