@@ -8,6 +8,7 @@ import profileJaringobi from '../../../../assets/profile-jaringobi.png'
 import type { Challenge } from "../../../../features/home/types"
 import  ChallengeAPI  from "../../api"
 import axios from "axios"
+import { DEFAULT_PROFILE_IMAGE } from '../../../../constants'
 
 interface Post {
   post_id: number;
@@ -38,6 +39,8 @@ const Progress: FC = () => {
 
   console.log("Current pathname:", location.pathname);
   console.log("isFromHome:", isFromHome);
+
+  const userNickname = localStorage.getItem('nickname'); // nickname 가져오기
 
   useEffect(() => {
     if (!challengeData && isFromHome) {
@@ -294,13 +297,13 @@ const Progress: FC = () => {
           <div className={styles.progressTextContainer}>
             <div className={styles.fishIconContainer}>
               <img 
-                src={profileJaringobi}
-                alt="자린고비 프로필" 
+                src={DEFAULT_PROFILE_IMAGE}
+                alt="프로필 이미지" 
                 className={styles.ocrFishIcon}
               />
             </div>
             <p className={styles.progressText}>
-              {challenge.creator_nickname}님 챌린지 성공까지
+              {userNickname}님 챌린지 성공까지
               <br />
               {challenge.period}일 남았어요.
             </p>
@@ -359,8 +362,7 @@ const Progress: FC = () => {
               >
                 <div className={styles.commentHeader}>
                   <img 
-                  
-                    src={/*post.user_profile_image ||*/ profileJaringobi}
+                    src={DEFAULT_PROFILE_IMAGE}
                     alt="프로필 이미지" 
                     className={styles.avatar}
                   />

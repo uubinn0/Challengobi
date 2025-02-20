@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Heart, MessageSquare } from "lucide-react";
 import ChallengeAPI from "../../api";
 import styles from "./Post.module.scss";
+import { DEFAULT_PROFILE_IMAGE } from '../../../../constants';
   
 
 interface Comment {
@@ -233,15 +234,15 @@ export default function Post() {
       <div className={styles.postCard}>
         <div className={styles.postHeader}>
           <img 
-            src={postData?.user_profile_image} 
-            alt="프로필" 
+            src={DEFAULT_PROFILE_IMAGE}
+            alt="프로필 이미지" 
             className={styles.avatar}
           />
           <div className={styles.postInfo}>
             <h1 className={styles.postTitle}>{postData?.post_title}</h1>
             <div className={styles.authorInfo}>
-              <span>{postData?.user_nickname}</span>
-              <span>{postData?.post_created_at ? formatDate(postData.post_created_at) : ''}</span>
+              <span className={styles.authorName}>{postData?.user_nickname}</span>
+              <span className={styles.postDate}>{formatDate(postData?.created_at)}</span>
             </div>
           </div>
         </div>
@@ -279,6 +280,11 @@ export default function Post() {
       {/* 댓글 입력 */}
       {isFromHome && (
         <form onSubmit={handleSubmit} className={styles.commentForm}>
+          <img 
+            src={DEFAULT_PROFILE_IMAGE}
+            alt="프로필 이미지" 
+            className={styles.avatar}
+          />
           <input
             type="text"
             placeholder="댓글을 입력하세요"
@@ -300,8 +306,8 @@ export default function Post() {
             <div key={comment.id} className={styles.comment}>
               <div className={styles.commentHeader}>
                 <img 
-                  src={comment.user_profile_image} 
-                  alt={comment.user_nickname} 
+                  src={DEFAULT_PROFILE_IMAGE}
+                  alt="프로필 이미지" 
                   className={styles.avatar}
                 />
                 <div className={styles.commentInfo}>
@@ -347,13 +353,14 @@ export default function Post() {
                 )}
               </div>
               {editingCommentId === comment.id ? (
-                <div className={styles.commentContent}>
+                <div className={styles.commentEditForm}>
+                  
                   <input
                     type="text"
                     value={editingContent}
                     onChange={(e) => setEditingContent(e.target.value)}
                     className={styles.commentInput}
-                    placeholder={comment.content}
+                    placeholder="댓글을 입력하세요"
                   />
                 </div>
               ) : (
