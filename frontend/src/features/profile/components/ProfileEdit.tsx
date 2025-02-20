@@ -7,6 +7,8 @@ import { accountApi, ProfileUpdateData, ProfileData } from '../api';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { ko } from 'date-fns/locale';
+import { storage } from '../../../firebaseConfig';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const ProfileEdit: React.FC = () => {
   const navigate = useNavigate();
@@ -110,33 +112,27 @@ const ProfileEdit: React.FC = () => {
       try {
         // FormData 생성
         const formData = new FormData();
-        formData.append('profile_image', file);
+        
+        // Firebase Storage에 이미지 업로드
+
+        const storageRef = ref(storage, `${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+
+        console.log('Uploaded Image URL:', downloadURL); // 로그 확인용
+
+        formData.append('profile_image', downloadURL); // Firebase URL 전송
         formData.append('user_id', String(userData.data.id));
         formData.append('nickname', userData.data.nickname);
         formData.append('sex', userData.data.sex);
         formData.append('birth_date', userData.data.birth_date);
         formData.append('career', String(userData.data.career));
         formData.append('introduction', userData.data.introduction || '');
-        
-        // challenge_categories에서 true인 카테고리만 추출
-        const selectedCats = Object.entries(userData.data.challenge_categories)
-          .filter(([_, value]) => value)
-          .map(([key]) => key);
-        selectedCats.forEach(category => {
-          formData.append('categories', category);
-        });
-
-        // 이미지 미리보기 설정
-        const previewUrl = URL.createObjectURL(file);
-        setUserData(prev => ({
-          ...prev,
-          data: {
-            ...prev.data,
-            profile_image: previewUrl
-          }
-        }));
 
         // 서버로 전송
+        console.log(userData)
+        console.log(formData)
+        
         const response = await fetch('http://localhost:8000/api/accounts/me/', {
           method: 'PUT',
           body: formData,
@@ -148,6 +144,15 @@ const ProfileEdit: React.FC = () => {
         if (!response.ok) {
           throw new Error('이미지 업로드 실패');
         }
+
+        // 이미지 미리보기 설정
+        setUserData(prev => ({
+          ...prev,
+          data: {
+            ...prev.data,
+            profile_image: downloadURL
+          }
+        }));
 
         alert('프로필 이미지가 업데이트되었습니다.');
         

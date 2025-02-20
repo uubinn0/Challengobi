@@ -68,7 +68,7 @@ class User(AbstractUser):
     )
     total_saving = models.PositiveIntegerField(default=0)
     introduction = models.TextField(null=True, blank=True)
-    profile_image = models.CharField(max_length=255, null=True, default=0)
+    profile_image = models.URLField(max_length=500, null=True, blank=True)
     create_at = models.DateTimeField(auto_now_add=True)
     social_login = models.CharField(max_length=255, null=True, default=0)
     challenge_streak = models.PositiveSmallIntegerField(default=0)

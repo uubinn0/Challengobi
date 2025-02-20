@@ -79,8 +79,9 @@ FIREBASE_CONFIG = {
     "measurementId": env("VITE_FIREBASE_MEASUREMENT_ID"),
 }
 
-# Firebase Storage 버킷 설정
-FIREBASE_STORAGE_BUCKET = env("VITE_FIREBASE_STORAGE_BUCKET")
+# Firebase Settings
+FIREBASE_ADMIN_CREDENTIALS = os.path.join(BASE_DIR, 's12-b110-challengobi-firebase-adminsdk-fbsvc-81fd305dd3.json')
+FIREBASE_STORAGE_BUCKET = 's12-b110-challengobi.firebasestorage.app'
 
 # Application definition
 

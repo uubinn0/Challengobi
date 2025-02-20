@@ -8,12 +8,16 @@ import type { UserProfile } from '../types/user';
 import { initialUserProfile } from '../types/user';
 import { existingNicknames } from '../data/dummyNicknames';
 import styles from './SignUpForm.module.scss';
+import axios from 'axios';
+import { storage } from "/src/firebaseConfig"; // 절대 경로 사용// src 디렉토리 내에서 firebaseConfig.js를 가져옵니다.
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const SignUpForm: React.FC = () => {
   const navigate = useNavigate();
   const [showKeywordPopup, setShowKeywordPopup] = useState<boolean>(false);
   const [formData, setFormData] = useState<UserProfile>({
-    ...initialUserProfile
+    ...initialUserProfile,
+    profileImageUrl: '',
   });
   
   const [showVerification, setShowVerification] = useState<boolean>(false);
@@ -23,6 +27,7 @@ const SignUpForm: React.FC = () => {
   const [isUserIdDuplicateChecked, setIsUserIdDuplicateChecked] = useState<boolean>(false);
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [passwordsMatch, setPasswordsMatch] = useState(true);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
     const { name, value } = e.target;
@@ -38,7 +43,7 @@ const SignUpForm: React.FC = () => {
     }
   };
   
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     
     if (!isDuplicateChecked) {
@@ -46,7 +51,21 @@ const SignUpForm: React.FC = () => {
       return;
     }
 
-    setShowKeywordPopup(true);
+    try {
+      if (imageFile) {
+        const imageUrl = await uploadImageToFirebase(imageFile);
+        setFormData((prevData) => ({
+          ...prevData,
+          profileImageUrl: imageUrl,
+        }));
+      }
+
+      const response = await axios.post('http://localhost:8000/api/register/', formData);
+      alert('회원가입 성공: ' + response.data.message);
+      // 성공 후 로그인 페이지로 이동할 수 있습니다.
+    } catch (error) {
+      alert('회원가입 실패: ' + (error.response?.data?.message || '오류가 발생했습니다.'));
+    }
   };
 
   const handleLogin = (): void => {
@@ -94,17 +113,16 @@ const SignUpForm: React.FC = () => {
   };
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          profileImage: reader.result as string
-        }));
-      };
-      reader.readAsDataURL(file);
+    if (e.target.files && e.target.files[0]) {
+      setImageFile(e.target.files[0]);
     }
+  };
+
+  const uploadImageToFirebase = async (file: File): Promise<string> => {
+    const storageRef = ref(storage, `profileImages/${file.name}`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    return url;
   };
 
   const handlePasswordConfirmChange = (e: React.ChangeEvent<HTMLInputElement>) => {

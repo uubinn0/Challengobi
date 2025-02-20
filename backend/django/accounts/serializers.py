@@ -340,7 +340,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class ProfileImageUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["profile_image"]
+        fields = ['profile_image']
+        extra_kwargs = {
+            'profile_image': {'required': True}
+        }
 
 
 # 개인정보 변경 (닉네임, 한줄소개, 휴대폰 번호, 생년월일, 직업)
@@ -383,7 +386,10 @@ class UserDeleteSerializer(serializers.Serializer):
 class ProfileImageUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["profile_image"]
+        fields = ['profile_image']
+        extra_kwargs = {
+            'profile_image': {'required': True}
+        }
 
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):

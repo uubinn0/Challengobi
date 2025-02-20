@@ -314,4 +314,8 @@ node_modules/
 npm-debug.log
 yarn-error.log
 
+# Firebase Admin SDK
+**/s12-b110-challengobi-firebase-adminsdk-fbsvc-81fd305dd3.json
+backend/django/config/firebase/s12-b110-challengobi-firebase-adminsdk-fbsvc-81fd305dd3.json
+
 # End of https://www.toptal.com/developers/gitignore/api/django,vue,vuejs,pycharm,venv

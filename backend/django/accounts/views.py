@@ -178,26 +178,39 @@ class UserProfileView(views.APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Firebase에 이미지 업로드
-            image_url = upload_image_to_firebase(image_file, user.id)
+            try:
+                # Firebase에 이미지 업로드
+                image_url = upload_image_to_firebase(image_file, user.id)
+                
+                # 기존 이미지가 있다면 Firebase에서 삭제
+                if user.profile_image:
+                    try:
+                        bucket = get_firebase_bucket()
+                        old_image_path = user.profile_image.split('/')[-1]
+                        blob = bucket.blob(f'profile_images/{user.id}/{old_image_path}')
+                        blob.delete()
+                    except Exception as e:
+                        print(f"기존 이미지 삭제 실패: {str(e)}")
 
-            # DB에 이미지 URL 업데이트
-            user.profile_image = image_url
-            user.save()
+                # DB에 새 이미지 URL 업데이트
+                user.profile_image = image_url
+                user.save()
 
-            return Response(
-                {
-                    "message": "이미지가 성공적으로 업로드되었습니다",
-                    "profile_image": image_url,
-                },
-                status=status.HTTP_200_OK,
-            )
+                return Response({
+                    'message': '이미지가 성공적으로 업로드되었습니다',
+                    'profile_image': image_url
+                }, status=status.HTTP_200_OK)
 
-        except ValueError as ve:
-            return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+            except ValueError as ve:
+                return Response(
+                    {'error': str(ve)}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
         except Exception as e:
             return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
