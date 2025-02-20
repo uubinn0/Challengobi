@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './FollowModal.module.scss';
+import profileTest from '@/assets/profile-test.jpg';
 
 interface User {
   id: number;
@@ -25,9 +26,12 @@ const FollowModal: React.FC<FollowModalProps> = ({ title, users, onClose }) => {
           {users.map((user) => (
             <div key={user.id} className={styles.item}>
               <img 
-                src={user.profile_image || '/default-profile.jpg'} 
-                alt={`${user.nickname}의 프로필`} 
+                src={user.profile_image || profileTest}
+                alt={user.nickname}
                 className={styles.profileImage}
+                onError={(e) => {
+                  e.currentTarget.src = profileTest;
+                }}
               />
               <span className={styles.nickname}>{user.nickname}</span>
             </div>

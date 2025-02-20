@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { accountApi } from '../api';
 import styles from './FollowList.module.scss';
 import { DEFAULT_PROFILE_IMAGE } from '../../../constants';
+import profileTest from '@/assets/profile-test.jpg';  // profile-test.jpg import
 
 interface FollowData {
   id: number;
@@ -47,7 +48,7 @@ const FollowList: React.FC<{ type: 'followers' | 'following' }> = ({ type }) => 
     return () => {
       isMounted = false;
     };
-  }, [userId, type]);  // userId와 type만 의존성으로 설정
+  }, [userId, type]);
 
   const handleFollowClick = async (targetUserId: number) => {
     try {
@@ -100,19 +101,32 @@ const FollowList: React.FC<{ type: 'followers' | 'following' }> = ({ type }) => 
           follows.map((follow) => {
             const displayUserId = type === 'followers' ? follow.follower : follow.following;
             const displayNickname = type === 'followers' ? follow.follower_nickname : follow.following_nickname;
+            const displayImage = type === 'followers' ? follow.follower_profile_image : follow.following_profile_image;
 
             return (
               <div key={follow.id} className={styles.item}>
                 <div className={styles.userInfo}>
-                  <div className={styles.profileImage} />
+                  <img 
+                    src={displayImage || profileTest} 
+                    alt={displayNickname}
+                    className={styles.profileImage}
+                    onError={(e) => {
+                      e.currentTarget.src = profileTest;
+                    }}
+                  />
                   <span className={styles.nickname}>{displayNickname}</span>
                 </div>
                 {Number(myId) !== displayUserId && (
                   <button 
-                    className={`${styles.followButton} ${styles.following}`}
+                    className={`${styles.followButton} ${type === 'following' ? styles.following : ''}`}
                     onClick={() => handleFollowClick(displayUserId)}
                   >
-                    {type === 'following' ? '팔로우 취소' : '팔로우'}
+                    {type === 'following' ? (
+                      <>
+                        팔로우<br />
+                        취소
+                      </>
+                    ) : '팔로우'}
                   </button>
                 )}
               </div>

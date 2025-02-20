@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import searchIcon from '../../../assets/SearchUser-search.png';
 import styles from './SearchUser.module.scss';
 import { accountApi } from '../../profile/api';
+import profileTest from '@/assets/profile-test.jpg';
 
 interface User {
   id: number;
@@ -12,7 +12,6 @@ interface User {
 }
 
 const SearchUser: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState<string>('');
   const [recommendedUsers, setRecommendedUsers] = useState<User[]>([]);
   const navigate = useNavigate();
 
@@ -29,20 +28,16 @@ const SearchUser: React.FC = () => {
     loadRecommendations();
   }, []);
 
-  // 사용자 프로필로 이동하는 함수
   const handleUserClick = async (userId: number) => {
     try {
-      // 1. 해당 사용자의 프로필 정보를 가져옴
       const userProfile = await accountApi.getUserProfile(userId);
-      // 2. 팔로우 상태도 함께 확인
       const followStatus = await accountApi.getFollowStatus(userId);
       
-      // 프로필 페이지로 이동하면서 프로필 데이터와 팔로우 상태를 전달
       navigate(`/profile/${userId}`, { 
         state: { 
           profileData: userProfile,
-          isFollowing: followStatus,  // 팔로우 상태 전달
-          previousTab: 'search'  // 검색 탭에서 왔다는 정보 추가
+          isFollowing: followStatus,
+          previousTab: 'search'
         } 
       });
     } catch (error) {
@@ -51,18 +46,7 @@ const SearchUser: React.FC = () => {
   };
 
   return (
-    <div className={styles.searchContainer}>
-      <div className={styles.searchBox}>
-        <img src={searchIcon} alt="search" className={styles.searchIcon} />
-        <input
-          type="text"
-          placeholder="검색어를 입력하세요"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <button className={styles.searchButton}>검색</button>
-      </div>
-
+    <div className={styles.container}>
       <div className={styles.recommendedSection}>
         <h3>나와 비슷한 사용자</h3>
         <div className={styles.userGrid}>
@@ -75,8 +59,12 @@ const SearchUser: React.FC = () => {
             >
               <div className={styles.userImage}>
                 <img 
-                  src={user.profile_image || '/default-profile.jpg'} 
-                  alt={user.nickname} 
+                  src={user.profile_image || profileTest}
+                  alt={user.nickname}
+                  className={styles.profileImage}
+                  onError={(e) => {
+                    e.currentTarget.src = profileTest;
+                  }}
                 />
               </div>
               <p className={styles.userName}>{user.nickname}</p>
